@@ -183,6 +183,17 @@ body {
 .navbar-cta:hover { background: #e5e5e5; transform: scale(1.02); }
 .navbar-cta.green-cta { background: var(--green); color: #fff; }
 .navbar-cta.green-cta:hover { background: var(--green2); }
+.navbar-cta.repo-cta {
+  background: var(--bg2);
+  color: var(--text2);
+  border: 1px solid var(--border);
+  font-weight: 600;
+}
+.navbar-cta.repo-cta:hover {
+  color: var(--text);
+  border-color: var(--border-green);
+  background: rgba(34,197,94,0.08);
+}
 
 /* ── SECTION LABEL ──────────────────────────── */
 .section-label {
@@ -298,6 +309,101 @@ h2.section-h2 {
 }
 .auth-quote-text { font-size: 12px; color: var(--text2); font-style: italic; }
 .auth-quote-name { font-size: 11px; color: var(--text3); margin-left: 4px; }
+
+.auth-visual {
+  position: absolute;
+  top: 96px;
+  right: 7%;
+  width: min(520px, 42vw);
+  min-height: 420px;
+  pointer-events: none;
+}
+.auth-visual-card {
+  position: absolute;
+  background:
+    linear-gradient(150deg, rgba(34,197,94,0.16), transparent 46%),
+    rgba(17,17,17,0.84);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 22px 70px rgba(0,0,0,0.45);
+  overflow: hidden;
+}
+.auth-visual-card.large {
+  width: 270px;
+  height: 230px;
+  right: 0;
+  top: 12px;
+}
+.auth-visual-card.medium {
+  width: 250px;
+  height: 190px;
+  right: 210px;
+  top: 118px;
+}
+.auth-visual-card.small {
+  width: 180px;
+  height: 150px;
+  right: 56px;
+  top: 278px;
+}
+.auth-window-bar {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-left: 12px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
+}
+.auth-window-bar span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.24);
+}
+.auth-visual-content { padding: 18px; }
+.auth-visual-line {
+  height: 11px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.10);
+  margin-bottom: 10px;
+}
+.auth-visual-line.green { background: rgba(34,197,94,0.58); }
+.auth-visual-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.04);
+  margin-top: 10px;
+}
+.auth-visual-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: var(--green);
+  color: #03140a;
+  font-weight: 900;
+}
+.auth-visual-float {
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.34), rgba(255,255,255,0.08) 42%, rgba(0,0,0,0.42));
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.38);
+  color: var(--text);
+  font-size: 24px;
+}
+.auth-visual-float.one { right: 300px; top: 24px; animation: float2 9s ease-in-out infinite; }
+.auth-visual-float.two { right: 70px; top: 210px; animation: float 11s ease-in-out infinite; }
 
 /* Hero headline */
 .auth-headline { text-align: left; max-width: 700px; width: 100%; margin-bottom: 24px; }
@@ -706,6 +812,52 @@ h2.section-h2 {
 .tag-gold   { background:rgba(251,191,36,.12);  color:#fcd34d; border:1px solid rgba(251,191,36,.2); }
 .tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
 
+.download-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 18px;
+  padding: 12px 18px;
+  border: 1px solid var(--border-green);
+  border-radius: 100px;
+  background:
+    linear-gradient(135deg, rgba(34,197,94,0.22), rgba(34,197,94,0.08)),
+    rgba(17,17,17,0.9);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 10px 30px rgba(0,0,0,0.25);
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+.download-btn::before {
+  content: '↓';
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green);
+  color: #03140a;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+.download-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(74,222,128,0.65);
+  background:
+    linear-gradient(135deg, rgba(34,197,94,0.34), rgba(34,197,94,0.13)),
+    rgba(17,17,17,0.95);
+}
+.download-btn:active { transform: translateY(0); }
+
 /* ── RESPONSIVE ── */
 @media(max-width:900px) {
   .prog-grid { grid-template-columns: 1fr; max-width: 480px; }
@@ -722,6 +874,7 @@ h2.section-h2 {
   .prog-stats-strip-item { border-right: none; border-bottom: 1px solid var(--border); flex: 1 1 40%; }
   .section-wrap { padding: 40px 20px 80px; }
   .navbar-links { display: none; }
+  .auth-visual { display: none; }
   h1.hero-h1, .auth-headline h1, .prog-sel-hero h1 { font-size: 40px; }
 }
 @media(max-width:600px) {
@@ -751,16 +904,6 @@ h2.section-h2 {
   <button class="disc-close" onclick="document.getElementById('disclaimerBanner').style.display='none';localStorage.setItem('discSeen','1')">Got it</button>
 </div>
 
-<!-- Hidden compatibility inputs -->
-<div style="display:none">
-  <input id="lcEmail" type="email">
-  <input id="lcOTP" type="text">
-  <button id="sendOtpBtn" onclick="sendOTP()"></button>
-  <button id="verifyOtpBtn" onclick="verifyOTP()"></button>
-  <div id="loginForm"></div>
-  <div id="lcLoading"></div>
-</div>
-
 <!-- ═══════════════════════════════════════
      NAVBAR (shown once logged in)
 ═══════════════════════════════════════ -->
@@ -777,6 +920,7 @@ h2.section-h2 {
     <button class="navbar-link" onclick="showSection('cheatsheets',this)">Cheatsheets</button>
   </div>
   <div style="display:flex;align-items:center;gap:10px;margin-left:8px">
+    <button class="navbar-cta repo-cta" onclick="window.open('https://github.com/monarchbaweja1/placements_bda_27.git','_blank','noopener')">Repository</button>
     <button class="navbar-cta" onclick="backToSelector()" id="progPill" style="background:var(--bg2);color:var(--text);border:1px solid var(--border);">
       <span id="progPillEmoji">📊</span>
       <span id="progPillName">BDA</span>
@@ -797,7 +941,10 @@ h2.section-h2 {
     <span class="navbar-link">4 Programmes</span>
     <span class="navbar-link">130+ Companies</span>
   </div>
-  <button class="navbar-cta green-cta" onclick="document.getElementById('authEmail')?.focus()">Get Access</button>
+  <div style="display:flex;align-items:center;gap:10px;margin-left:8px">
+    <button class="navbar-cta repo-cta" onclick="window.open('https://github.com/monarchbaweja1/placements_bda_27.git','_blank','noopener')">Repository</button>
+    <button class="navbar-cta green-cta" onclick="document.getElementById('authEmail')?.focus()">Get Access</button>
+  </div>
 </nav>
 
 <!-- ═══════════════════════════════════════
@@ -836,6 +983,59 @@ h2.section-h2 {
   </div>
 
   <div class="auth-inner">
+    <div class="auth-visual reveal reveal-delay-1" aria-hidden="true">
+      <div class="auth-visual-float one">Q</div>
+      <div class="auth-visual-float two">AI</div>
+      <div class="auth-visual-card large">
+        <div class="auth-window-bar"><span></span><span></span><span></span></div>
+        <div class="auth-visual-content">
+          <div class="auth-visual-line green" style="width:56%"></div>
+          <div class="auth-visual-line" style="width:86%"></div>
+          <div class="auth-visual-line" style="width:72%"></div>
+          <div class="auth-visual-row">
+            <div class="auth-visual-icon">63</div>
+            <div style="flex:1">
+              <div class="auth-visual-line green" style="width:72%;height:8px"></div>
+              <div class="auth-visual-line" style="width:48%;height:8px"></div>
+            </div>
+          </div>
+          <div class="auth-visual-row">
+            <div class="auth-visual-icon">QA</div>
+            <div style="flex:1">
+              <div class="auth-visual-line" style="width:82%;height:8px"></div>
+              <div class="auth-visual-line green" style="width:44%;height:8px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="auth-visual-card medium">
+        <div class="auth-visual-content">
+          <div class="auth-visual-row">
+            <div class="auth-visual-icon">ML</div>
+            <div style="flex:1">
+              <div class="auth-visual-line green" style="width:64%;height:8px"></div>
+              <div class="auth-visual-line" style="width:86%;height:8px"></div>
+            </div>
+          </div>
+          <div class="auth-visual-row">
+            <div class="auth-visual-icon">SQL</div>
+            <div style="flex:1">
+              <div class="auth-visual-line" style="width:74%;height:8px"></div>
+              <div class="auth-visual-line" style="width:50%;height:8px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="auth-visual-card small">
+        <div class="auth-visual-content">
+          <div class="auth-visual-line green" style="width:38%"></div>
+          <div class="auth-visual-line" style="width:76%"></div>
+          <div class="auth-visual-line" style="width:58%"></div>
+          <div class="auth-visual-line green" style="width:88%"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Quote -->
     <div class="auth-quote">
       <div class="auth-quote-avatar">A</div>
@@ -1178,101 +1378,66 @@ let _authEmail = '';
 
 function showScreen(id) {
   ['screen-email','screen-otp'].forEach(s => {
-    const el = document.getElementById(s);
-    if(el) el.classList.toggle('hidden', s !== id);
+    document.querySelectorAll(`#${s}`).forEach(el => {
+      el.classList.toggle('hidden', s !== id);
+    });
   });
 }
+
+function getVisibleElement(selector) {
+  return Array.from(document.querySelectorAll(selector)).find(el => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length));
+}
+
+function getActiveAuthEmail() {
+  return getVisibleElement('#authEmail');
+}
+
+function getActiveSendButton() {
+  return getVisibleElement('#authSendBtn, #sendOtpBtn');
+}
+
+function getActiveVerifyButton() {
+  return getVisibleElement('#authVerifyBtn, #verifyOtpBtn');
+}
+
+function setLoadingButton(btn, loadingText) {
+  if (!btn) return;
+  if (!btn.dataset.originalText) btn.dataset.originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = loadingText;
+}
+
+function resetButton(btn, fallbackText) {
+  if (!btn) return;
+  btn.disabled = false;
+  btn.textContent = btn.dataset.originalText || fallbackText;
+}
+
+function withTimeout(promise, ms, label = 'request') {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s.`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+window.addEventListener('unhandledrejection', event => {
+  console.error('Unhandled promise rejection:', event.reason);
+  showAuthStatus('Unexpected auth error: ' + (event.reason?.message || event.reason), 'err');
+  resetButton(getActiveSendButton(), 'Continue with Email →');
+  resetButton(getActiveVerifyButton(), 'Verify & Enter Hub →');
+});
+
+window.addEventListener('error', event => {
+  console.error('Unhandled error:', event.error || event.message);
+  showAuthStatus('Unexpected error occurred. Check console for details.', 'err');
+});
 
 function enterHub() {
   document.querySelectorAll('.auth-screen').forEach(s => s.classList.add('hidden'));
   document.getElementById('authNav').style.display = 'none';
   document.getElementById('progSelector').style.display = 'flex';
 }
-
-function showAuthStatus(msg, type) {
-  ['authEmailStatus','authOtpStatus'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) { el.className = 'auth-status ' + type + ' show'; el.textContent = msg; }
-  });
-}
-
-// ── Send OTP ─────────────────────────────
-window.sendOTP = async function() {
-  const email = (document.getElementById('authEmail')?.value || '').trim();
-  if(!email || !email.includes('@')) { showAuthStatus('Enter a valid email address.', 'err'); return; }
-  const btn = document.getElementById('authSendBtn');
-  if(btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
-
-  const { error } = await sbIndex.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
-
-  if(error) {
-    showAuthStatus('Error: ' + error.message, 'err');
-    if(btn) { btn.disabled = false; btn.textContent = 'Continue →'; }
-    return;
-  }
-
-  _authEmail = email;
-  const badge = document.getElementById('otpEmailBadge');
-  if(badge) badge.textContent = '✉️ ' + email;
-  showScreen('screen-otp');
-  startOtpTimer();
-  document.getElementById('otp0')?.focus();
-  if(btn) { btn.disabled = false; btn.textContent = 'Continue →'; }
-  // Trigger reveals on otp screen
-  document.querySelectorAll('#screen-otp .reveal').forEach(el => {
-    setTimeout(() => el.classList.add('visible'), 100);
-  });
-};
-
-// ── Verify OTP ───────────────────────────
-window.verifyOTP = async function() {
-  const token = ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7']
-    .map(id => document.getElementById(id)?.value || '').join('');
-  if(token.length !== 8) { showAuthStatus('Enter all 8 digits.', 'err'); return; }
-  const btn = document.getElementById('authVerifyBtn');
-  if(btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
-
-  const { data, error } = await sbIndex.auth.verifyOtp({ email: _authEmail, token, type: 'email' });
-
-  if(error) {
-    showAuthStatus('Incorrect code. Try again.', 'err');
-    if(btn) { btn.disabled = false; btn.textContent = 'Verify & Enter Hub →'; }
-    ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'].forEach(id => {
-      const el = document.getElementById(id);
-      if(el) { el.value = ''; el.classList.remove('filled'); }
-    });
-    document.getElementById('otp0')?.focus();
-    return;
-  }
-
-  if(data?.user) {
-    showAuthStatus('✅ Verified! Loading hub…', 'ok');
-    setTimeout(() => enterHub(), 500);
-  }
-};
-
-// ── Resend ───────────────────────────────
-window.resendOTP = async function() {
-  if(!_authEmail) return;
-  await sbIndex.auth.signInWithOtp({ email: _authEmail, options: { shouldCreateUser: true } });
-  showAuthStatus('New code sent!', 'ok');
-  ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) { el.value = ''; el.classList.remove('filled'); }
-  });
-  document.getElementById('otp0')?.focus();
-  startOtpTimer();
-};
-
-// ── Back to email ─────────────────────────
-window.backToEmail = function() {
-  clearOtpTimer();
-  showScreen('screen-email');
-  ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) { el.value = ''; el.classList.remove('filled'); }
-  });
-};
 
 // ── OTP timer ────────────────────────────
 let _timerInterval;
@@ -3629,107 +3794,13 @@ function downloadSectionAsPDF(title, contentId) {
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     SCREEN 1: EMAIL LOGIN (Full Page)
-══════════════════════════════════════════ -->
-<div id="screen-email" class="auth-screen">
-  <div class="auth-header">
-    <div class="auth-gim-tag">Goa Institute of Management</div>
-    <div class="auth-main-title">
-      GIM Placement<br><span class="line2">Prep Hub</span>
-    </div>
-    <div class="auth-main-sub">
-      The complete placement preparation environment — 130+ companies, 800+ interview questions, roadmap &amp; cheatsheets.
-    </div>
-  </div>
-
-  <div class="auth-form-wrap">
-    <!-- Already signed in state -->
-    <div id="alreadySignedIn" style="display:none;margin-bottom:12px">
-      <div class="auth-logged-bar">
-        <div class="auth-logged-email">✅ &nbsp;<span id="asiEmail">—</span></div>
-        <div class="auth-logged-out" onclick="doSignOutIndex()">Sign out</div>
-      </div>
-      <button class="auth-cta" onclick="enterHub()">Enter Prep Hub →</button>
-    </div>
-
-    <!-- Email form -->
-    <div id="emailFormWrap">
-      <input type="email" class="auth-input" id="authEmail"
-        placeholder="Enter your email address"
-        autocomplete="email"
-        onkeydown="if(event.key==='Enter')sendOTP()">
-      <button class="auth-cta" id="sendOtpBtn" onclick="sendOTP()">
-        Continue with Email →
-      </button>
-      <div class="auth-helper">
-        We'll send an 8-digit code to your inbox.<br>
-        No password · Free forever · Any email
-      </div>
-    </div>
-  </div>
-
-  <div class="auth-stats">
-    <div class="auth-stat">
-      <div class="auth-stat-n" style="color:var(--accent)">4</div>
-      <div class="auth-stat-l">Programmes</div>
-    </div>
-    <div class="auth-stat">
-      <div class="auth-stat-n" style="color:#22c55e">130+</div>
-      <div class="auth-stat-l">Companies</div>
-    </div>
-    <div class="auth-stat">
-      <div class="auth-stat-n" style="color:#f59e0b">800+</div>
-      <div class="auth-stat-l">Questions</div>
-    </div>
-    <div class="auth-stat">
-      <div class="auth-stat-n" style="color:#a78bfa">∞</div>
-      <div class="auth-stat-l">Free Forever</div>
-    </div>
-  </div>
+<!-- Programme banner (shown after selection) -->
+<div class="back-btn" id="backBtn" style="display:none" onclick="backToSelector()">← Change Programme</div>
+<div class="prog-banner" id="progBanner" style="display:none">
+  <span id="progBannerBadge" class="prog-badge"></span>
+  <span id="progBannerName"></span>
+  <span style="margin-left:auto;color:var(--text3)">GIM Placement Prep Hub</span>
 </div>
-
-<!-- ══════════════════════════════════════════
-     SCREEN 2: OTP VERIFICATION (Full Page)
-══════════════════════════════════════════ -->
-<div id="screen-otp" class="auth-screen hidden">
-  <div class="otp-back" onclick="backToEmail()">← Back</div>
-
-  <div class="auth-header" style="margin-bottom:32px">
-    <div class="auth-gim-tag">Check your inbox</div>
-    <div class="auth-main-title" style="font-size:clamp(32px,5vw,52px)">
-      Enter the<br><span class="line2">8-digit code</span>
-    </div>
-    <div class="auth-main-sub" style="margin-top:12px">Code sent to</div>
-    <div class="otp-email-badge" id="otpEmailShow">—</div>
-  </div>
-
-  <div style="position:relative;z-index:2;width:100%;max-width:400px;text-align:center">
-    <div class="otp-boxes" id="otpBoxes">
-      <input class="otp-box" id="otp0" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-      <input class="otp-box" id="otp1" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-      <input class="otp-box" id="otp2" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-      <input class="otp-box" id="otp3" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-      <input class="otp-box" id="otp4" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-      <input class="otp-box" id="otp5" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-      <input class="otp-box" id="otp6" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-      <input class="otp-box" id="otp7" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-    </div>
-
-    <button class="auth-cta" id="verifyOtpBtn" onclick="verifyOTP()" style="max-width:340px">
-      Verify &amp; Continue →
-    </button>
-
-    <div class="otp-resend">
-      Didn't receive it? &nbsp;<span onclick="resendOTP()">Resend code</span>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     PROGRAMME SELECTOR
-══════════════════════════════════════════ -->
-<div id="progSelector" style="display:none">
   <div class="prog-logo">Goa Institute of Management</div>
   <div class="prog-title">GIM <span>Placement</span><br>Prep Hub</div>
   <div class="prog-sub">Select your programme — company intel, Q&amp;A banks, roadmap &amp; cheatsheets</div>
@@ -5099,13 +5170,14 @@ const SB_KEY = 'sb_publishable_bLUTa913DWCoVFTt9r_vew_Wa_hjEbV';
 const { createClient: createSbClient } = supabase;
 const sbIndex = createSbClient(SB_URL, SB_KEY);
 
-let _authEmail = '';
+_authEmail = _authEmail || '';
 
 // ── Screen helpers
 function showScreen(id) {
   ['screen-email','screen-otp'].forEach(s => {
-    const el = document.getElementById(s);
-    if (el) el.classList.toggle('hidden', s !== id);
+    document.querySelectorAll(`#${s}`).forEach(el => {
+      el.classList.toggle('hidden', s !== id);
+    });
   });
 }
 
@@ -5132,84 +5204,139 @@ sbIndex.auth.onAuthStateChange((event, session) => {
 });
 
 // ── Status helper
-function showAuthStatus(msg, type) {
+function showAuthStatus(message, type) {
   const ids = ['authEmailStatus','authOtpStatus'];
   ids.forEach(id => {
     const el = document.getElementById(id);
-    if (el) { el.className = 'auth-status ' + type + ' show'; el.textContent = msg; }
+    if (el) { el.className = 'auth-status ' + type + ' show'; el.textContent = message; }
   });
 }
 
 // ── Step 1: Send OTP
 window.sendOTP = async function() {
-  const email = (document.getElementById('authEmail')?.value || '').trim();
+  const emailEl = getActiveAuthEmail();
+  const btn = getActiveSendButton();
+  const email = (emailEl?.value || '').trim();
+
   if (!email || !email.includes('@')) {
-    showAuthStatus('Enter a valid email address.', 'err'); return;
-  }
-  const btn = document.getElementById('authSendBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
-
-  const { error } = await sbIndex.auth.signInWithOtp({
-    email,
-    options: { shouldCreateUser: true }
-  });
-
-  if (error) {
-    showAuthStatus('Error: ' + error.message, 'err');
-    if (btn) { btn.disabled = false; btn.innerHTML = 'Continue with Email <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'; }
+    showAuthStatus('Enter a valid email address.', 'err');
+    resetButton(btn, 'Continue with Email →');
     return;
   }
 
-  _authEmail = email;
-  const badge = document.getElementById('otpEmailBadge');
-  if (badge) badge.textContent = '✉️ ' + email;
-  showScreen('screen-otp');
-  startOtpTimer();
-  document.getElementById('otp0')?.focus();
-  if (btn) { btn.disabled = false; btn.innerHTML = 'Continue with Email <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'; }
+  setLoadingButton(btn, 'Sending…');
+  showAuthStatus('Sending OTP... Please wait.', 'ok');
+
+  try {
+    const response = await withTimeout(sbIndex.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true
+      }
+    }), 20000, 'OTP request');
+    console.log('sendOTP response', response);
+
+    if (response.error) {
+      throw response.error;
+    }
+
+    _authEmail = email;
+    const badge = document.getElementById('otpEmailBadge');
+    if (badge) badge.textContent = '✉️ ' + email;
+    const emailChip = document.getElementById('otpEmailShow');
+    if (emailChip) emailChip.textContent = email;
+
+    showAuthStatus('OTP sent! Check your inbox for the 8-digit code.', 'ok');
+    showScreen('screen-otp');
+    startOtpTimer();
+    document.getElementById('otp0')?.focus();
+  } catch (error) {
+    console.error('sendOTP failed', error);
+    showAuthStatus(error?.message || 'Unable to send OTP. Check your network or email settings.', 'err');
+  } finally {
+    resetButton(btn, 'Continue with Email →');
+  }
 };
 
 // ── Step 2: Verify OTP
 window.verifyOTP = async function() {
   const token = ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7']
     .map(id => document.getElementById(id)?.value || '').join('');
-  if (token.length !== 8) { showAuthStatus('Enter all 8 digits.', 'err'); return; }
 
-  const btn = document.getElementById('authVerifyBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
+  if (token.length !== 8) {
+    showAuthStatus('Enter all 8 digits from your email.', 'err');
+    return;
+  }
 
-  const { data, error } = await sbIndex.auth.verifyOtp({
-    email: _authEmail, token, type: 'email'
-  });
+  const btn = getActiveVerifyButton();
+  setLoadingButton(btn, 'Verifying…');
 
-  if (error) {
-    showAuthStatus('Incorrect code. Try again.', 'err');
-    if (btn) { btn.disabled = false; btn.innerHTML = 'Verify &amp; Enter Hub <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'; }
+  try {
+    const response = await withTimeout(sbIndex.auth.verifyOtp({
+      email: _authEmail,
+      token,
+      type: 'email'
+    }), 20000, 'OTP verification');
+    console.log('verifyOTP response', response);
+
+    if (response.error) {
+      throw response.error;
+    }
+
+    if (response.data?.user) {
+      showAuthStatus('✅ Verified! Opening hub…', 'ok');
+      setTimeout(() => enterHub(), 500);
+    } else {
+      throw new Error('OTP verification completed without an active user session.');
+    }
+  } catch (error) {
+    console.error('verifyOTP failed', error);
+    showAuthStatus('Incorrect code or expired link. Try again.', 'err');
+    resetButton(btn, 'Verify & Enter Hub →');
     ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'].forEach(id => {
       const el = document.getElementById(id);
       if (el) { el.value = ''; el.classList.remove('filled'); }
     });
     document.getElementById('otp0')?.focus();
-    return;
-  }
-
-  if (data?.user) {
-    showAuthStatus('✅ Verified! Opening hub…', 'ok');
-    setTimeout(() => enterHub(), 500);
   }
 };
 
-// ── Resend
+// ── Resend OTP
 window.resendOTP = async function() {
-  if (!_authEmail) return;
-  await sbIndex.auth.signInWithOtp({ email: _authEmail, options: { shouldCreateUser: true } });
-  showAuthStatus('New code sent!', 'ok');
-  ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.value = ''; el.classList.remove('filled'); }
-  });
-  document.getElementById('otp0')?.focus();
-  startOtpTimer();
+  if (!_authEmail) {
+    showAuthStatus('No email selected. Please enter your email again.', 'err');
+    return;
+  }
+
+  const btn = document.getElementById('otpResendBtn');
+  setLoadingButton(btn, 'Resending…');
+
+  try {
+    const response = await withTimeout(sbIndex.auth.signInWithOtp({
+      email: _authEmail,
+      options: {
+        shouldCreateUser: true
+      }
+    }), 20000, 'OTP resend request');
+    console.log('resendOTP response', response);
+
+    if (response.error) {
+      throw response.error;
+    }
+
+    showAuthStatus('New code sent! Check your inbox.', 'ok');
+    ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.value = ''; el.classList.remove('filled'); }
+    });
+    document.getElementById('otp0')?.focus();
+    startOtpTimer();
+  } catch (error) {
+    console.error('resendOTP failed', error);
+    showAuthStatus('Unable to resend OTP. Please try again in a moment.', 'err');
+  } finally {
+    resetButton(btn, 'Resend');
+  }
 };
 
 // ── Back to email
@@ -5283,6 +5410,8 @@ function showToastIdx(msg, type) {
 function enterHub() {
   document.getElementById('screen-email')?.classList.add('hidden');
   document.getElementById('screen-otp')?.classList.add('hidden');
+  document.getElementById('authNav').style.display = 'none';
+  document.getElementById('mainNav').style.display = 'none';
   const ls = document.getElementById('loginScreen');
   if(ls) ls.style.display='none';
   document.getElementById('progSelector').style.display='flex';
@@ -5292,6 +5421,8 @@ function enterHub() {
 function showProgrammeSelector() {
   document.getElementById('screen-email')?.classList.add('hidden');
   document.getElementById('screen-otp')?.classList.add('hidden');
+  document.getElementById('authNav').style.display = 'none';
+  document.getElementById('mainNav').style.display = 'none';
   document.getElementById('mainApp').classList.remove('show');
   document.getElementById('mainApp').style.display='none';
   document.getElementById('progSelector').style.display='flex';
@@ -5301,6 +5432,7 @@ function showProgrammeSelector() {
 function backToSelector() {
   document.getElementById('mainApp').style.display='none';
   document.getElementById('mainApp').classList.remove('show');
+  document.getElementById('mainNav').style.display='none';
   document.getElementById('progSelector').style.display='flex';
   chartsDrawn = false;
 }
@@ -5312,6 +5444,8 @@ window.selectProg = function(prog) {
   document.getElementById('progSelector').style.display='none';
   document.getElementById('mainApp').style.display='block';
   document.getElementById('mainApp').classList.add('show');
+  document.getElementById('authNav').style.display='none';
+  document.getElementById('mainNav').style.display='flex';
 
   const pd = progData[prog] || progData.bda;
 
@@ -5890,6 +6024,124 @@ window.buildRoadmap = function() {
   });
   observeReveal();
 };
+
+// Final section controller: one top-nav section visible at a time.
+window.showSection = function(id, btn) {
+  const sectionIds = ['overview', 'companies', 'roles', 'roadmap', 'cheatsheets'];
+  sectionIds.forEach(sectionId => {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+    const isActive = sectionId === id;
+    section.classList.toggle('active', isActive);
+    section.style.display = isActive ? 'block' : 'none';
+  });
+
+  document.querySelectorAll('#mainNav .navbar-link').forEach(link => {
+    const target = link.getAttribute('onclick') || '';
+    link.classList.toggle('active', target.includes("'" + id + "'") || target.includes('"' + id + '"'));
+  });
+  if (btn) btn.classList.add('active');
+
+  if (id === 'overview') {
+    chartsDrawn = false;
+    setTimeout(() => {
+      drawCharts();
+      drawSectorChart(selectedProg || 'bda');
+    }, 100);
+  }
+
+  window.scrollTo({ top: 0, behavior: 'auto' });
+  observeReveal();
+};
+
+const _finalSelectProg = window.selectProg;
+window.selectProg = function(prog) {
+  if (typeof _finalSelectProg === 'function') _finalSelectProg(prog);
+  window.showSection('overview');
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  window.showSection('overview');
+});
+
+window.downloadSectionAsPDF = function(title, contentId) {
+  const source = document.getElementById(contentId);
+  if (!source) {
+    alert('This download content is not ready yet. Open the section and try again.');
+    return;
+  }
+
+  const clone = source.cloneNode(true);
+  clone.querySelectorAll('button, .download-btn, .q-tabs').forEach(el => el.remove());
+  const cleanTitle = String(title || 'GIM Placement Prep').replace(/[<>]/g, '');
+  const printable = window.open('', '_blank');
+  if (!printable) {
+    alert('Please allow pop-ups to download or print this PDF.');
+    return;
+  }
+
+  printable.document.write(`<!doctype html>
+    <html>
+      <head>
+        <title>${cleanTitle}</title>
+        <style>
+          * { box-sizing: border-box; }
+          body {
+            margin: 0;
+            padding: 32px;
+            color: #111827;
+            background: #ffffff;
+            font-family: Arial, sans-serif;
+            line-height: 1.55;
+          }
+          .print-head {
+            border-bottom: 3px solid #16a34a;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+          }
+          h1 { margin: 0 0 6px; font-size: 26px; color: #052e16; }
+          .meta { color: #4b5563; font-size: 13px; }
+          .q-item {
+            break-inside: avoid;
+            border-left: 4px solid #16a34a;
+            background: #f8fafc;
+            padding: 12px 14px;
+            margin: 10px 0;
+            border-radius: 8px;
+          }
+          .q-num { color: #16a34a; font-weight: 800; font-size: 12px; margin-bottom: 4px; }
+          .q-text { font-weight: 700; }
+          .q-hint { color: #4b5563; font-weight: 400; margin-top: 6px; font-size: 13px; }
+          .role-tag, .tag { display: inline-block; margin: 0 6px 6px 0; color: #166534; font-size: 12px; }
+          @media print { body { padding: 20mm; } }
+        </style>
+      </head>
+      <body>
+        <div class="print-head">
+          <h1>${cleanTitle}</h1>
+          <div class="meta">GIM Placement Prep Hub · Batch 2025-27</div>
+        </div>
+        ${clone.innerHTML}
+      </body>
+    </html>`);
+  printable.document.close();
+  printable.focus();
+  setTimeout(() => printable.print(), 250);
+};
+
+document.addEventListener('click', event => {
+  const btn = event.target.closest('.download-btn');
+  if (!btn) return;
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+
+  const inline = btn.getAttribute('onclick') || '';
+  const match = inline.match(/downloadSectionAsPDF\('([^']*)',\s*'([^']*)'\)/);
+  const title = btn.dataset.title || match?.[1] || btn.textContent.replace(/^↓?\s*/, '').trim() || 'GIM Placement Prep';
+  const contentId = btn.dataset.content || match?.[2] || btn.closest('[id]')?.id;
+  window.downloadSectionAsPDF(title, contentId);
+}, true);
 
 </script>
 </body>
