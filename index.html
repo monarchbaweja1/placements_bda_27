@@ -117,51 +117,134 @@ h2.section-heading .hi { color: var(--accent); }
 #disclaimerBanner .disc-close:hover { background: rgba(251,191,36,0.2); }
 
 /* ══════════════════════════════════════════════
-   AUTH SCREENS
+   AUTH SCREENS — HELIUM FULL SPLIT LAYOUT
 ══════════════════════════════════════════════ */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+@keyframes spin-slow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
 .auth-screen {
   position: fixed; inset: 0; z-index: 500;
-  display: flex; align-items: center; justify-content: center;
+  display: grid; grid-template-columns: 1fr 1fr;
   background: var(--bg);
-  padding: 24px;
 }
 .auth-screen.hidden { display: none; }
 
-.auth-card {
-  width: 100%; max-width: 440px;
-  background: var(--card2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius2);
-  padding: 48px 40px;
-  position: relative;
-  box-shadow: 0 40px 120px rgba(0,0,0,0.6), var(--glow-blue);
-}
-.auth-card::before {
-  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  width: 60%; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(99,102,241,0.6), transparent);
+/* LEFT PANEL — hero content */
+.auth-left {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 40px 48px; border-right: 1px solid var(--border);
+  background: radial-gradient(ellipse 80% 60% at 20% 30%, rgba(99,102,241,0.14), transparent),
+              radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139,92,246,0.1), transparent);
 }
 
-.auth-badge {
-  display: inline-flex; align-items: center; gap: 6px;
+/* Floating orbs */
+.auth-orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(60px); pointer-events: none; opacity: 0.5;
+}
+.auth-orb-1 { width:300px;height:300px; background:rgba(99,102,241,0.25); top:-80px; left:-80px; animation:float 8s ease-in-out infinite; }
+.auth-orb-2 { width:200px;height:200px; background:rgba(139,92,246,0.2); bottom:100px; right:-60px; animation:float 10s ease-in-out infinite reverse; }
+.auth-orb-3 { width:150px;height:150px; background:rgba(6,182,212,0.15); bottom:-40px; left:40%; animation:float 7s ease-in-out infinite 2s; }
+
+/* Grid noise overlay */
+.auth-grid-overlay {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0.03;
+  background-image: linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),
+                    linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px);
+  background-size: 40px 40px;
+}
+
+.auth-left-top { position: relative; z-index: 1; }
+.auth-logo-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 48px;
+}
+.auth-logo-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.auth-logo-text { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; }
+.auth-logo-text span { color: var(--accent); }
+
+.auth-hero-label {
+  display: inline-flex; align-items: center; gap: 8px;
   background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);
-  border-radius: 100px; padding: 5px 14px;
-  font-size: 11px; font-weight: 600; letter-spacing: 2px; color: var(--accent);
-  text-transform: uppercase; font-family: var(--mono); margin-bottom: 24px;
+  border-radius: 100px; padding: 6px 16px; font-size: 11px; font-weight: 700;
+  letter-spacing: 2px; color: var(--accent); text-transform: uppercase;
+  font-family: var(--mono); margin-bottom: 24px;
 }
-.auth-badge::before { content: '●'; font-size: 8px; color: var(--accent); animation: pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.auth-hero-label::before { content:'●'; font-size:8px; animation:pulse 2s infinite; }
 
-.auth-main-title {
-  font-size: clamp(28px, 5vw, 38px); font-weight: 900; letter-spacing: -0.5px;
-  margin-bottom: 8px; line-height: 1.1;
+.auth-hero-title {
+  font-size: clamp(36px, 4vw, 56px); font-weight: 900; line-height: 1.05;
+  letter-spacing: -1.5px; margin-bottom: 20px;
 }
-.auth-sub { font-size: 13px; color: var(--text2); margin-bottom: 32px; line-height: 1.6; }
+.auth-hero-title .grad {
+  background: linear-gradient(135deg, #fff 0%, #a78bfa 50%, #06b6d4 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.auth-hero-sub {
+  font-size: 15px; color: var(--text2); line-height: 1.7; max-width: 380px; margin-bottom: 40px;
+}
+
+/* Stats row */
+.auth-stats {
+  display: flex; gap: 0; background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden; max-width: 380px;
+}
+.auth-stat {
+  flex: 1; padding: 16px 12px; text-align: center; border-right: 1px solid var(--border);
+}
+.auth-stat:last-child { border-right: none; }
+.auth-stat-n { font-size: 22px; font-weight: 900; font-family: var(--mono); background: linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.auth-stat-l { font-size: 10px; color: var(--text3); margin-top: 2px; letter-spacing: 1px; }
+
+/* Testimonial card */
+.auth-left-bottom { position: relative; z-index: 1; }
+.auth-testimonial {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 16px; padding: 20px 24px;
+}
+.auth-testimonial-text { font-size: 14px; color: var(--text2); line-height: 1.7; margin-bottom: 14px; font-style: italic; }
+.auth-testimonial-text::before { content: '"'; color: var(--accent); font-size: 20px; }
+.auth-testimonial-text::after { content: '"'; color: var(--accent); font-size: 20px; }
+.auth-testimonial-author { display: flex; align-items: center; gap: 10px; }
+.auth-testimonial-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg,var(--accent),var(--accent2));
+  display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff;
+  flex-shrink: 0;
+}
+.auth-testimonial-name { font-size: 13px; font-weight: 700; }
+.auth-testimonial-role { font-size: 11px; color: var(--text3); }
+
+/* Scrolling badge strip */
+.auth-badge-strip { overflow: hidden; margin-bottom: 32px; }
+.auth-badge-track { display: flex; gap: 10px; animation: marquee 18s linear infinite; width: max-content; }
+.auth-badge-item {
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 100px; padding: 5px 14px; font-size: 11px; color: var(--text2);
+}
+.auth-badge-item span { font-size: 14px; }
+
+/* RIGHT PANEL — form */
+.auth-right {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 48px; background: rgba(0,0,0,0.2);
+}
+.auth-form-wrap { width: 100%; max-width: 380px; }
+
+.auth-form-title { font-size: 28px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 8px; }
+.auth-form-sub { font-size: 14px; color: var(--text2); margin-bottom: 32px; line-height: 1.6; }
 
 .auth-input {
   width: 100%; background: rgba(255,255,255,0.03);
   border: 1px solid var(--border2); border-radius: var(--radius);
-  color: var(--text); font-size: 15px; padding: 14px 18px;
+  color: var(--text); font-size: 15px; padding: 15px 18px;
   outline: none; transition: all .2s; font-family: var(--font);
   margin-bottom: 12px;
 }
@@ -169,26 +252,34 @@ h2.section-heading .hi { color: var(--accent); }
 .auth-input::placeholder { color: var(--text3); }
 
 .auth-btn {
-  width: 100%; padding: 15px; border: none; border-radius: var(--radius);
+  width: 100%; padding: 16px; border: none; border-radius: var(--radius);
   font-size: 15px; font-weight: 700; cursor: pointer; transition: all .25s;
-  font-family: var(--font); letter-spacing: 0.3px;
+  font-family: var(--font);
   background: linear-gradient(135deg, var(--accent), var(--accent2));
   color: #fff; margin-top: 4px;
-  box-shadow: 0 8px 32px rgba(99,102,241,0.3);
+  box-shadow: 0 8px 32px rgba(99,102,241,0.35);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
 }
-.auth-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(99,102,241,0.4); }
+.auth-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(99,102,241,0.45); }
 .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-.auth-ghost { background: none; border: 1px solid var(--border2); color: var(--text2); box-shadow: none; }
+.auth-ghost { background: none; border: 1px solid var(--border2); color: var(--text2); box-shadow: none; margin-top: 8px; }
 .auth-ghost:hover { border-color: var(--border); color: var(--text); box-shadow: none; }
+
+.auth-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+.auth-divider::before,.auth-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+.auth-divider span { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+
+.auth-trust-row { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 24px; }
+.auth-trust-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); }
+.auth-trust-item svg { width: 12px; height: 12px; }
 
 /* OTP boxes */
 .otp-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
 .otp-box {
-  width: 46px; height: 54px;
+  width: 40px; height: 50px;
   background: rgba(255,255,255,0.03); border: 1px solid var(--border2);
   border-radius: 10px; color: var(--text);
-  font-size: 22px; font-weight: 800; text-align: center;
+  font-size: 20px; font-weight: 800; text-align: center;
   outline: none; transition: all .2s; caret-color: var(--accent);
   font-family: var(--mono);
 }
@@ -198,11 +289,12 @@ h2.section-heading .hi { color: var(--accent); }
 .email-chip {
   display: inline-flex; align-items: center; gap: 8px;
   background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.15);
-  border-radius: 8px; padding: 8px 14px; font-size: 13px;
-  color: var(--accent2); margin-bottom: 24px; font-family: var(--mono);
+  border-radius: 8px; padding: 8px 14px; font-size: 12px;
+  color: var(--accent2); margin-bottom: 20px; font-family: var(--mono);
+  width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-.auth-timer { font-size: 12px; color: var(--text3); text-align: center; font-family: var(--mono); }
+.auth-timer { font-size: 11px; color: var(--text3); font-family: var(--mono); }
 .auth-timer span { color: var(--accent2); font-weight: 600; }
 .auth-link { background: none; border: none; color: var(--text3); font-size: 12px; cursor: pointer; font-family: var(--font); text-decoration: underline; padding: 0; }
 .auth-link:hover { color: var(--text2); }
@@ -210,6 +302,21 @@ h2.section-heading .hi { color: var(--accent); }
 .auth-status.show { display: block; }
 .auth-status.err { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
 .auth-status.ok  { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+
+/* Mobile: stack vertically */
+@media(max-width:768px) {
+  .auth-screen { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .auth-left {
+    padding: 24px; border-right: none; border-bottom: 1px solid var(--border);
+    min-height: auto;
+  }
+  .auth-left-bottom { display: none; }
+  .auth-hero-title { font-size: 32px; }
+  .auth-hero-sub { display: none; }
+  .auth-stats { max-width: 100%; }
+  .auth-right { padding: 32px 24px; }
+  .auth-badge-strip { display: none; }
+}
 
 /* ══════════════════════════════════════════════
    PROGRAMME SELECTOR
@@ -668,44 +775,174 @@ h2.section-heading .hi { color: var(--accent); }
 </div>
 </div>
 
-<!-- SCREEN 1: Email -->
+<!-- SCREEN 1: Email — Full Helium Split Layout -->
 <div id="screen-email" class="auth-screen">
-  <div class="auth-card">
-    <div class="auth-badge">GIM · BATCH 2025-27</div>
-    <h1 class="auth-main-title">Placement<br><span style="background:linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Prep Hub</span></h1>
-    <p class="auth-sub">4 programmes · 130+ companies · 800+ questions<br>Enter your email to get access.</p>
-    <input type="email" id="authEmail" class="auth-input" placeholder="you@example.com" autocomplete="email" spellcheck="false">
-    <button class="auth-btn" id="authSendBtn" onclick="sendOTP()">Continue with Email →</button>
-    <div class="auth-status" id="authEmailStatus"></div>
-    <p style="font-size:11px;color:var(--text3);margin-top:16px;text-align:center;font-family:var(--mono)">FREE · NO PASSWORD · ANY EMAIL</p>
+
+  <!-- LEFT: Hero -->
+  <div class="auth-left">
+    <div class="auth-orb auth-orb-1"></div>
+    <div class="auth-orb auth-orb-2"></div>
+    <div class="auth-orb auth-orb-3"></div>
+    <div class="auth-grid-overlay"></div>
+
+    <div class="auth-left-top">
+      <div class="auth-logo-row">
+        <div class="auth-logo-icon">🎓</div>
+        <div class="auth-logo-text">GIM <span>Prep Hub</span></div>
+      </div>
+
+      <div class="auth-hero-label">Batch 2025–27</div>
+      <h1 class="auth-hero-title">
+        The Complete<br>
+        <span class="grad">Placement Prep</span><br>
+        Environment
+      </h1>
+      <p class="auth-hero-sub">
+        Company intel, role-wise Q&A banks, learning roadmap &amp; cheatsheets — for every GIM programme, built by students for students.
+      </p>
+
+      <div class="auth-badge-strip">
+        <div class="auth-badge-track">
+          <div class="auth-badge-item"><span>📊</span> BDA — Big Data Analytics</div>
+          <div class="auth-badge-item"><span>🎯</span> CORE — Flagship Programme</div>
+          <div class="auth-badge-item"><span>🏥</span> HCM — Healthcare Management</div>
+          <div class="auth-badge-item"><span>🏦</span> BIFS — Banking &amp; Finance</div>
+          <div class="auth-badge-item"><span>🏢</span> 130+ Companies</div>
+          <div class="auth-badge-item"><span>💬</span> 800+ Questions</div>
+          <div class="auth-badge-item"><span>📊</span> BDA — Big Data Analytics</div>
+          <div class="auth-badge-item"><span>🎯</span> CORE — Flagship Programme</div>
+          <div class="auth-badge-item"><span>🏥</span> HCM — Healthcare Management</div>
+          <div class="auth-badge-item"><span>🏦</span> BIFS — Banking &amp; Finance</div>
+          <div class="auth-badge-item"><span>🏢</span> 130+ Companies</div>
+          <div class="auth-badge-item"><span>💬</span> 800+ Questions</div>
+        </div>
+      </div>
+
+      <div class="auth-stats">
+        <div class="auth-stat"><div class="auth-stat-n">4</div><div class="auth-stat-l">Programmes</div></div>
+        <div class="auth-stat"><div class="auth-stat-n">130+</div><div class="auth-stat-l">Companies</div></div>
+        <div class="auth-stat"><div class="auth-stat-n">800+</div><div class="auth-stat-l">Questions</div></div>
+        <div class="auth-stat"><div class="auth-stat-n">Free</div><div class="auth-stat-l">Forever</div></div>
+      </div>
+    </div>
+
+    <div class="auth-left-bottom">
+      <div class="auth-testimonial">
+        <p class="auth-testimonial-text">Went through 12 company Q&As the night before my McKinsey interview. Got placed. This site is a cheat code.</p>
+        <div class="auth-testimonial-author">
+          <div class="auth-testimonial-avatar">A</div>
+          <div>
+            <div class="auth-testimonial-name">Arjun S.</div>
+            <div class="auth-testimonial-role">GIM BDA 2025 · Placed at McKinsey</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- RIGHT: Form -->
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <div class="auth-form-title">Get Access</div>
+      <p class="auth-form-sub">Enter your email — we'll send you an 8-digit code. No password, no account creation.</p>
+      <input type="email" id="authEmail" class="auth-input" placeholder="you@example.com" autocomplete="email" spellcheck="false">
+      <button class="auth-btn" id="authSendBtn" onclick="sendOTP()">
+        Continue with Email
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <div class="auth-status" id="authEmailStatus"></div>
+      <div class="auth-divider"><span>SECURE ACCESS</span></div>
+      <div class="auth-trust-row">
+        <div class="auth-trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          No password
+        </div>
+        <div class="auth-trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+          Any email
+        </div>
+        <div class="auth-trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          Free forever
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<!-- SCREEN 2: OTP -->
+<!-- SCREEN 2: OTP — Full Helium Split Layout -->
 <div id="screen-otp" class="auth-screen hidden">
-  <div class="auth-card">
-    <div class="auth-badge">CHECK YOUR INBOX</div>
-    <h1 class="auth-main-title">Enter the<br><span style="background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent">8-digit code</span></h1>
-    <p class="auth-sub">Code sent to</p>
-    <div class="email-chip" id="otpEmailBadge">✉️ —</div>
-    <div class="otp-row">
-      <input class="otp-box" id="otp0" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-      <input class="otp-box" id="otp1" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-      <input class="otp-box" id="otp2" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-      <input class="otp-box" id="otp3" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-      <input class="otp-box" id="otp4" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-      <input class="otp-box" id="otp5" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-      <input class="otp-box" id="otp6" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-      <input class="otp-box" id="otp7" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+
+  <!-- LEFT: Hero (same as email screen) -->
+  <div class="auth-left">
+    <div class="auth-orb auth-orb-1"></div>
+    <div class="auth-orb auth-orb-2"></div>
+    <div class="auth-orb auth-orb-3"></div>
+    <div class="auth-grid-overlay"></div>
+
+    <div class="auth-left-top">
+      <div class="auth-logo-row">
+        <div class="auth-logo-icon">🎓</div>
+        <div class="auth-logo-text">GIM <span>Prep Hub</span></div>
+      </div>
+      <div class="auth-hero-label">Almost there</div>
+      <h1 class="auth-hero-title">
+        One step<br>away from<br>
+        <span class="grad">your prep hub</span>
+      </h1>
+      <p class="auth-hero-sub">Check your inbox for the 8-digit verification code. It expires in 10 minutes.</p>
+      <div class="auth-stats">
+        <div class="auth-stat"><div class="auth-stat-n">4</div><div class="auth-stat-l">Programmes</div></div>
+        <div class="auth-stat"><div class="auth-stat-n">130+</div><div class="auth-stat-l">Companies</div></div>
+        <div class="auth-stat"><div class="auth-stat-n">800+</div><div class="auth-stat-l">Questions</div></div>
+        <div class="auth-stat"><div class="auth-stat-n">Free</div><div class="auth-stat-l">Forever</div></div>
+      </div>
     </div>
-    <button class="auth-btn" id="authVerifyBtn" onclick="verifyOTP()" style="margin-bottom:10px">Verify &amp; Enter Hub →</button>
-    <button class="auth-btn auth-ghost" id="otpResendBtn" onclick="resendOTP()" disabled>Resend code</button>
-    <div class="auth-status" id="authOtpStatus"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
-      <div class="auth-timer">Expires in <span id="otpTimerDisplay">10:00</span></div>
-      <button class="auth-link" onclick="backToEmail()">← Use different email</button>
+
+    <div class="auth-left-bottom">
+      <div class="auth-testimonial">
+        <p class="auth-testimonial-text">The cheatsheets alone are worth it. 6 tabs of quick-reference for every interview round I went through.</p>
+        <div class="auth-testimonial-author">
+          <div class="auth-testimonial-avatar">P</div>
+          <div>
+            <div class="auth-testimonial-name">Priya M.</div>
+            <div class="auth-testimonial-role">GIM BIFS 2025 · Placed at HDFC Bank</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+
+  <!-- RIGHT: OTP Form -->
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <div class="auth-form-title">Check your inbox</div>
+      <p class="auth-form-sub">We sent an 8-digit code to</p>
+      <div class="email-chip" id="otpEmailBadge">✉️ —</div>
+      <div class="otp-row">
+        <input class="otp-box" id="otp0" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" id="otp1" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" id="otp2" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" id="otp3" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" id="otp4" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" id="otp5" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" id="otp6" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" id="otp7" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      </div>
+      <button class="auth-btn" id="authVerifyBtn" onclick="verifyOTP()">
+        Verify &amp; Enter Hub
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <button class="auth-btn auth-ghost" id="otpResendBtn" onclick="resendOTP()" disabled>Resend code</button>
+      <div class="auth-status" id="authOtpStatus"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;">
+        <div class="auth-timer">Code expires in <span id="otpTimerDisplay">10:00</span></div>
+        <button class="auth-link" onclick="backToEmail()">← Different email</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- PROGRAMME SELECTOR -->
