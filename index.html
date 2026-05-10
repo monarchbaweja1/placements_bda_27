@@ -3960,18 +3960,34 @@ const SB_KEY = 'sb_publishable_bLUTa913DWCoVFTt9r_vew_Wa_hjEbV';
 const { createClient: createSbClient } = supabase;
 const sbIndex = createSbClient(SB_URL, SB_KEY);
 
-// ── Check session on load
+// ── Check session on load (handle magic link redirect from URL hash)
 sbIndex.auth.onAuthStateChange((event, session) => {
   if (session?.user) {
+    // Signed in — show "Enter Hub" button
     showLoggedIn(session.user.email);
-  } else {
+    // If this was a redirect from magic link, auto-enter after brief delay
+    if (event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
+      setTimeout(() => {
+        window.history.replaceState(null, '', window.location.pathname);
+        enterHub();
+      }, 800);
+    }
+  } else if (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
     showLoginForm();
   }
 });
 
+// Initial session check
 sbIndex.auth.getSession().then(({ data: { session } }) => {
   if (session?.user) {
     showLoggedIn(session.user.email);
+  } else {
+    // No session — check if URL has token (magic link redirect)
+    const hash = window.location.hash;
+    if (!hash.includes('access_token')) {
+      showLoginForm();
+    }
+    // If hash has token, onAuthStateChange will handle it
   }
 });
 
