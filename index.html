@@ -1154,6 +1154,14 @@ h2.section-h2 {
      SCRIPTS
 ═══════════════════════════════════════ -->
 <script>
+// ── Supabase init (available to all auth functions below)
+const SB_URL = 'https://dsrwktqgpngrviavceal.supabase.co';
+const SB_KEY = 'sb_publishable_bLUTa913DWCoVFTt9r_vew_Wa_hjEbV';
+const { createClient: createSbClient } = supabase;
+const sbIndex = createSbClient(SB_URL, SB_KEY);
+let _authEmail = '';
+
+
 if(localStorage.getItem('discSeen')==='1')document.getElementById('disclaimerBanner').style.display='none';
 
 // ── Scroll reveal ────────────────────────
@@ -1395,9 +1403,11 @@ function drawSectorChart(prog) {
   const lbl = document.getElementById('sectorChartLabel');
   if(lbl) lbl.textContent = 'Sector Distribution — ' + prog.toUpperCase();
 }
+
 </script>
 
 <script>
+
 // ═══════════════════════════════════════════════════════
 // MAIN DATA + LOGIC (preserved from original)
 // ═══════════════════════════════════════════════════════
@@ -5091,189 +5101,9 @@ window.addEventListener('DOMContentLoaded', function() {
 
 
 
-// ═══════════════════════════════════════════
-// SUPABASE AUTH — FULL PAGE FLOW
-// ═══════════════════════════════════════════
-const SB_URL = 'https://dsrwktqgpngrviavceal.supabase.co';
-const SB_KEY = 'sb_publishable_bLUTa913DWCoVFTt9r_vew_Wa_hjEbV';
-const { createClient: createSbClient } = supabase;
-const sbIndex = createSbClient(SB_URL, SB_KEY);
 
-let _authEmail = '';
+// Supabase auth handled in auth script above
 
-// ── Screen helpers
-function showScreen(id) {
-  ['screen-email','screen-otp'].forEach(s => {
-    const el = document.getElementById(s);
-    if (el) el.classList.toggle('hidden', s !== id);
-  });
-}
-
-function enterHub() {
-  document.querySelectorAll('.auth-screen').forEach(s => s.classList.add('hidden'));
-  document.getElementById('progSelector').style.display = 'flex';
-}
-
-// ── On load: check existing session
-sbIndex.auth.getSession().then(({ data: { session } }) => {
-  if (session?.user) {
-    enterHub();
-  } else {
-    showScreen('screen-email');
-  }
-});
-
-sbIndex.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN' && session?.user) {
-    enterHub();
-  } else if (event === 'SIGNED_OUT') {
-    showScreen('screen-email');
-  }
-});
-
-// ── Status helper
-function showAuthStatus(msg, type) {
-  const ids = ['authEmailStatus','authOtpStatus'];
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.className = 'auth-status ' + type + ' show'; el.textContent = msg; }
-  });
-}
-
-// ── Step 1: Send OTP
-window.sendOTP = async function() {
-  const email = (document.getElementById('authEmail')?.value || '').trim();
-  if (!email || !email.includes('@')) {
-    showAuthStatus('Enter a valid email address.', 'err'); return;
-  }
-  const btn = document.getElementById('authSendBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
-
-  const { error } = await sbIndex.auth.signInWithOtp({
-    email,
-    options: { shouldCreateUser: true }
-  });
-
-  if (error) {
-    showAuthStatus('Error: ' + error.message, 'err');
-    if (btn) { btn.disabled = false; btn.innerHTML = 'Continue with Email <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'; }
-    return;
-  }
-
-  _authEmail = email;
-  const badge = document.getElementById('otpEmailBadge');
-  if (badge) badge.textContent = '✉️ ' + email;
-  showScreen('screen-otp');
-  startOtpTimer();
-  document.getElementById('otp0')?.focus();
-  if (btn) { btn.disabled = false; btn.innerHTML = 'Continue with Email <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'; }
-};
-
-// ── Step 2: Verify OTP
-window.verifyOTP = async function() {
-  const token = ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7']
-    .map(id => document.getElementById(id)?.value || '').join('');
-  if (token.length !== 8) { showAuthStatus('Enter all 8 digits.', 'err'); return; }
-
-  const btn = document.getElementById('authVerifyBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
-
-  const { data, error } = await sbIndex.auth.verifyOtp({
-    email: _authEmail, token, type: 'email'
-  });
-
-  if (error) {
-    showAuthStatus('Incorrect code. Try again.', 'err');
-    if (btn) { btn.disabled = false; btn.innerHTML = 'Verify &amp; Enter Hub <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'; }
-    ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) { el.value = ''; el.classList.remove('filled'); }
-    });
-    document.getElementById('otp0')?.focus();
-    return;
-  }
-
-  if (data?.user) {
-    showAuthStatus('✅ Verified! Opening hub…', 'ok');
-    setTimeout(() => enterHub(), 500);
-  }
-};
-
-// ── Resend
-window.resendOTP = async function() {
-  if (!_authEmail) return;
-  await sbIndex.auth.signInWithOtp({ email: _authEmail, options: { shouldCreateUser: true } });
-  showAuthStatus('New code sent!', 'ok');
-  ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.value = ''; el.classList.remove('filled'); }
-  });
-  document.getElementById('otp0')?.focus();
-  startOtpTimer();
-};
-
-// ── Back to email
-window.backToEmail = function() {
-  clearOtpTimer();
-  showScreen('screen-email');
-  ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.value = ''; el.classList.remove('filled'); }
-  });
-};
-
-// ── Sign out
-window.doSignOutIndex = async function() {
-  await sbIndex.auth.signOut();
-};
-
-// ── OTP box keyboard navigation (auto-advance)
-document.addEventListener('DOMContentLoaded', function() {
-  const boxes = ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'];
-  boxes.forEach((id, i) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener('input', function() {
-      this.value = this.value.replace(/[^0-9]/g,'').slice(-1);
-      if (this.value) {
-        this.classList.add('filled');
-        if (i < 7) document.getElementById(boxes[i+1]).focus();
-        // Auto-verify when all filled
-        const allFilled = boxes.every(bid => document.getElementById(bid).value);
-        if (allFilled) verifyOTP();
-      } else {
-        this.classList.remove('filled');
-      }
-    });
-    el.addEventListener('keydown', function(e) {
-      if (e.key === 'Backspace' && !this.value && i > 0) {
-        document.getElementById(boxes[i-1]).focus();
-      }
-      if (e.key === 'Enter') verifyOTP();
-    });
-    // Handle paste of full code
-    el.addEventListener('paste', function(e) {
-      e.preventDefault();
-      const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g,'');
-      if (paste.length === 6) {
-        boxes.forEach((bid, bi) => {
-          const b = document.getElementById(bid);
-          b.value = paste[bi] || '';
-          b.classList.toggle('filled', !!b.value);
-        });
-        verifyOTP();
-      }
-    });
-  });
-});
-
-function showToastIdx(msg, type) {
-  const t = document.getElementById('toast');
-  if (!t) return;
-  t.textContent = msg;
-  t.className = 'toast ' + (type === 'err' ? 'err' : 'ok') + ' show';
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
 
 // ════════════════════════════════════════════════════════════════
 // OVERRIDES — adapt old sidebar logic to new top-nav layout
@@ -5890,6 +5720,7 @@ window.buildRoadmap = function() {
   });
   observeReveal();
 };
+
 
 </script>
 </body>
