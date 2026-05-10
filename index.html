@@ -6064,6 +6064,25 @@ document.addEventListener('DOMContentLoaded', () => {
   window.showSection('overview');
 });
 
+function showAuthGate() {
+  const legacyLogin = document.getElementById('loginScreen');
+  if (legacyLogin) legacyLogin.style.display = 'none';
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('mainApp').classList.remove('show');
+  document.getElementById('mainNav').style.display = 'none';
+  document.getElementById('progSelector').style.display = 'none';
+  document.getElementById('authNav').style.display = 'flex';
+  document.getElementById('screen-otp')?.classList.add('hidden');
+  document.getElementById('screen-email')?.classList.remove('hidden');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  showAuthGate();
+  if (typeof sbIndex !== 'undefined' && sbIndex?.auth) {
+    sbIndex.auth.signOut().finally(showAuthGate);
+  }
+});
+
 window.downloadSectionAsPDF = function(title, contentId) {
   const source = document.getElementById(contentId);
   if (!source) {
