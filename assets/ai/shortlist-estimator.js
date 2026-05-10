@@ -35,6 +35,17 @@
       <div class="gim-sl-body" id="gimSlBody">
         <!-- Form -->
         <div id="gimSlFormView">
+          <div class="gim-sl-upload-row">
+            <div>
+              <label class="gim-sl-field-label" for="gimSlFile">Upload CV</label>
+              <input class="gim-sl-file" id="gimSlFile" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+            </div>
+            <div class="gim-sl-upload-meta">
+              <strong id="gimSlFileName">PDF, DOCX, or TXT</strong>
+              <span id="gimSlUploadStatus">Upload a CV to auto-fill skills and project signals.</span>
+            </div>
+          </div>
+
           <div class="gim-sl-grid-2">
             <div>
               <label class="gim-sl-field-label" for="gimSlCgpa">Your CGPA</label>
@@ -104,6 +115,9 @@
   // ── Refs ─────────────────────────────────────────────────────────
   const trigger      = wrap.querySelector('.gim-sl-trigger');
   const closeBtn     = overlay.querySelector('.gim-sl-close-btn');
+  const fileInput    = overlay.querySelector('#gimSlFile');
+  const fileNameEl   = overlay.querySelector('#gimSlFileName');
+  const uploadStatusEl = overlay.querySelector('#gimSlUploadStatus');
   const cgpaInput    = overlay.querySelector('#gimSlCgpa');
   const progDisplay  = overlay.querySelector('#gimSlProgDisplay');
   const skillsInput  = overlay.querySelector('#gimSlSkills');
@@ -120,6 +134,7 @@
   const resView      = overlay.querySelector('#gimSlResultsView');
 
   let companies = [];
+  let extractedResumeText = '';
 
   // ── Interaction ──────────────────────────────────────────────────
   trigger.addEventListener('click', open);
@@ -127,12 +142,15 @@
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) close(); });
   document.addEventListener('gim:programme-change', updateScope);
+  setInterval(updateScope, 800);
 
   cgpaInput.addEventListener('input', checkReady);
+  fileInput.addEventListener('change', handleFileUpload);
   addBtn.addEventListener('click', addCompany);
   compInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCompany(); } });
 
   function open() {
+    if (!isProgrammeViewActive()) return;
     overlay.classList.add('open');
     updateScope();
     setTimeout(() => cgpaInput.focus(), 60);
@@ -147,6 +165,15 @@
   }
 
   function updateScope() {
+    const active = isProgrammeViewActive();
+    wrap.hidden = !active;
+    if (!active) {
+      overlay.classList.remove('open');
+      if (scopeEl) scopeEl.textContent = 'Select a programme to scope estimates';
+      if (progDisplay) progDisplay.value = '';
+      return;
+    }
+
     const code = getProgrammeCode();
     if (scopeEl) scopeEl.textContent = code
       ? `${code.toUpperCase()} · AI-based estimate · Not a guarantee`
@@ -159,6 +186,37 @@
   function checkReady() {
     const cgpa = parseFloat(cgpaInput.value);
     submitBtn.disabled = !(companies.length > 0 && !isNaN(cgpa) && cgpa >= 0 && cgpa <= 10);
+  }
+
+  async function handleFileUpload() {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+
+    errorEl.style.display = 'none';
+    fileNameEl.textContent = file.name;
+    uploadStatusEl.textContent = 'Extracting resume text...';
+    fileInput.disabled = true;
+
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('Please sign in before uploading a resume.');
+      const payload = await window.GimResumeUpload.extractResumeFile(file, token);
+      extractedResumeText = payload.text;
+
+      const derivedSkills = window.GimResumeUpload.deriveSkills(payload.text);
+      const derivedSummary = window.GimResumeUpload.deriveProfileSummary(payload.text);
+      if (derivedSkills) skillsInput.value = derivedSkills;
+      if (derivedSummary) projInput.value = derivedSummary.slice(0, 4000);
+
+      uploadStatusEl.textContent = `Extracted ${payload.characters.toLocaleString()} characters. Auto-filled fields are editable.`;
+      checkReady();
+    } catch (err) {
+      extractedResumeText = '';
+      uploadStatusEl.textContent = 'Upload failed.';
+      showError(err.message || 'Could not extract this resume.');
+    } finally {
+      fileInput.disabled = false;
+    }
   }
 
   // ── Company chip management ──────────────────────────────────────
@@ -224,7 +282,7 @@
       const res = await fetch('/api/ai/shortlist-probability', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ programme, cgpa, skills, projects, targetCompanies: companies })
+        body: JSON.stringify({ programme, cgpa, skills, projects, resumeText: extractedResumeText, targetCompanies: companies })
       });
       const payload = await res.json();
       if (!res.ok || !payload.ok) throw new Error(payload?.error?.message || 'Estimation failed.');
@@ -326,6 +384,10 @@
 
   function resetForm() {
     companies = [];
+    extractedResumeText = '';
+    fileInput.value = '';
+    fileNameEl.textContent = 'PDF, DOCX, or TXT';
+    uploadStatusEl.textContent = 'Upload a CV to auto-fill skills and project signals.';
     renderChips();
     cgpaInput.value = '';
     skillsInput.value = '';
@@ -341,6 +403,14 @@
     const pill = document.getElementById('progPillName')?.textContent?.trim().toLowerCase();
     if (pill && pill !== 'programme') return pill;
     return null;
+  }
+
+  function isProgrammeViewActive() {
+    const app = document.getElementById('mainApp');
+    const nav = document.getElementById('mainNav');
+    const appVisible = !!app && app.classList.contains('show') && app.style.display !== 'none';
+    const navVisible = !!nav && nav.style.display !== 'none';
+    return appVisible && navVisible && !!getProgrammeCode();
   }
 
   async function getToken() {

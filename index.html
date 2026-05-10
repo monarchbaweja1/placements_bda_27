@@ -6112,7 +6112,17 @@ window.showSection = function(id, btn) {
 const _finalSelectProg = window.selectProg;
 window.selectProg = function(prog) {
   if (typeof _finalSelectProg === 'function') _finalSelectProg(prog);
+  window.selectedProg = prog;
+  document.dispatchEvent(new CustomEvent('gim:programme-change', { detail: { programme: prog } }));
   window.showSection('overview');
+};
+
+const _finalBackToSelector = window.backToSelector;
+window.backToSelector = function() {
+  if (typeof _finalBackToSelector === 'function') _finalBackToSelector();
+  selectedProg = null;
+  window.selectedProg = null;
+  document.dispatchEvent(new CustomEvent('gim:programme-change', { detail: { programme: null } }));
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -6134,6 +6144,8 @@ function showAuthGate() {
 
 window.goHomeLogin = function() {
   selectedProg = null;
+  window.selectedProg = null;
+  document.dispatchEvent(new CustomEvent('gim:programme-change', { detail: { programme: null } }));
   clearOtpTimer?.();
   showAuthGate();
 };
@@ -6239,6 +6251,7 @@ document.addEventListener('click', event => {
 </script>
 <div id="gim-ai-root"></div>
 <script src="assets/ai/ai-assistant.js" defer></script>
+<script src="assets/ai/resume-upload.js" defer></script>
 <script src="assets/ai/resume-analyzer.js" defer></script>
 <script src="assets/ai/shortlist-estimator.js" defer></script>
 </body>

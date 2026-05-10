@@ -47,8 +47,9 @@ export default async function handler(req, res) {
       });
     }
 
-    const skills   = String(body.skills   || '').trim().slice(0, 4000);
-    const projects = String(body.projects  || '').trim().slice(0, 4000);
+    const skills     = String(body.skills     || '').trim().slice(0, 4000);
+    const projects   = String(body.projects   || '').trim().slice(0, 4000);
+    const resumeText = String(body.resumeText || '').trim().slice(0, 80_000);
 
     const rawCompanies = Array.isArray(body.targetCompanies) ? body.targetCompanies : [];
     const targetCompanies = rawCompanies
@@ -68,6 +69,7 @@ export default async function handler(req, res) {
       cgpa,
       skills,
       projects,
+      resumeText,
       targetCompanies
     });
 
@@ -79,7 +81,7 @@ export default async function handler(req, res) {
         .insert({
           user_id: auth.user.id,
           programme_id: access.userContext.programme?.id,
-          input_profile: { cgpa, skills, projects },
+          input_profile: { cgpa, skills, projects, resumeTextChars: resumeText.length },
           probability: est.probability,
           reasons: est.reasons || [],
           caveats: est.caveat

@@ -11,6 +11,10 @@
   font-family: var(--font, Inter, system-ui, sans-serif);
 }
 
+.gim-sl-wrap[hidden] {
+  display: none !important;
+}
+
 .gim-sl-trigger {
   width: 48px;
   height: 48px;
@@ -143,6 +147,51 @@
 }
 
 /* ── Form ── */
+.gim-sl-upload-row {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+.gim-sl-file {
+  width: 100%;
+  border: 1px solid rgba(31,41,51,0.13);
+  border-radius: 10px;
+  padding: 9px;
+  font: inherit;
+  font-size: 12px;
+  background: #fff;
+  color: #52616f;
+}
+.gim-sl-file::file-selector-button {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-right: 8px;
+  background: #059669;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.gim-sl-upload-meta {
+  min-height: 43px;
+  border: 1px solid rgba(5,150,105,0.14);
+  border-radius: 10px;
+  padding: 8px 11px;
+  background: rgba(236,253,245,0.45);
+}
+.gim-sl-upload-meta strong,
+.gim-sl-upload-meta span {
+  display: block;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.gim-sl-upload-meta strong { color: #1f2933; }
+.gim-sl-upload-meta span { color: #7b8794; margin-top: 2px; }
+
 .gim-sl-field-label {
   display: block;
   font-size: 11px;
@@ -461,6 +510,7 @@
 @media (max-width: 640px) {
   .gim-sl-wrap { right: 16px; bottom: 146px; }
   .gim-sl-overlay { padding: 8px; }
+  .gim-sl-upload-row { grid-template-columns: 1fr; }
   .gim-sl-grid-2 { grid-template-columns: 1fr; }
   .gim-sl-card-top { flex-direction: column; gap: 10px; }
   .gim-sl-modal { border-radius: 16px; }

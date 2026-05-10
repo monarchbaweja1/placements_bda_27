@@ -47,6 +47,7 @@
   const scope = root.querySelector('#gimAiScope');
 
   launcher.addEventListener('click', () => {
+    if (!isProgrammeViewActive()) return;
     root.classList.add('open');
     updateScope();
     setTimeout(() => input.focus(), 80);
@@ -116,7 +117,7 @@
   });
 
   document.addEventListener('gim:programme-change', updateScope);
-  setInterval(updateScope, 2500);
+  setInterval(updateScope, 800);
   updateScope();
 
   function setSending(next) {
@@ -169,6 +170,14 @@
   }
 
   function updateScope() {
+    const active = isProgrammeViewActive();
+    root.hidden = !active;
+    if (!active) {
+      root.classList.remove('open');
+      scope.textContent = 'Select a programme to scope answers';
+      return;
+    }
+
     const code = getProgrammeCode();
     scope.textContent = code ? `${code.toUpperCase()} scoped assistant` : 'Select a programme to scope answers';
   }
@@ -178,6 +187,14 @@
     const pill = document.getElementById('progPillName')?.textContent?.trim().toLowerCase();
     if (pill && pill !== 'programme') return pill === 'core' ? 'core' : pill;
     return null;
+  }
+
+  function isProgrammeViewActive() {
+    const app = document.getElementById('mainApp');
+    const nav = document.getElementById('mainNav');
+    const appVisible = !!app && app.classList.contains('show') && app.style.display !== 'none';
+    const navVisible = !!nav && nav.style.display !== 'none';
+    return appVisible && navVisible && !!getProgrammeCode();
   }
 
   function getPageContext() {

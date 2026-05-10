@@ -305,10 +305,10 @@ function buildReasons({ profile, cgpa, cgpaScore, skillScore, roleScore, project
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────
-export function estimateShortlistProbabilities({ programme, cgpa, skills, projects, targetCompanies }) {
+export function estimateShortlistProbabilities({ programme, cgpa, skills, projects, resumeText = '', targetCompanies }) {
   const code    = normalizeProgrammeCode(programme) || 'bda';
   const profiles = COMPANY_PROFILES[code] || COMPANY_PROFILES.bda;
-  const tokens  = tokenize(skills + ' ' + projects);
+  const tokens  = tokenize(`${skills} ${projects} ${resumeText}`);
   const cgpaNum = parseFloat(cgpa) || 0;
 
   return targetCompanies.map(companyName => {

@@ -6,6 +6,10 @@
   font-family: var(--font, Inter, system-ui, sans-serif);
 }
 
+.gim-ai-root[hidden] {
+  display: none !important;
+}
+
 .gim-ai-launcher {
   width: 58px;
   height: 58px;

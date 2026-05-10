@@ -11,6 +11,10 @@
   font-family: var(--font, Inter, system-ui, sans-serif);
 }
 
+.gim-ra-wrap[hidden] {
+  display: none !important;
+}
+
 .gim-ra-trigger {
   width: 48px;
   height: 48px;
@@ -141,6 +145,51 @@
 }
 
 /* ── Form view ── */
+.gim-ra-upload-row {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+.gim-ra-file {
+  width: 100%;
+  border: 1px solid rgba(31,41,51,0.13);
+  border-radius: 10px;
+  padding: 9px;
+  font: inherit;
+  font-size: 12px;
+  background: #fff;
+  color: #52616f;
+}
+.gim-ra-file::file-selector-button {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-right: 8px;
+  background: #059669;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.gim-ra-upload-meta {
+  min-height: 43px;
+  border: 1px solid rgba(5,150,105,0.14);
+  border-radius: 10px;
+  padding: 8px 11px;
+  background: rgba(236,253,245,0.45);
+}
+.gim-ra-upload-meta strong,
+.gim-ra-upload-meta span {
+  display: block;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.gim-ra-upload-meta strong { color: #1f2933; }
+.gim-ra-upload-meta span { color: #7b8794; margin-top: 2px; }
+
 .gim-ra-field-label {
   display: block;
   font-size: 11px;
@@ -389,6 +438,7 @@
 @media (max-width: 640px) {
   .gim-ra-wrap { right: 16px; bottom: 88px; }
   .gim-ra-overlay { padding: 8px; }
+  .gim-ra-upload-row { grid-template-columns: 1fr; }
   .gim-ra-grid { grid-template-columns: 1fr; }
   .gim-ra-hero { flex-direction: column; text-align: center; }
   .gim-ra-bar-name { flex: 0 0 88px; }

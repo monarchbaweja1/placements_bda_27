@@ -42,9 +42,20 @@
       <div class="gim-ra-body" id="gimRaBody">
         <!-- Form view -->
         <div id="gimRaFormView">
-          <label class="gim-ra-field-label" for="gimRaText">Paste your resume text</label>
+          <div class="gim-ra-upload-row">
+            <div>
+              <label class="gim-ra-field-label" for="gimRaFile">Upload CV</label>
+              <input class="gim-ra-file" id="gimRaFile" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+            </div>
+            <div class="gim-ra-upload-meta">
+              <strong id="gimRaFileName">PDF, DOCX, or TXT</strong>
+              <span id="gimRaUploadStatus">Upload a CV or paste text below.</span>
+            </div>
+          </div>
+
+          <label class="gim-ra-field-label" for="gimRaText">Paste or extracted resume text</label>
           <textarea class="gim-ra-textarea" id="gimRaText" maxlength="80000"
-            placeholder="Copy all text from your PDF resume and paste it here. The more complete the text, the more accurate the analysis."></textarea>
+            placeholder="Upload a PDF/DOCX CV to extract text automatically, or paste your resume text here."></textarea>
           <div class="gim-ra-charcount"><span id="gimRaChars">0</span>&nbsp;/ 80,000 characters</div>
 
           <div class="gim-ra-grid">
@@ -90,6 +101,9 @@
   // ── Element refs ───────────────────────────────────────────────
   const trigger   = wrap.querySelector('.gim-ra-trigger');
   const closeBtn  = overlay.querySelector('.gim-ra-close-btn');
+  const fileInput = overlay.querySelector('#gimRaFile');
+  const fileNameEl = overlay.querySelector('#gimRaFileName');
+  const uploadStatusEl = overlay.querySelector('#gimRaUploadStatus');
   const textarea  = overlay.querySelector('#gimRaText');
   const charEl    = overlay.querySelector('#gimRaChars');
   const roleInput = overlay.querySelector('#gimRaRole');
@@ -107,16 +121,17 @@
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) close(); });
   document.addEventListener('gim:programme-change', updateScope);
+  setInterval(updateScope, 800);
 
   textarea.addEventListener('input', () => {
-    const len = textarea.value.length;
-    charEl.textContent = len.toLocaleString();
-    submitBtn.disabled = len < 500;
+    updateTextState();
   });
+  fileInput.addEventListener('change', handleFileUpload);
 
   submitBtn.addEventListener('click', runAnalysis);
 
   function open() {
+    if (!isProgrammeViewActive()) return;
     overlay.classList.add('open');
     updateScope();
     setTimeout(() => textarea.focus(), 60);
@@ -130,10 +145,49 @@
     resView.style.display   = name === 'results' ? '' : 'none';
   }
 
+  async function handleFileUpload() {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+
+    errorEl.style.display = 'none';
+    fileNameEl.textContent = file.name;
+    uploadStatusEl.textContent = 'Extracting resume text...';
+    fileInput.disabled = true;
+    submitBtn.disabled = true;
+
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('Please sign in before uploading a resume.');
+      const payload = await window.GimResumeUpload.extractResumeFile(file, token);
+      textarea.value = payload.text;
+      updateTextState();
+      uploadStatusEl.textContent = `Extracted ${payload.characters.toLocaleString()} characters. Review before analyzing.`;
+    } catch (err) {
+      uploadStatusEl.textContent = 'Upload failed.';
+      showError(err.message || 'Could not extract this resume.');
+    } finally {
+      fileInput.disabled = false;
+    }
+  }
+
+  function updateTextState() {
+    const len = textarea.value.length;
+    charEl.textContent = len.toLocaleString();
+    submitBtn.disabled = len < 500;
+  }
+
   function updateScope() {
+    const active = isProgrammeViewActive();
+    wrap.hidden = !active;
+    if (!active) {
+      overlay.classList.remove('open');
+      if (scopeEl) scopeEl.textContent = 'Select a programme before analyzing';
+      return;
+    }
+
     const code = getProgrammeCode();
     if (scopeEl) scopeEl.textContent = code
-      ? `${code.toUpperCase()} · ATS scoring & recommendations`
+      ? `${code.toUpperCase()} scoped ATS scoring & recommendations`
       : 'Select a programme before analyzing';
   }
 
@@ -270,6 +324,9 @@
 
   function resetForm() {
     textarea.value = '';
+    fileInput.value = '';
+    fileNameEl.textContent = 'PDF, DOCX, or TXT';
+    uploadStatusEl.textContent = 'Upload a CV or paste text below.';
     charEl.textContent = '0';
     roleInput.value = '';
     compInput.value = '';
@@ -284,6 +341,14 @@
     const pill = document.getElementById('progPillName')?.textContent?.trim().toLowerCase();
     if (pill && pill !== 'programme') return pill;
     return null;
+  }
+
+  function isProgrammeViewActive() {
+    const app = document.getElementById('mainApp');
+    const nav = document.getElementById('mainNav');
+    const appVisible = !!app && app.classList.contains('show') && app.style.display !== 'none';
+    const navVisible = !!nav && nav.style.display !== 'none';
+    return appVisible && navVisible && !!getProgrammeCode();
   }
 
   async function getToken() {
