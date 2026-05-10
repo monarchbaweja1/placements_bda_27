@@ -1,0 +1,467 @@
+/* Shortlist Probability Estimator — GIM Placement Prep Hub
+   All classes prefixed gim-sl- to avoid conflicts. */
+
+.gim-sl-wrap {
+  position: fixed;
+  right: 22px;
+  bottom: 148px;
+  z-index: 11800;
+  display: flex;
+  align-items: center;
+  font-family: var(--font, Inter, system-ui, sans-serif);
+}
+
+.gim-sl-trigger {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid rgba(5,150,105,0.28);
+  background: rgba(255,255,255,0.94);
+  color: #059669;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(31,41,51,0.14);
+  transition: transform .2s ease, box-shadow .2s ease, background .15s;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+}
+.gim-sl-trigger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(31,41,51,0.18);
+  background: #ecfdf5;
+}
+
+.gim-sl-tip {
+  position: absolute;
+  right: 56px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1f2933;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 7px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.gim-sl-tip::after {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-left-color: #1f2933;
+}
+.gim-sl-trigger:hover ~ .gim-sl-tip { opacity: 1; }
+
+/* ── Overlay ── */
+.gim-sl-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 13400;
+  background: rgba(31,41,51,0.44);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  font-family: var(--font, Inter, system-ui, sans-serif);
+}
+.gim-sl-overlay.open { display: flex; }
+
+.gim-sl-modal {
+  width: min(740px, 100%);
+  max-height: min(94vh, 900px);
+  display: flex;
+  flex-direction: column;
+  background: rgba(255,255,255,0.97);
+  border: 1px solid rgba(31,41,51,0.1);
+  border-radius: 20px;
+  box-shadow: 0 32px 88px rgba(31,41,51,0.24);
+  overflow: hidden;
+  animation: gim-sl-in .22s cubic-bezier(.22,1,.36,1);
+}
+@keyframes gim-sl-in {
+  from { opacity: 0; transform: scale(.97) translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Header ── */
+.gim-sl-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(31,41,51,0.09);
+  background: linear-gradient(135deg, rgba(236,253,245,0.9), rgba(255,251,235,0.85));
+}
+.gim-sl-head-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #059669;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  font-size: 18px;
+  font-weight: 900;
+}
+.gim-sl-head-text { flex: 1; min-width: 0; }
+.gim-sl-head-text strong { display: block; font-size: 15px; color: #1f2933; line-height: 1.2; }
+.gim-sl-head-text span { display: block; font-size: 11px; color: #7b8794; margin-top: 2px; }
+.gim-sl-close-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(31,41,51,0.1);
+  background: rgba(255,255,255,0.7);
+  color: #52616f;
+  font-size: 18px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+/* ── Body ── */
+.gim-sl-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: rgba(250,247,240,0.22);
+}
+
+/* ── Form ── */
+.gim-sl-field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #52616f;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 7px;
+}
+.gim-sl-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.gim-sl-input {
+  width: 100%;
+  border: 1px solid rgba(31,41,51,0.13);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 13px;
+  color: #1f2933;
+  background: #fff;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.gim-sl-input:focus {
+  border-color: rgba(5,150,105,0.46);
+  box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+}
+.gim-sl-textarea {
+  width: 100%;
+  min-height: 80px;
+  max-height: 160px;
+  resize: vertical;
+  border: 1px solid rgba(31,41,51,0.13);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 13px;
+  color: #1f2933;
+  background: #fff;
+  outline: none;
+  line-height: 1.6;
+  transition: border-color .15s, box-shadow .15s;
+}
+.gim-sl-textarea:focus {
+  border-color: rgba(5,150,105,0.46);
+  box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+}
+
+/* ── Company chips ── */
+.gim-sl-company-section { margin-bottom: 20px; }
+.gim-sl-company-add {
+  display: flex;
+  gap: 8px;
+  margin-top: 7px;
+}
+.gim-sl-company-add .gim-sl-input { flex: 1; }
+.gim-sl-add-btn {
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: #059669;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: background .15s;
+}
+.gim-sl-add-btn:hover { background: #047857; }
+
+.gim-sl-company-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; min-height: 20px; }
+.gim-sl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 12px;
+  border-radius: 999px;
+  background: rgba(5,150,105,0.1);
+  border: 1px solid rgba(5,150,105,0.22);
+  color: #047857;
+  font-size: 12px;
+  font-weight: 600;
+}
+.gim-sl-chip-x {
+  cursor: pointer;
+  color: #7b8794;
+  font-size: 14px;
+  line-height: 1;
+  background: none;
+  border: none;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+.gim-sl-chip-x:hover { color: #dc2626; }
+
+/* ── Suggestions ── */
+.gim-sl-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.gim-sl-suggestion {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(31,41,51,0.05);
+  border: 1px solid rgba(31,41,51,0.1);
+  color: #52616f;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.gim-sl-suggestion:hover {
+  background: rgba(5,150,105,0.1);
+  border-color: rgba(5,150,105,0.22);
+  color: #047857;
+}
+
+/* ── Form footer ── */
+.gim-sl-form-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.gim-sl-form-note {
+  font-size: 11px;
+  color: #9aa5b1;
+  line-height: 1.4;
+}
+.gim-sl-btn-primary {
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 12px;
+  background: #059669;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: background .15s;
+}
+.gim-sl-btn-primary:hover { background: #047857; }
+.gim-sl-btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+.gim-sl-btn-secondary {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid rgba(31,41,51,0.14);
+  color: #52616f;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.gim-sl-btn-secondary:hover { background: rgba(31,41,51,0.04); }
+
+.gim-sl-error-box {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: rgba(220,38,38,0.06);
+  border: 1px solid rgba(220,38,38,0.16);
+  border-radius: 12px;
+  font-size: 13px;
+  color: #b91c1c;
+  line-height: 1.5;
+}
+
+/* ── Loading ── */
+.gim-sl-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  gap: 18px;
+}
+.gim-sl-spinner {
+  width: 42px;
+  height: 42px;
+  border: 3px solid rgba(5,150,105,0.15);
+  border-top-color: #059669;
+  border-radius: 50%;
+  animation: gim-sl-spin .75s linear infinite;
+}
+@keyframes gim-sl-spin { to { transform: rotate(360deg); } }
+.gim-sl-loading p { font-size: 14px; color: #52616f; text-align: center; line-height: 1.6; }
+
+/* ── Results ── */
+.gim-sl-section { font-size: 11px; font-weight: 700; color: #7b8794; text-transform: uppercase; letter-spacing: .05em; margin: 18px 0 10px; }
+.gim-sl-cards { display: flex; flex-direction: column; gap: 12px; }
+
+.gim-sl-card {
+  padding: 18px 20px;
+  background: #fff;
+  border: 1px solid rgba(31,41,51,0.09);
+  border-radius: 14px;
+}
+.gim-sl-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.gim-sl-prob-badge {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  flex-direction: column;
+}
+.gim-sl-prob-num {
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1;
+}
+.gim-sl-prob-pct { font-size: 10px; font-weight: 600; margin-top: 1px; }
+
+.gim-sl-card-info { flex: 1; min-width: 0; }
+.gim-sl-card-name { font-size: 16px; font-weight: 700; color: #1f2933; }
+.gim-sl-card-sector { font-size: 12px; color: #7b8794; margin-top: 2px; }
+.gim-sl-card-caveat {
+  font-size: 11px;
+  color: #9aa5b1;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(31,41,51,0.03);
+  border-radius: 8px;
+  font-style: italic;
+}
+
+/* Probability colors */
+.gim-sl-prob-badge.high   { background: rgba(5,150,105,0.1);   color: #059669; border: 1px solid rgba(5,150,105,0.2); }
+.gim-sl-prob-badge.medium { background: rgba(217,119,6,0.1);   color: #d97706; border: 1px solid rgba(217,119,6,0.2); }
+.gim-sl-prob-badge.low    { background: rgba(220,38,38,0.08);  color: #dc2626; border: 1px solid rgba(220,38,38,0.16); }
+
+/* Breakdown bars (compact) */
+.gim-sl-bars { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
+.gim-sl-bar-row { display: flex; align-items: center; gap: 8px; }
+.gim-sl-bar-name { flex: 0 0 96px; font-size: 11px; font-weight: 600; color: #7b8794; }
+.gim-sl-bar-track { flex: 1; height: 5px; border-radius: 999px; background: rgba(31,41,51,0.07); overflow: hidden; }
+.gim-sl-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #059669, #10b981);
+  width: 0;
+  transition: width .85s cubic-bezier(.22,1,.36,1);
+}
+.gim-sl-bar-fill.amber { background: linear-gradient(90deg, #d97706, #f59e0b); }
+.gim-sl-bar-fill.red   { background: linear-gradient(90deg, #dc2626, #f87171); }
+.gim-sl-bar-val { flex: 0 0 26px; font-size: 11px; font-weight: 700; color: #7b8794; text-align: right; }
+
+/* Reasons list */
+.gim-sl-reasons { display: flex; flex-direction: column; gap: 5px; }
+.gim-sl-reason {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: #52616f;
+  line-height: 1.5;
+  align-items: flex-start;
+}
+.gim-sl-reason-dot { color: #059669; flex: 0 0 auto; margin-top: 2px; }
+
+/* Unknown company card */
+.gim-sl-card-unknown { opacity: .75; }
+.gim-sl-unknown-label {
+  font-size: 13px;
+  color: #7b8794;
+  font-style: italic;
+  padding: 8px 12px;
+  background: rgba(31,41,51,0.04);
+  border-radius: 8px;
+  margin-top: 4px;
+}
+
+/* Disclaimer banner */
+.gim-sl-disclaimer {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: rgba(245,158,11,0.07);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: 12px;
+  font-size: 12px;
+  color: #92400e;
+  line-height: 1.55;
+}
+
+.gim-sl-result-foot {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(31,41,51,0.08);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .gim-sl-wrap { right: 16px; bottom: 146px; }
+  .gim-sl-overlay { padding: 8px; }
+  .gim-sl-grid-2 { grid-template-columns: 1fr; }
+  .gim-sl-card-top { flex-direction: column; gap: 10px; }
+  .gim-sl-modal { border-radius: 16px; }
+}
