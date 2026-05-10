@@ -859,32 +859,39 @@ code {
     <div class="lc-title">GIM <span>Placement</span><br>Prep Hub</div>
     <div class="lc-sub">The complete placement preparation environment for GIM students — companies, Q&A, roadmap &amp; cheatsheets.</div>
 
-    <!-- Loading state while checking auth -->
-    <div id="lcLoading" style="padding:20px 0;text-align:center">
+    <!-- Step 1: Enter email -->
+    <div id="lcLoading" style="display:none;padding:20px 0;text-align:center">
       <div style="font-family:var(--font-mono);font-size:13px;color:var(--text2);margin-bottom:12px">
-        <span id="lcLoadingDot" style="display:inline-block;animation:pulse 1s infinite">●</span>
-        &nbsp;Signing you in...
-      </div>
-      <div style="height:2px;background:var(--border);border-radius:2px;overflow:hidden;width:200px;margin:0 auto">
-        <div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));border-radius:2px;animation:ldfill 2s ease infinite alternate"></div>
+        ● &nbsp;Checking session...
       </div>
     </div>
 
-    <div id="loginForm" style="display:none">
+    <div id="loginForm">
       <input type="email" class="lc-input" id="lcEmail" placeholder="Enter your email address" autocomplete="email">
-      <button class="lc-btn" id="lcBtn" onclick="doLogin()">Get Login Link →</button>
-      <div class="lc-sent" id="lcSent">
-        ✅ Magic link sent!<br>Check your inbox and click the link to sign in.
-      </div>
-      <div class="lc-note">
-        Enter any email → receive a one-click login link.<br>
+      <button class="lc-btn" id="lcBtn" onclick="doLogin()">Send OTP Code →</button>
+      <div class="lc-note" style="margin-top:10px">
+        Enter your email → get a 6-digit code → enter it below<br>
         No password needed · Free forever
+      </div>
+    </div>
+
+    <!-- Step 2: Enter OTP -->
+    <div id="otpForm" style="display:none;margin-top:0">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;font-family:var(--font-mono)">
+        ✉️ Code sent to <strong id="otpEmailLabel" style="color:var(--accent)"></strong>
+      </div>
+      <input type="text" class="lc-input" id="lcOTP" placeholder="Enter 6-digit code" maxlength="6"
+        style="text-align:center;font-size:22px;letter-spacing:8px;font-family:var(--font-mono)"
+        oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      <button class="lc-btn" id="otpBtn" onclick="verifyOTP()" style="margin-top:8px">Verify &amp; Enter Hub →</button>
+      <div style="margin-top:10px;font-size:12px;color:var(--text3);font-family:var(--font-mono)">
+        <span onclick="resetLogin()" style="cursor:pointer;color:var(--accent)">← Use different email</span>
       </div>
     </div>
 
     <div id="loggedInBar" style="display:none">
       <div class="lc-user-bar">
-        <span>✅ Signed in as: <strong id="lcUserEmail">—</strong></span>
+        <span>✅ <strong id="lcUserEmail">—</strong></span>
         <span class="lc-signout" onclick="doSignOutIndex()">Sign out</span>
       </div>
       <button class="lc-btn" style="margin-top:10px" onclick="enterHub()">Enter Prep Hub →</button>
@@ -3281,32 +3288,39 @@ function downloadSectionAsPDF(title, contentId) {
     <div class="lc-title">GIM <span>Placement</span><br>Prep Hub</div>
     <div class="lc-sub">The complete placement preparation environment for GIM students — companies, Q&A, roadmap &amp; cheatsheets.</div>
 
-    <!-- Loading state while checking auth -->
-    <div id="lcLoading" style="padding:20px 0;text-align:center">
+    <!-- Step 1: Enter email -->
+    <div id="lcLoading" style="display:none;padding:20px 0;text-align:center">
       <div style="font-family:var(--font-mono);font-size:13px;color:var(--text2);margin-bottom:12px">
-        <span id="lcLoadingDot" style="display:inline-block;animation:pulse 1s infinite">●</span>
-        &nbsp;Signing you in...
-      </div>
-      <div style="height:2px;background:var(--border);border-radius:2px;overflow:hidden;width:200px;margin:0 auto">
-        <div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));border-radius:2px;animation:ldfill 2s ease infinite alternate"></div>
+        ● &nbsp;Checking session...
       </div>
     </div>
 
-    <div id="loginForm" style="display:none">
+    <div id="loginForm">
       <input type="email" class="lc-input" id="lcEmail" placeholder="Enter your email address" autocomplete="email">
-      <button class="lc-btn" id="lcBtn" onclick="doLogin()">Get Login Link →</button>
-      <div class="lc-sent" id="lcSent">
-        ✅ Magic link sent!<br>Check your inbox and click the link to sign in.
-      </div>
-      <div class="lc-note">
-        Enter any email → receive a one-click login link.<br>
+      <button class="lc-btn" id="lcBtn" onclick="doLogin()">Send OTP Code →</button>
+      <div class="lc-note" style="margin-top:10px">
+        Enter your email → get a 6-digit code → enter it below<br>
         No password needed · Free forever
+      </div>
+    </div>
+
+    <!-- Step 2: Enter OTP -->
+    <div id="otpForm" style="display:none;margin-top:0">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;font-family:var(--font-mono)">
+        ✉️ Code sent to <strong id="otpEmailLabel" style="color:var(--accent)"></strong>
+      </div>
+      <input type="text" class="lc-input" id="lcOTP" placeholder="Enter 6-digit code" maxlength="6"
+        style="text-align:center;font-size:22px;letter-spacing:8px;font-family:var(--font-mono)"
+        oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      <button class="lc-btn" id="otpBtn" onclick="verifyOTP()" style="margin-top:8px">Verify &amp; Enter Hub →</button>
+      <div style="margin-top:10px;font-size:12px;color:var(--text3);font-family:var(--font-mono)">
+        <span onclick="resetLogin()" style="cursor:pointer;color:var(--accent)">← Use different email</span>
       </div>
     </div>
 
     <div id="loggedInBar" style="display:none">
       <div class="lc-user-bar">
-        <span>✅ Signed in as: <strong id="lcUserEmail">—</strong></span>
+        <span>✅ <strong id="lcUserEmail">—</strong></span>
         <span class="lc-signout" onclick="doSignOutIndex()">Sign out</span>
       </div>
       <button class="lc-btn" style="margin-top:10px" onclick="enterHub()">Enter Prep Hub →</button>
@@ -3982,51 +3996,17 @@ const SB_KEY = 'sb_publishable_bLUTa913DWCoVFTt9r_vew_Wa_hjEbV';
 const { createClient: createSbClient } = supabase;
 const sbIndex = createSbClient(SB_URL, SB_KEY);
 
-// ── Robust auth flow — handles magic link, PKCE and regular sessions
-const _hasAuthParams = () => {
-  const h = window.location.hash;
-  const s = window.location.search;
-  return h.includes('access_token') || h.includes('error_description') ||
-         s.includes('code=') || s.includes('error=');
-};
-
-// If URL has auth params (magic link redirect), show loading, let Supabase handle
-if (_hasAuthParams()) {
-  document.getElementById('lcLoading').style.display = 'block';
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('loggedInBar').style.display = 'none';
-  // Fallback: if no auth event in 6 seconds, show login form
-  setTimeout(() => {
-    if (document.getElementById('lcLoading').style.display !== 'none') {
-      window.history.replaceState(null, '', window.location.pathname);
-      showLoginForm();
-    }
-  }, 6000);
-} else {
-  // No auth params — check existing session
-  sbIndex.auth.getSession().then(({ data: { session } }) => {
-    if (session?.user) {
-      showLoggedIn(session.user.email);
-    } else {
-      showLoginForm();
-    }
-  });
-}
-
-// Auth state listener — handles all events
-sbIndex.auth.onAuthStateChange((event, session) => {
+// ── Simple session check (OTP flow - no URL redirect needed)
+sbIndex.auth.getSession().then(({ data: { session } }) => {
   if (session?.user) {
-    if (event === 'SIGNED_IN') {
-      // Auto-enter hub when magic link is used
-      window.history.replaceState(null, '', window.location.pathname);
-      showLoggedIn(session.user.email);
-      setTimeout(() => enterHub(), 600);
-    } else {
-      showLoggedIn(session.user.email);
-    }
-  } else if (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
+    showLoggedIn(session.user.email);
+  } else {
     showLoginForm();
   }
+});
+
+sbIndex.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT') showLoginForm();
 });
 
 function showLoginForm() {
@@ -4052,6 +4032,8 @@ window.enterHub = function() {
   setTimeout(() => document.getElementById('loader').style.display = 'none', 400);
 };
 
+let _otpEmail = '';
+
 window.doLogin = async function() {
   const email = document.getElementById('lcEmail').value.trim();
   if (!email || !email.includes('@')) {
@@ -4059,20 +4041,39 @@ window.doLogin = async function() {
     return;
   }
   const btn = document.getElementById('lcBtn');
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
-  const { error } = await sbIndex.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.origin + window.location.pathname }
-  });
+  btn.disabled = true; btn.textContent = 'Sending...';
+  // Use OTP (6-digit code) — no redirect needed, works everywhere
+  const { error } = await sbIndex.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
   if (error) {
     showToastIndex('Error: ' + error.message, 'err');
-    btn.disabled = false;
-    btn.textContent = 'Get Login Link →';
-    return;
+    btn.disabled = false; btn.textContent = 'Send OTP Code →'; return;
   }
-  document.getElementById('lcSent').style.display = 'block';
-  btn.textContent = 'Link sent! Check inbox ✓';
+  _otpEmail = email;
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('otpForm').style.display = 'block';
+  document.getElementById('otpEmailLabel').textContent = email;
+  showToastIndex('Code sent! Check your inbox.', 'ok');
+};
+
+window.verifyOTP = async function() {
+  const token = document.getElementById('lcOTP').value.trim();
+  if (token.length !== 6) { showToastIndex('Enter the 6-digit code', 'err'); return; }
+  const btn = document.getElementById('otpBtn');
+  btn.disabled = true; btn.textContent = 'Verifying...';
+  const { data, error } = await sbIndex.auth.verifyOtp({ email: _otpEmail, token, type: 'email' });
+  if (error) {
+    showToastIndex('Invalid code: ' + error.message, 'err');
+    btn.disabled = false; btn.textContent = 'Verify & Enter Hub →'; return;
+  }
+  if (data?.user) { showLoggedIn(data.user.email); setTimeout(enterHub, 400); }
+};
+
+window.resetLogin = function() {
+  document.getElementById('otpForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('lcEmail').value = '';
+  document.getElementById('lcBtn').disabled = false;
+  document.getElementById('lcBtn').textContent = 'Send OTP Code →';
 };
 
 window.doSignOutIndex = async function() {
