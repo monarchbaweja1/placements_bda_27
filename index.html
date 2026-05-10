@@ -717,9 +717,140 @@ code {
   .main { margin-left: 0; }
   .content { padding: 20px; }
 }
+
+/* ── PROGRAMME SELECTOR ── */
+#progSelector{
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(59,130,246,.12),transparent),
+             radial-gradient(ellipse 50% 40% at 80% 80%,rgba(167,139,250,.06),transparent),
+             var(--bg);
+  z-index:9998;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:24px;
+}
+.prog-logo{font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--text3);letter-spacing:3px;margin-bottom:6px;text-transform:uppercase}
+.prog-title{font-family:var(--font-head);font-size:42px;font-weight:900;text-align:center;line-height:1.1;margin-bottom:8px}
+.prog-title span{color:var(--accent)}
+.prog-sub{color:var(--text2);font-size:14px;margin-bottom:40px;text-align:center}
+.prog-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;max-width:800px;width:100%}
+.prog-card{
+  background:var(--card);border:1px solid var(--border2);border-radius:18px;
+  padding:28px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;
+  text-align:center;
+}
+.prog-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.3)}
+.prog-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:18px 18px 0 0;transition:height .25s}
+.prog-card:hover::before{height:6px}
+.prog-card.bda::before{background:linear-gradient(90deg,#3b82f6,#06b6d4)}
+.prog-card.core::before{background:linear-gradient(90deg,#f59e0b,#ef4444)}
+.prog-card.hcm::before{background:linear-gradient(90deg,#22c55e,#06b6d4)}
+.prog-card.bifs::before{background:linear-gradient(90deg,#a78bfa,#3b82f6)}
+.prog-card:hover.bda{border-color:#3b82f6;background:rgba(59,130,246,.05)}
+.prog-card:hover.core{border-color:#f59e0b;background:rgba(245,158,11,.05)}
+.prog-card:hover.hcm{border-color:#22c55e;background:rgba(34,197,94,.05)}
+.prog-card:hover.bifs{border-color:#a78bfa;background:rgba(167,139,250,.05)}
+.prog-emoji{font-size:36px;margin-bottom:12px}
+.prog-name{font-family:var(--font-head);font-size:18px;font-weight:900;letter-spacing:1px;margin-bottom:4px}
+.prog-full{font-size:12px;color:var(--text2);margin-bottom:14px}
+.prog-stats{display:flex;justify-content:center;gap:16px;margin-bottom:0}
+.prog-stat{text-align:center}
+.prog-stat-n{font-family:var(--font-head);font-size:20px;font-weight:800}
+.prog-stat-l{font-size:10px;color:var(--text3);font-family:var(--font-mono)}
+.prog-bda .prog-stat-n{color:#3b82f6}
+.prog-core .prog-stat-n{color:#f59e0b}
+.prog-hcm .prog-stat-n{color:#22c55e}
+.prog-bifs .prog-stat-n{color:#a78bfa}
+.back-btn{
+  position:fixed;top:16px;left:20px;
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;border-radius:10px;
+  background:var(--card);border:1px solid var(--border2);
+  color:var(--text2);cursor:pointer;
+  font-family:var(--font-mono);font-size:12px;
+  transition:all .2s;z-index:200;
+  text-decoration:none;
+}
+.back-btn:hover{color:var(--accent);border-color:var(--accent)}
+.prog-banner{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 20px;
+  background:var(--bg3);border-bottom:1px solid var(--border);
+  font-family:var(--font-mono);font-size:12px;color:var(--text2);
+  position:sticky;top:0;z-index:49;
+}
+.prog-badge{
+  padding:3px 10px;border-radius:8px;
+  font-size:11px;font-weight:700;
+}
+@media(max-width:600px){.prog-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
+
+<!-- ══════════════════════════════════════════
+     PROGRAMME SELECTOR
+══════════════════════════════════════════ -->
+<div id="progSelector">
+  <div class="prog-logo">Goa Institute of Management</div>
+  <div class="prog-title">GIM <span>Placement</span><br>Prep Hub</div>
+  <div class="prog-sub">Select your programme to access company intel, Q&A banks, roadmap &amp; cheatsheets</div>
+  <div class="prog-grid">
+    <div class="prog-card bda" onclick="selectProg('bda')">
+      <div class="prog-emoji">📊</div>
+      <div class="prog-name">BDA</div>
+      <div class="prog-full">PGDM — Big Data Analytics</div>
+      <div class="prog-stats">
+        <div class="prog-stat prog-bda"><div class="prog-stat-n" style="color:#3b82f6">63</div><div class="prog-stat-l">Companies</div></div>
+        <div class="prog-stat prog-bda"><div class="prog-stat-n" style="color:#3b82f6">22.5</div><div class="prog-stat-l">Highest LPA</div></div>
+        <div class="prog-stat prog-bda"><div class="prog-stat-n" style="color:#3b82f6">15.6</div><div class="prog-stat-l">Avg LPA</div></div>
+      </div>
+    </div>
+    <div class="prog-card core" onclick="selectProg('core')">
+      <div class="prog-emoji">🎯</div>
+      <div class="prog-name">CORE</div>
+      <div class="prog-full">PGDM — Core (Flagship)</div>
+      <div class="prog-stats">
+        <div class="prog-stat prog-core"><div class="prog-stat-n" style="color:#f59e0b">60</div><div class="prog-stat-l">Companies</div></div>
+        <div class="prog-stat prog-core"><div class="prog-stat-n" style="color:#f59e0b">26.3</div><div class="prog-stat-l">Highest LPA</div></div>
+        <div class="prog-stat prog-core"><div class="prog-stat-n" style="color:#f59e0b">14.8</div><div class="prog-stat-l">Avg LPA</div></div>
+      </div>
+    </div>
+    <div class="prog-card hcm" onclick="selectProg('hcm')">
+      <div class="prog-emoji">🏥</div>
+      <div class="prog-name">HCM</div>
+      <div class="prog-full">PGDM — Healthcare Management</div>
+      <div class="prog-stats">
+        <div class="prog-stat prog-hcm"><div class="prog-stat-n" style="color:#22c55e">22</div><div class="prog-stat-l">Companies</div></div>
+        <div class="prog-stat prog-hcm"><div class="prog-stat-n" style="color:#22c55e">29.1</div><div class="prog-stat-l">Highest LPA</div></div>
+        <div class="prog-stat prog-hcm"><div class="prog-stat-n" style="color:#22c55e">14.0</div><div class="prog-stat-l">Avg LPA</div></div>
+      </div>
+    </div>
+    <div class="prog-card bifs" onclick="selectProg('bifs')">
+      <div class="prog-emoji">🏦</div>
+      <div class="prog-name">BIFS</div>
+      <div class="prog-full">PGDM — Banking, Insurance &amp; Financial Services</div>
+      <div class="prog-stats">
+        <div class="prog-stat prog-bifs"><div class="prog-stat-n" style="color:#a78bfa">23</div><div class="prog-stat-l">Companies</div></div>
+        <div class="prog-stat prog-bifs"><div class="prog-stat-n" style="color:#a78bfa">19.7</div><div class="prog-stat-l">Highest LPA</div></div>
+        <div class="prog-stat prog-bifs"><div class="prog-stat-n" style="color:#a78bfa">14.8</div><div class="prog-stat-l">Avg LPA</div></div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:28px;font-size:12px;color:var(--text3);font-family:var(--font-mono);text-align:center">
+    All data sourced from GIM official audited placement reports 2020–24
+  </div>
+</div>
+
+<!-- Programme banner (shown after selection) -->
+<div class="back-btn" id="backBtn" style="display:none" onclick="backToSelector()">← Change Programme</div>
+<div class="prog-banner" id="progBanner" style="display:none">
+  <span id="progBannerBadge" class="prog-badge"></span>
+  <span id="progBannerName"></span>
+  <span style="margin-left:auto;color:var(--text3)">GIM Placement Prep Hub</span>
+</div>
+
 
 <div class="shell">
 
@@ -937,17 +1068,17 @@ code {
     </div>
 
     <div class="resume-split">
-      <!-- Left: Profile card -->
+      <!-- Left: Generic BDA Profile card -->
       <div>
         <div class="resume-panel">
-          <div class="rp-title">📄 Your Resume</div>
+          <div class="rp-title">📄 Typical BDA Profile</div>
           <div class="exp-item">
-            <div class="exp-company">Your Current Internship</div>
-            <div class="exp-role">Research Analyst Intern</div>
-            <div class="exp-dur">Ongoing · 5 months</div>
+            <div class="exp-company">Current Internship</div>
+            <div class="exp-role">Data / Research / Analytics Intern</div>
+            <div class="exp-dur">5 months (GIM mandatory internship)</div>
             <div class="exp-tags">
-              <span class="exp-tag">Research</span>
               <span class="exp-tag">Analytics</span>
+              <span class="exp-tag">Research</span>
               <span class="exp-tag" style="background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.2);color:var(--accent3);">CURRENT</span>
             </div>
           </div>
@@ -2902,7 +3033,138 @@ function downloadSectionAsPDF(title, contentId) {
       h2{color:#0f4c81;} h3{color:#1a6b8a;} 
       .q-item{border-left:3px solid #0f4c81;padding:10px 15px;margin:10px 0;background:#f9f9f9;}
       .q-text{font-weight:600;} .q-hint{color:#555;font-style:italic;margin-top:4px;font-size:0.9em;}
-    </style></head><body>
+    
+/* ── PROGRAMME SELECTOR ── */
+#progSelector{
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(59,130,246,.12),transparent),
+             radial-gradient(ellipse 50% 40% at 80% 80%,rgba(167,139,250,.06),transparent),
+             var(--bg);
+  z-index:9998;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:24px;
+}
+.prog-logo{font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--text3);letter-spacing:3px;margin-bottom:6px;text-transform:uppercase}
+.prog-title{font-family:var(--font-head);font-size:42px;font-weight:900;text-align:center;line-height:1.1;margin-bottom:8px}
+.prog-title span{color:var(--accent)}
+.prog-sub{color:var(--text2);font-size:14px;margin-bottom:40px;text-align:center}
+.prog-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;max-width:800px;width:100%}
+.prog-card{
+  background:var(--card);border:1px solid var(--border2);border-radius:18px;
+  padding:28px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;
+  text-align:center;
+}
+.prog-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.3)}
+.prog-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:18px 18px 0 0;transition:height .25s}
+.prog-card:hover::before{height:6px}
+.prog-card.bda::before{background:linear-gradient(90deg,#3b82f6,#06b6d4)}
+.prog-card.core::before{background:linear-gradient(90deg,#f59e0b,#ef4444)}
+.prog-card.hcm::before{background:linear-gradient(90deg,#22c55e,#06b6d4)}
+.prog-card.bifs::before{background:linear-gradient(90deg,#a78bfa,#3b82f6)}
+.prog-card:hover.bda{border-color:#3b82f6;background:rgba(59,130,246,.05)}
+.prog-card:hover.core{border-color:#f59e0b;background:rgba(245,158,11,.05)}
+.prog-card:hover.hcm{border-color:#22c55e;background:rgba(34,197,94,.05)}
+.prog-card:hover.bifs{border-color:#a78bfa;background:rgba(167,139,250,.05)}
+.prog-emoji{font-size:36px;margin-bottom:12px}
+.prog-name{font-family:var(--font-head);font-size:18px;font-weight:900;letter-spacing:1px;margin-bottom:4px}
+.prog-full{font-size:12px;color:var(--text2);margin-bottom:14px}
+.prog-stats{display:flex;justify-content:center;gap:16px;margin-bottom:0}
+.prog-stat{text-align:center}
+.prog-stat-n{font-family:var(--font-head);font-size:20px;font-weight:800}
+.prog-stat-l{font-size:10px;color:var(--text3);font-family:var(--font-mono)}
+.prog-bda .prog-stat-n{color:#3b82f6}
+.prog-core .prog-stat-n{color:#f59e0b}
+.prog-hcm .prog-stat-n{color:#22c55e}
+.prog-bifs .prog-stat-n{color:#a78bfa}
+.back-btn{
+  position:fixed;top:16px;left:20px;
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;border-radius:10px;
+  background:var(--card);border:1px solid var(--border2);
+  color:var(--text2);cursor:pointer;
+  font-family:var(--font-mono);font-size:12px;
+  transition:all .2s;z-index:200;
+  text-decoration:none;
+}
+.back-btn:hover{color:var(--accent);border-color:var(--accent)}
+.prog-banner{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 20px;
+  background:var(--bg3);border-bottom:1px solid var(--border);
+  font-family:var(--font-mono);font-size:12px;color:var(--text2);
+  position:sticky;top:0;z-index:49;
+}
+.prog-badge{
+  padding:3px 10px;border-radius:8px;
+  font-size:11px;font-weight:700;
+}
+@media(max-width:600px){.prog-grid{grid-template-columns:1fr}}
+
+</style></head><body>
+
+<!-- ══════════════════════════════════════════
+     PROGRAMME SELECTOR
+══════════════════════════════════════════ -->
+<div id="progSelector">
+  <div class="prog-logo">Goa Institute of Management</div>
+  <div class="prog-title">GIM <span>Placement</span><br>Prep Hub</div>
+  <div class="prog-sub">Select your programme to access company intel, Q&A banks, roadmap &amp; cheatsheets</div>
+  <div class="prog-grid">
+    <div class="prog-card bda" onclick="selectProg('bda')">
+      <div class="prog-emoji">📊</div>
+      <div class="prog-name">BDA</div>
+      <div class="prog-full">PGDM — Big Data Analytics</div>
+      <div class="prog-stats">
+        <div class="prog-stat prog-bda"><div class="prog-stat-n" style="color:#3b82f6">63</div><div class="prog-stat-l">Companies</div></div>
+        <div class="prog-stat prog-bda"><div class="prog-stat-n" style="color:#3b82f6">22.5</div><div class="prog-stat-l">Highest LPA</div></div>
+        <div class="prog-stat prog-bda"><div class="prog-stat-n" style="color:#3b82f6">15.6</div><div class="prog-stat-l">Avg LPA</div></div>
+      </div>
+    </div>
+    <div class="prog-card core" onclick="selectProg('core')">
+      <div class="prog-emoji">🎯</div>
+      <div class="prog-name">CORE</div>
+      <div class="prog-full">PGDM — Core (Flagship)</div>
+      <div class="prog-stats">
+        <div class="prog-stat prog-core"><div class="prog-stat-n" style="color:#f59e0b">60</div><div class="prog-stat-l">Companies</div></div>
+        <div class="prog-stat prog-core"><div class="prog-stat-n" style="color:#f59e0b">26.3</div><div class="prog-stat-l">Highest LPA</div></div>
+        <div class="prog-stat prog-core"><div class="prog-stat-n" style="color:#f59e0b">14.8</div><div class="prog-stat-l">Avg LPA</div></div>
+      </div>
+    </div>
+    <div class="prog-card hcm" onclick="selectProg('hcm')">
+      <div class="prog-emoji">🏥</div>
+      <div class="prog-name">HCM</div>
+      <div class="prog-full">PGDM — Healthcare Management</div>
+      <div class="prog-stats">
+        <div class="prog-stat prog-hcm"><div class="prog-stat-n" style="color:#22c55e">22</div><div class="prog-stat-l">Companies</div></div>
+        <div class="prog-stat prog-hcm"><div class="prog-stat-n" style="color:#22c55e">29.1</div><div class="prog-stat-l">Highest LPA</div></div>
+        <div class="prog-stat prog-hcm"><div class="prog-stat-n" style="color:#22c55e">14.0</div><div class="prog-stat-l">Avg LPA</div></div>
+      </div>
+    </div>
+    <div class="prog-card bifs" onclick="selectProg('bifs')">
+      <div class="prog-emoji">🏦</div>
+      <div class="prog-name">BIFS</div>
+      <div class="prog-full">PGDM — Banking, Insurance &amp; Financial Services</div>
+      <div class="prog-stats">
+        <div class="prog-stat prog-bifs"><div class="prog-stat-n" style="color:#a78bfa">23</div><div class="prog-stat-l">Companies</div></div>
+        <div class="prog-stat prog-bifs"><div class="prog-stat-n" style="color:#a78bfa">19.7</div><div class="prog-stat-l">Highest LPA</div></div>
+        <div class="prog-stat prog-bifs"><div class="prog-stat-n" style="color:#a78bfa">14.8</div><div class="prog-stat-l">Avg LPA</div></div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:28px;font-size:12px;color:var(--text3);font-family:var(--font-mono);text-align:center">
+    All data sourced from GIM official audited placement reports 2020–24
+  </div>
+</div>
+
+<!-- Programme banner (shown after selection) -->
+<div class="back-btn" id="backBtn" style="display:none" onclick="backToSelector()">← Change Programme</div>
+<div class="prog-banner" id="progBanner" style="display:none">
+  <span id="progBannerBadge" class="prog-badge"></span>
+  <span id="progBannerName"></span>
+  <span style="margin-left:auto;color:var(--text3)">GIM Placement Prep Hub</span>
+</div>
+
     <h2>GIM BDA Interview Prep — ${title}</h2>
     <p>Prepared for: GIM BDA Batch 2025-27</p>
     <hr>
@@ -3140,6 +3402,359 @@ buildRoles();
 buildResume();
 buildRoadmap();
 buildCheatsheets();
+
+
+// ═══════════════════════════════════════════════════════
+// PROGRAMME DATA — Core, HCM, BIFS
+// ═══════════════════════════════════════════════════════
+
+const progData = {
+  bda: {
+    name: "PGDM — Big Data Analytics",
+    badge: "BDA", color: "#3b82f6",
+    stats: { companies: 63, highest: "22.5 LPA", avg: "15.6 LPA", students: 101 },
+    topbarStats: [
+      {label:"Companies", val:"63"},
+      {label:"Highest LPA", val:"22.5"},
+      {label:"Avg LPA", val:"15.6"}
+    ]
+  },
+  core: {
+    name: "PGDM — Core (Flagship)",
+    badge: "CORE", color: "#f59e0b",
+    stats: { companies: 60, highest: "26.3 LPA", avg: "14.8 LPA", students: 166 },
+    topbarStats: [
+      {label:"Companies", val:"60"},
+      {label:"Highest LPA", val:"26.3"},
+      {label:"Avg LPA", val:"14.8"}
+    ],
+    companies: [
+      { id:"aartii",name:"Aarti Industries",type:"fmcg",badge:"AI",color:"#0f766e",tagline:"Chemicals & Specialty",tagColor:"tag-green",roles:["Management Trainee","Sales Executive"],
+        technical:[
+          {q:"Aarti Industries operates in specialty chemicals. How would you build a demand forecasting model for a B2B chemical product?",hint:"B2B demand is lumpy and driven by key accounts. Use customer-level forecasting + macro indicators (oil prices, GDP). ARIMA + XGBoost ensemble."},
+          {q:"How would you analyse Aarti's pricing strategy versus global chemical producers?",hint:"Price benchmarking: India vs China vs EU producers. Factor in freight, duties, quality premium. Regression of price vs input costs (benzene, toluene)."},
+          {q:"SQL: Find the top 5 customers by purchase volume growth (YoY) from a sales database.",hint:"CTE: current year vs previous year volume per customer. JOIN on customer_id. Calculate (curr - prev) / prev as growth %. RANK() descending."}
+        ],behavioral:[{q:"Why specialty chemicals for an MBA graduate?",hint:"Link to India's China+1 opportunity, import substitution theme, scale of business impact in industrial sectors."}],caseStudy:[{q:"CASE: Aarti Industries wants to enter a new specialty chemical segment. Build the go-to-market framework.",hint:"Market size (global + India import data) → customer identification (who uses this chemical) → pricing analysis → capex vs variable cost → pilot customer strategy."}]
+      },
+      { id:"abinbev",name:"AB InBev",type:"fmcg",badge:"AB",color:"#b45309",tagline:"Beer & Beverages FMCG",tagColor:"tag-gold",roles:["Management Trainee","Sales Analytics","Revenue Management"],
+        technical:[
+          {q:"AB InBev uses Revenue Management heavily. What is price-pack architecture and how does analytics support it?",hint:"Right product × right pack × right price × right channel. Elasticity by pack size, channel, geography. Analytics: regression on scanner data."},
+          {q:"How would you measure the effectiveness of an on-ground activation event for a new beer brand?",hint:"Control stores (no activation) vs treatment. Sales lift (incremental volume), brand awareness tracking, trial-to-repeat conversion rate."},
+          {q:"What is the difference between sell-in and sell-out data? Why does AB InBev track both?",hint:"Sell-in: what AB InBev ships to distributors. Sell-out: what retailers sell to consumers. Gap = trade inventory. Monitor to detect pipeline filling vs real demand."}
+        ],behavioral:[{q:"AB InBev is known for aggressive targets. How do you perform under pressure?",hint:"Reference high-stakes deliverables at internship. Show ownership mentality and results."}],caseStudy:[{q:"CASE: AB InBev's Budweiser market share dropped 3% in Maharashtra in Q2. Diagnose and propose a turnaround strategy.",hint:"Decompose: distribution (weighted distribution drop?), pricing (competitive pressure?), consumer preference, occasion relevance. Use Nielsen/outlet audit data."}]
+      },
+      { id:"aditya_birla_cap",name:"Aditya Birla Capital",type:"bfsi",badge:"ABC",color:"#dc2626",tagline:"NBFC & Financial Services",tagColor:"tag-orange",roles:["Management Trainee","Credit Analyst","Relationship Manager"],
+        technical:[
+          {q:"How would you build a loan origination scorecard for Aditya Birla Finance's MSME lending product?",hint:"Features: GST history, bank statement cash flows, bureau score, business vintage, collateral. Logistic regression + scorecards. Validate: Gini, KS, AUC."},
+          {q:"What is weighted average cost of capital (WACC) and how does an NBFC use it?",hint:"WACC = (E/V)×Re + (D/V)×Rd×(1-T). NBFCs: cost of borrowing drives WACC. Use for project IRR hurdle rates and loan pricing floor."},
+          {q:"How would you identify early warning signals in an NBFC's MSME loan portfolio?",hint:"Bounce rates on EMIs, GST filing gaps, current account debit patterns, bureau enquiry spike, stock statement submission delays."}
+        ],behavioral:[{q:"Aditya Birla Group is highly diversified. Which vertical interests you most and why?",hint:"Prepare a specific answer — capital markets, insurance, health insurance, NBFC lending. Show knowledge of that vertical."}],caseStudy:[{q:"CASE: AB Capital wants to grow its health insurance business from 5% to 15% market share in 3 years. Build the strategy.",hint:"Distribution: bancassurance + agency + digital. Product: corporate health, retail health, top-up. Customer acquisition vs retention analytics. M&A vs organic."}]
+      },
+      { id:"asianpaints",name:"Asian Paints",type:"fmcg",badge:"AP",color:"#dc2626",tagline:"Paints & Home Décor",tagColor:"tag-orange",roles:["Management Trainee","Sales Manager","Area Manager"],
+        technical:[
+          {q:"Asian Paints has a legendary distribution network. How would you use analytics to optimise dealer territory allocation?",hint:"Geo-analytics: dealer coverage radius, revenue per dealer, density mapping, white-space identification. Optimise for coverage × profitability × logistics cost."},
+          {q:"How would you build a demand forecast for a seasonal product like exterior wall paint?",hint:"Strong weather/season signal (painting season: Oct-Feb). Add new construction index, housing starts, renovation cycles. SARIMA + external regressors."},
+          {q:"Asian Paints is entering the home services business. How would you measure the success of their interior design consultation service?",hint:"NPS, trial-to-repeat rate, revenue per customer, cross-sell conversion (consultation → paint purchase), CAC vs LTV."}
+        ],behavioral:[{q:"Why Asian Paints over an IT or consulting role for a BDA/Core graduate?",hint:"India's largest paints company, massive distribution analytics opportunity, fascinating consumer + B2B mix, strong MT programme."}],caseStudy:[{q:"CASE: Asian Paints' market share in Tier-3 cities is 42% vs 56% in metros. Design an analytics-driven growth strategy for Tier-3.",hint:"Distribution gap analysis (numeric/weighted distribution) → high-potential pin-code identification → dealer activation programme → price-pack strategy for Tier-3."}]
+      },
+      { id:"arcesium",name:"Arcesium",type:"tech",badge:"AR",color:"#7c3aed",tagline:"FinTech & Capital Markets",tagColor:"tag-purple",roles:["Technology Analyst","Financial Analyst","Operations Analyst"],
+        technical:[
+          {q:"Arcesium provides post-trade processing for hedge funds. Explain what trade reconciliation involves and how automation helps.",hint:"Matching trades between internal books and counterparty/broker records. Breaks: quantity, price, settlement date mismatches. ML: auto-match on fuzzy keys, classify unmatched trades."},
+          {q:"What is NAV (Net Asset Value) for a hedge fund and how is it calculated?",hint:"NAV = Total Assets - Total Liabilities. Calculated daily: mark-to-market all positions + accrued income - management fees - liabilities. Critical for investor redemptions."},
+          {q:"How would you use Python to detect anomalies in daily trade settlement data?",hint:"Z-score on settlement amounts by security type. Isolation Forest for multivariate anomalies. Alert: trades > 3σ from historical mean by counterparty."}
+        ],behavioral:[{q:"Arcesium is a tech-first company in capital markets. How does your technical background prepare you?",hint:"Connect programming skills + BFSI domain knowledge. Show interest in fintech intersection."}],caseStudy:[{q:"CASE: A hedge fund client's reconciliation failure rate is 8%. Arcesium is tasked with reducing it to 2%. Design the analytics solution.",hint:"Root cause classification: price source mismatch, settlement date differences, corporate action differences. ML model to auto-resolve common patterns. Escalation workflow for exceptions."}]
+      },
+      { id:"crisfil",name:"CRISIL",type:"bfsi",badge:"CR",color:"#1d4ed8",tagline:"Rating & Analytics",tagColor:"tag-blue",roles:["Analyst","Credit Rating Analyst","Research Analyst"],
+        technical:[
+          {q:"Explain how CRISIL rates a corporate bond. What are the key analytical factors?",hint:"Business risk (industry, competitive position, operating efficiency) + Financial risk (leverage, coverage ratios, liquidity, cash flows). Notching for structural features (secured vs unsecured, seniority)."},
+          {q:"How do macroeconomic indicators affect credit ratings? Build a simple indicator framework.",hint:"GDP growth (capacity to repay), inflation (cost pressures), interest rates (refinancing risk), forex (for exporters/importers), commodity prices (sector-specific). Regression of default rates on macro variables."},
+          {q:"What is the Altman Z-Score and what are its limitations for Indian companies?",hint:"Z-score = 1.2X1 + 1.4X2 + 3.3X3 + 0.6X4 + 1.0X5. Developed for US manufacturing. Limitations: doesn't work for service companies, Indian accounting differences, doesn't capture qualitative factors."}
+        ],behavioral:[{q:"CRISIL requires deep analytical rigour. Describe a time you went deeper than asked on a data problem.",hint:"Show intellectual curiosity. Reference any project where you found an unexpected insight by going beyond surface analysis."}],caseStudy:[{q:"CASE: A mid-size real estate developer wants a CRISIL rating for their NCD issue. What information would you request and what rating would you likely assign?",hint:"Request: audited financials, project inventory, sales velocity, debt maturity profile, promoter background. Assess: project risk, debt coverage, unsold inventory. Real estate ratings tend to be in BBB/A range."}]
+      },
+      { id:"diageo",name:"Diageo",type:"fmcg",badge:"DG",color:"#1e3a8a",tagline:"Premium Spirits FMCG",tagColor:"tag-blue",roles:["Management Trainee","Sales Executive","Revenue Management Analyst"],
+        technical:[
+          {q:"Diageo is a premium spirits company. How does premiumisation analytics work in FMCG?",hint:"Track consumer upgrade path: mass → semi-premium → premium → super-premium. Measure: share of premium SKUs in basket, price ladder climbing rate, occasion-based purchase analysis."},
+          {q:"How would you analyse the off-trade vs on-trade channel mix for Diageo's Scotch portfolio?",hint:"Off-trade (retail/e-comm): volume-driven, promotional. On-trade (bars/restaurants): margin-driven, brand building. Analytics: channel profitability, brand equity by channel, promotional effectiveness."},
+          {q:"Spirits regulations vary significantly by Indian state. How would you build a regulatory compliance monitoring dashboard?",hint:"Track: state excise duty rates, outlet license counts, advertising restrictions, product approval status per state. Alert on regulatory changes. Build state-wise GTM planning tool."}
+        ],behavioral:[{q:"Diageo's culture is entrepreneurial. How have you shown initiative beyond your job description?",hint:"Show ownership examples — at internship, in GIM clubs, or academic projects where you went beyond the brief."}],caseStudy:[{q:"CASE: Diageo wants to grow Johnnie Walker in India by 20% YoY. Design the analytics-led sales strategy.",hint:"Market sizing by city tier. Distributor performance analytics. On-trade activation ROI. Consumer profiling. Digital channel strategy. Price-pack architecture for gifting occasions."}]
+      },
+      { id:"itc",name:"ITC Limited",type:"fmcg",badge:"IT",color:"#166534",tagline:"FMCG & Agribusiness",tagColor:"tag-green",roles:["Management Trainee","Trade Marketing","Category Manager"],
+        technical:[
+          {q:"ITC is one of India's largest FMCG companies. How would you build a category share prediction model?",hint:"Panel data regression: price index, distribution (weighted), advertising spend, promotions, competitive activity. Markov chain model for brand switching."},
+          {q:"How would you design a route-to-market analytics system for ITC's Foods division?",hint:"Outlet universe mapping → current coverage → weekly beat planning optimisation → salesperson productivity metrics → territory redesign triggers."},
+          {q:"ITC has a large agribusiness (e-Choupal). How would you use data analytics to help farmers make better crop decisions?",hint:"Input: soil health, weather forecast, market prices, crop disease alerts. Output: recommended crops, input advisory, harvest timing. Delivered via mobile app to 4M+ farmers."}
+        ],behavioral:[{q:"ITC is known for long-term thinking and sustainability. How does this align with your career goals?",hint:"Link ITC's 100-year legacy with your interest in building sustainable business impact vs quick wins."}],caseStudy:[{q:"CASE: ITC's Sunfeast brand is losing share to Britannia's Good Day in the premium cookies segment. What is your data-driven strategy to defend and grow share?",hint:"Consumer panel: who is switching and why? Product: taste parity vs competitor? Distribution: outlet availability? Promotion: trade support vs competitor. Target: high-switching consumer segments."}]
+      },
+      { id:"socgen",name:"Société Générale (SocGen)",type:"bfsi",badge:"SG",color:"#dc2626",tagline:"Investment Banking & Analytics",tagColor:"tag-orange",roles:["Analyst","Risk Analyst","Finance Associate"],
+        technical:[
+          {q:"SocGen is a major European investment bank. Explain what a 'booking entity' is in global banking and why it matters for analytics.",hint:"Legal entity that holds a trade for accounting/regulatory purposes. Different booking entities in different countries → different regulatory reporting, capital treatment, tax implications. Analytics: P&L by booking entity."},
+          {q:"How would you build a cross-currency risk exposure report for SocGen's India desk?",hint:"Net open position per currency pair → mark-to-market using live FX rates → VaR by currency → concentration limits → daily P&L attribution by currency."},
+          {q:"What is FRTB (Fundamental Review of the Trading Book) and how does it impact bank analytics?",hint:"Basel IV market risk framework. IMA vs SA approach. Requires more granular trade-level data, ES (Expected Shortfall) vs VaR, P&L attribution tests. Massive data and analytics infrastructure upgrade."}
+        ],behavioral:[{q:"SocGen has faced major trading scandals. How do you ensure integrity in financial analytics?",hint:"Model validation, independent review, documented assumptions, compliance-first mindset. Mention interest in risk controls, not just alpha generation."}],caseStudy:[{q:"CASE: SocGen's India GBS wants to automate its daily regulatory reporting (RBI) currently taking 4 analysts 3 hours each morning. Design the automation.",hint:"Data pipeline: trading systems → reconciliation → regulatory calculations → report generation → submission. Python + SQL automation. Target: < 30 min, 1 analyst oversight."}]
+      },
+      { id:"gep",name:"GEP Worldwide",type:"consulting",badge:"GP",color:"#0f766e",tagline:"Supply Chain & Procurement Analytics",tagColor:"tag-green",roles:["Associate Consultant","Business Analyst","Data Analyst"],
+        technical:[
+          {q:"GEP specialises in procurement analytics. What is spend analytics and what insights does it generate?",hint:"Classifying an organisation's buying spend by category, supplier, geography. Insights: tail spend, maverick buying, supplier concentration risk, savings opportunities, compliance rate."},
+          {q:"How would you build a supplier risk scoring model for a Fortune 500 procurement function?",hint:"Dimensions: financial health (Altman Z-Score proxy), geographic risk (political stability, natural disaster), dependency (% of category from single supplier), ESG compliance, delivery performance. Weighted composite score."},
+          {q:"What is Total Cost of Ownership (TCO) analysis? How does it differ from unit price analysis?",hint:"TCO = Purchase price + Logistics + Duties + Quality cost + Inventory holding + Maintenance + End-of-life. Unit price is just one component. A cheaper supplier can have higher TCO."}
+        ],behavioral:[{q:"GEP's clients are Fortune 500 CPOs. How do you communicate analytical findings to C-suite procurement leaders?",hint:"Executive summary first. Single slide with key action. Quantify impact in dollar savings. Leave technical details in appendix."}],caseStudy:[{q:"CASE: A manufacturing client spends $500M annually across 2,000 suppliers. GEP is engaged to find $50M in savings. Where do you start?",hint:"Spend cube analysis: top 20% categories by spend → benchmark vs market rates → identify consolidation opportunities → negotiate with key suppliers → tail spend policy → payment terms optimisation."}]
+      },
+      { id:"wellsfargo_core",name:"Wells Fargo India",type:"bfsi",badge:"WF",color:"#c2410c",tagline:"Banking Operations & Analytics",tagColor:"tag-orange",roles:["Analyst","Finance Associate","Risk Analyst"],
+        technical:[
+          {q:"Wells Fargo India is a GBS/GCC hub. What analytics functions are typically offshored to India centres?",hint:"Risk reporting, regulatory reporting (Basel, CCAR), model validation, compliance analytics, operational risk monitoring, financial control, internal audit analytics."},
+          {q:"Explain CCAR (Comprehensive Capital Analysis and Review) and the role of data analytics in it.",hint:"US Fed's annual stress test for large banks. Tests capital adequacy under adverse macro scenarios. Analytics: loss modelling (PD, LGD, EAD) under baseline/adverse/severely adverse scenarios. Huge data exercise."},
+          {q:"How would you detect model risk in a credit risk model used for regulatory capital calculation?",hint:"Backtesting: actual vs predicted defaults. Benchmarking vs industry. Sensitivity analysis. Documentation gaps. Override rates. Independent model validation team review."}
+        ],behavioral:[{q:"GBS roles can feel removed from business decisions. How do you stay motivated and add value in a support function?",hint:"GBS is where complex analytical work actually happens. Focus on quality, process improvement, automation. See yourself as enabler of better decisions upstream."}],caseStudy:[{q:"CASE: Wells Fargo's India team needs to build a credit card fraud detection model compliant with US regulations. What framework do you propose?",hint:"Data governance (PII handling per US regulations) → feature engineering → model development → validation → model risk management (SR 11-7) → production deployment → monitoring."}]
+      },
+      { id:"thermax",name:"Thermax",type:"fmcg",badge:"TX",color:"#0369a1",tagline:"Energy & Environment Engineering",tagColor:"tag-blue",roles:["Management Trainee","Business Analyst","Product Manager"],
+        technical:[
+          {q:"Thermax makes industrial boilers and energy solutions. How would you build a predictive maintenance analytics system for their installed base of 10,000 boilers?",hint:"IoT sensor data: pressure, temperature, vibration, fuel consumption → anomaly detection → failure prediction (RUL — Remaining Useful Life) → maintenance scheduling integration → revenue: service contracts."},
+          {q:"How would you analyse the win-loss data from Thermax's industrial sales team to improve hit rate?",hint:"Features: deal size, customer type, geography, competitor involved, proposal turnaround time, relationship strength. Decision tree or logistic regression. Identify high-win-rate deal profiles."},
+          {q:"Thermax is a B2B company with long sales cycles (6-18 months). How do you forecast quarterly revenue?",hint:"Pipeline analysis: probability-weighted revenue = Σ(deal value × close probability × timing probability). Stage-gate model for each deal. Update weekly with CRM data."}
+        ],behavioral:[{q:"Thermax serves industries like cement, steel, pharma. How do you quickly learn a new industrial domain?",hint:"Domain immersion: plant visits, talking to application engineers, reading technical specs. Translate domain knowledge into data features."}],caseStudy:[{q:"CASE: Thermax wants to launch a 'Carbon as a Service' subscription for industrial customers. Design the analytics for pricing and customer targeting.",hint:"Target: highest-emitting industrial customers. Carbon credit market analysis. Cost of abatement per ton by technology. Subscription pricing model. ROI for customer vs one-time capex."}]
+      },
+    ]
+  },
+  hcm: {
+    name: "PGDM — Healthcare Management",
+    badge: "HCM", color: "#22c55e",
+    stats: { companies: 22, highest: "29.1 LPA", avg: "14.0 LPA", students: 48 },
+    topbarStats: [
+      {label:"Companies", val:"22"},
+      {label:"Highest LPA", val:"29.1"},
+      {label:"Avg LPA", val:"14.0"}
+    ],
+    companies: [
+      { id:"stryker",name:"Stryker",type:"fmcg",badge:"ST",color:"#f59e0b",tagline:"Medical Devices (Ortho & Surgical)",tagColor:"tag-gold",roles:["Sales Associate","Territory Manager","Clinical Specialist"],
+        technical:[
+          {q:"Stryker is a leading orthopaedic implant company. How would you analyse a hospital's procedure volume to prioritise sales territories?",hint:"Procedure volume (knee/hip replacements) × current Stryker market share × growth potential = territory opportunity score. Source: hospital discharge data (NABH), surgeon rosters."},
+          {q:"How does value-based contracting work in medical devices? How would analytics support it?",hint:"Outcome-based pricing: Stryker gets paid based on patient outcomes (readmission rate, implant revision rate). Analytics: track patient outcomes, benchmark vs competitor implants, build evidence for value proposition."},
+          {q:"How would you build a KOL (Key Opinion Leader) engagement analytics programme for Stryker's spine division?",hint:"Identify KOLs: publication count, conference presentations, peer influence, case volume. Tier by influence. Track engagement: CME attendance, advisory board participation, clinical trial involvement."}
+        ],behavioral:[{q:"Medical device sales requires clinical credibility. How does your HCM background prepare you for this?",hint:"Clinical knowledge from HCM curriculum, understanding of hospital procurement, familiarity with clinical protocols, ability to speak to surgeons and hospital administrators."}],caseStudy:[{q:"CASE: Stryker lost 3 key orthopaedic surgeons to a competitor's implant system in Chennai. Design a win-back strategy.",hint:"Understand switching reason (clinical preference, pricing, support). Clinical evidence for Stryker superiority. Product demo with clinical support. Competitive pricing analysis. Build new relationships with younger surgeons."}]
+      },
+      { id:"jnj_hcm",name:"Johnson & Johnson MedTech",type:"fmcg",badge:"JJ",color:"#cc0000",tagline:"Medical Devices & MedTech",tagColor:"tag-orange",roles:["Sales Consultant","Market Development Manager","Healthcare Analytics"],
+        technical:[
+          {q:"J&J MedTech has a broad portfolio (surgical, vision, ortho). How would you develop a hospital penetration strategy for a new surgical robot?",hint:"Identify target hospitals: case volume > 500/yr, budget for capital equipment, innovation-adopting culture, champion surgeon. ROI model for hospital: cost per case (robot) vs traditional surgery. Business case development."},
+          {q:"How would you measure the clinical and economic value of a new wound care product vs the standard of care?",hint:"Clinical: faster healing, lower infection rate, reduced dressing changes. Economic: shorter hospital stay, fewer nurse visits, lower antibiotic costs. Health Technology Assessment (HTA) methodology."},
+          {q:"J&J's global compliance requirements are strict. How does analytics help manage HCP (Healthcare Professional) engagement within regulatory limits?",hint:"Track: spend per HCP (meals, CME, speaker fees) vs country-specific FCPA/local law limits. Automated alerts when approaching thresholds. Audit trail for all interactions."}
+        ],behavioral:[{q:"J&J's Credo puts patients first. Describe a situation where you prioritised long-term ethics over short-term gains.",hint:"Show principle-driven decision making. Can reference academic or work situations where you maintained standards under pressure."}],caseStudy:[{q:"CASE: J&J wants to grow its Ethicon surgical stapler market share in government hospitals from 8% to 20% in 2 years. Design the strategy.",hint:"Government procurement: tender strategy (price competitive), demonstrate total cost of care advantage. Evidence: faster surgery, fewer complications. CME for surgeons. AIIMS/PGI reference sites. Tender database analytics."}]
+      },
+      { id:"philips_hcm",name:"Philips Healthcare",type:"fmcg",badge:"PH",color:"#1d4ed8",tagline:"Medical Imaging & Patient Monitoring",tagColor:"tag-blue",roles:["Healthcare Analytics Associate","Sales Engineer","Clinical Application Specialist"],
+        technical:[
+          {q:"Philips makes MRI machines, CT scanners, and patient monitoring. How would you build an equipment utilisation analytics dashboard for a large hospital network?",hint:"Equipment: scan volume per machine, downtime, maintenance history, revenue per hour. Compare against benchmark. Identify underutilised assets. Recommend: upgrade, relocation, or retirement."},
+          {q:"How does predictive maintenance work for expensive medical imaging equipment?",hint:"IoT sensors: tube voltage, temperature, gantry vibration. Features: age, scan volume, error codes, service history. Predict: remaining useful life, failure type. Proactive service scheduling."},
+          {q:"What is population health management and how does Philips Healthsuite platform support it?",hint:"Aggregate patient data across care settings → risk stratification → identify high-risk patients → proactive intervention → track outcomes. Philips Healthsuite: clinical data integration + analytics + care coordination tools."}
+        ],behavioral:[{q:"Healthcare technology sales requires building trust with clinicians. How do you establish credibility with doctors who have deep clinical expertise?",hint:"Listen first, don't oversell. Learn the clinical workflow. Demonstrate domain knowledge from HCM curriculum. Use clinical evidence, not marketing claims. Build long-term relationships."}],caseStudy:[{q:"CASE: Philips wants to expand its IntelliVue patient monitoring solutions in Indian ICUs. Design a market entry strategy.",hint:"Market size: ~5,000 ICUs in India, 40% with outdated monitoring. Target: private hospital chains (Apollo, Max, Fortis, Manipal). Clinical champion strategy. Proof of concept in 2 flagship hospitals. Phased expansion."}]
+      },
+      { id:"lekconsulting",name:"L.E.K. Consulting",type:"consulting",badge:"LK",color:"#0f172a",tagline:"Healthcare Strategy Consulting",tagColor:"tag-blue",roles:["Associate Consultant","Business Analyst"],
+        technical:[
+          {q:"L.E.K. is a strategy consulting firm with strong healthcare practice. Walk me through a hospital investment decision framework.",hint:"Market assessment (catchment area demographics, competitive positioning, speciality mix) → financial modelling (volume ramp, revenue per bed, EBITDA, IRR) → risk assessment (regulatory, competition, talent) → recommendation."},
+          {q:"How would you size the healthcare analytics market in India for a PE firm evaluating an investment?",hint:"Top-down: India healthcare market $370B → % with digital/analytics capability (10%) → analytics spend as % of revenue (2-3%). Bottom-up: count healthcare analytics companies × average revenue. Cross-check both."},
+          {q:"Explain the difference between acute care, post-acute care, and ambulatory care. How do business models differ?",hint:"Acute: inpatient hospital (high acuity, high cost). Post-acute: rehabilitation, step-down care. Ambulatory: outpatient clinics, diagnostics, day surgery. Revenue models: DRG/bed-day vs episode vs fee-for-service."}
+        ],behavioral:[{q:"Consulting requires presenting to hospital CEOs and CXOs. How do you prepare for a presentation where the audience knows more about operations than you?",hint:"Structure thinking clearly (MECE), focus on analytics-driven insights they can't see from inside, acknowledge domain gaps while showing analytical rigour. Prepare extensively on the specific client."}],caseStudy:[{q:"CASE: A PE firm wants to acquire a 500-bed private hospital in Pune. L.E.K. is advising on due diligence. What are the top 5 questions you'd answer?",hint:"1. Market position and competitive moat. 2. Quality of revenue (speciality mix, payor mix). 3. Occupancy trends and capacity. 4. Physician dependency and stickiness. 5. Regulatory and compliance risk."}]
+      },
+      { id:"drlal",name:"Dr Lal PathLabs",type:"fmcg",badge:"DL",color:"#dc2626",tagline:"Diagnostics & Lab Analytics",tagColor:"tag-orange",roles:["Operations Analyst","Territory Manager","Business Development"],
+        technical:[
+          {q:"Dr Lal PathLabs is India's largest diagnostics chain. How would you optimise lab network planning using patient volume data?",hint:"Geospatial analysis: test volume by pin code → hub-and-spoke model → lab placement optimisation (minimise patient travel time + maximise volume) → collection centre placement → logistics cost model."},
+          {q:"How would you use analytics to reduce turnaround time (TAT) for reports from 24 hours to 12 hours?",hint:"Process mining: sample collection → pickup → lab receipt → processing → QC → report generation → delivery. Identify bottlenecks. Predictive: early flag of batches likely to breach TAT. Optimise lab scheduling."},
+          {q:"What metrics define a high-performing diagnostic centre? Build a KPI dashboard.",hint:"Revenue: tests/day, revenue per test, average ticket size. Operations: TAT compliance %, rejection rate, equipment uptime. Quality: re-run rate, critical value reporting rate. Customer: NPS, repeat visit rate."}
+        ],behavioral:[{q:"Diagnostics has strong competition from Thyrocare and Metropolis. How would you defend Dr Lal's market position?",hint:"Quality assurance, network reach, brand trust (50+ years), tech investment (mobile app, home collection). Analytics: identify churning accounts and proactive retention."}],caseStudy:[{q:"CASE: Dr Lal wants to expand to 15 new cities in Tier-2 India. Design a data-driven city selection framework.",hint:"Scoring model: population (>500K), current diagnostic market size, competitive intensity, number of hospitals/clinics, income levels, infrastructure. Weight factors and rank cities."}]
+      },
+      { id:"niva_bupa",name:"Niva Bupa Health Insurance",type:"bfsi",badge:"NB",color:"#1d4ed8",tagline:"Health Insurance Analytics",tagColor:"tag-blue",roles:["Analytics Associate","Underwriting Analyst","Product Analyst"],
+        technical:[
+          {q:"Niva Bupa is one of India's fastest-growing health insurers. How would you build a health risk score for an individual health insurance applicant?",hint:"Demographics (age, gender), BMI, pre-existing conditions, family history, lifestyle (smoking, alcohol, exercise), geographic risk (disease prevalence). Gradient boosting model. Calibrated probability output for pricing."},
+          {q:"How does claims analytics help a health insurer manage medical inflation?",hint:"Trend analysis: cost per claim by diagnosis, hospital, procedure. Identify outliers. Network analytics: which hospitals charge highest for same procedure. DRG benchmarking. Negotiate with hospitals based on data."},
+          {q:"What is a loss ratio and how would you build an early warning system for portfolio deterioration?",hint:"Loss Ratio = Claims Paid / Premium Earned. EWS: track LR by cohort, product, geography monthly. Alert when LR > 85% (health). Root cause: claims frequency, severity, or fraudulent claims spike."}
+        ],behavioral:[{q:"Health insurance involves sensitive patient data. How do you ensure privacy-compliant analytics?",hint:"Anonymised data for analytics. Aggregate reporting. Data minimisation principle. IRDAI data protection guidelines. Purpose limitation — don't use claims data for marketing."}],caseStudy:[{q:"CASE: Niva Bupa's corporate health insurance loss ratio is 96% (vs target 80%). Diagnose and design a corrective programme.",hint:"Decompose: which corporates/industries are driving high LR. Claims analysis: top diagnoses, hospitals, fraudulent patterns. Underwriting: revisit corporate pricing. Wellness: preventive programmes for high-risk cohorts."}]
+      },
+      { id:"zydus",name:"Zydus Health Sciences",type:"fmcg",badge:"ZH",color:"#0f766e",tagline:"Pharmaceutical & Consumer Health",tagColor:"tag-green",roles:["Medical Representative","Market Research Analyst","Sales Analyst"],
+        technical:[
+          {q:"Zydus has a strong generics + branded pharma + consumer health presence. How would you do a brand lifecycle analysis for a branded generic?",hint:"Launch → growth → maturity → generic entry. Track: market share, prescription evolution, price erosion post-generic entry. Develop lifecycle management strategy (line extensions, OTC switch, patient programs)."},
+          {q:"How would you build a territory productivity scorecard for Zydus's medical representative force of 10,000 reps?",hint:"Metrics: doctors covered vs target, prescription share growth, samples utilised, call average (calls/day), new doctor additions, brand focus compliance. Dashboard with RAG status per KPI."},
+          {q:"What is IQVIA data and how does a pharma company use it for market analytics?", hint:"IQVIA tracks retail pharmacy dispensing data (value, volume, brand share). Used for: market share tracking, competitive intelligence, sales force deployment, territory planning. Updated monthly."}
+        ],behavioral:[{q:"Pharmaceutical sales requires persistence and scientific knowledge. How do you build credibility with specialists (cardiologists, diabetologists)?",hint:"HCM curriculum provides clinical foundations. Study therapeutic area deeply. Bring clinical evidence data. Follow up consistently. Position as knowledge partner, not just salesperson."}],caseStudy:[{q:"CASE: Zydus is launching a new diabetes combination pill (Metformin + newer molecule). Design the launch analytics strategy.",hint:"Physician targeting: endocrinologists + top GPs treating diabetes. Market sizing: total T2D patients on Metformin. Positioning vs competition. IQVIA-based share tracking. Patient support programme metrics."}]
+      },
+      { id:"deloitte_hcm",name:"Deloitte Healthcare Consulting",type:"consulting",badge:"DL",color:"#86efac",tagline:"Healthcare Advisory",tagColor:"tag-green",roles:["Analyst","Consultant","Healthcare Associate"],
+        technical:[
+          {q:"Deloitte advises hospitals on operational efficiency. How would you reduce a hospital's OT (operating theatre) turnaround time?",hint:"Process mapping: previous case end → cleaning → next case start. Identify: instrument sterilisation bottleneck, anaesthesiologist availability, scheduling gaps. Target: < 20 min turnaround."},
+          {q:"What is a DRG (Diagnosis Related Group) system and how does it affect hospital analytics?",hint:"Classifies hospital cases by diagnosis + procedure for reimbursement. Fixed payment per DRG regardless of actual cost → hospital must manage within DRG. Analytics: case mix index, DRG-level profitability, coding accuracy."},
+          {q:"How would you build a capacity planning model for a 200-bed private hospital planning to expand?",hint:"Current utilisation by department (occupancy, OT utilisation, diagnostic equipment). Demand forecast (catchment demographics + disease burden). Future: greenfield expansion vs satellite hub. Phased expansion plan."}
+        ],behavioral:[{q:"Healthcare consulting involves both clinical and business stakeholders. How do you manage their different priorities?",hint:"Clinicians: patient outcomes, clinical protocols. Administrators: cost, revenue, compliance. Find common ground in data. Separate meetings for clinical vs admin concerns. Translate clinical to financial terms and vice versa."}],caseStudy:[{q:"CASE: A large hospital network's pharmacy margins have fallen from 28% to 19% in 2 years. Diagnose and recommend.",hint:"Root cause: generic penetration, high-value drug shortage, procurement inefficiency, pilferage, formulary non-compliance. ABC analysis of drug categories. Procurement renegotiation. Formulary adherence analytics."}]
+      },
+    ]
+  },
+  bifs: {
+    name: "PGDM — Banking, Insurance & Financial Services",
+    badge: "BIFS", color: "#a78bfa",
+    stats: { companies: 23, highest: "19.7 LPA", avg: "14.8 LPA", students: 51 },
+    topbarStats: [
+      {label:"Companies", val:"23"},
+      {label:"Highest LPA", val:"19.7"},
+      {label:"Avg LPA", val:"14.8"}
+    ],
+    companies: [
+      { id:"bofa",name:"Bank of America",type:"bfsi",badge:"BA",color:"#e11d48",tagline:"Investment Banking & Analytics",tagColor:"tag-orange",roles:["Analyst","Operations Analyst","Risk Associate"],
+        technical:[
+          {q:"Bank of America is one of the world's largest banks. For their India GBS, what analytics functions are typically performed?",hint:"Risk reporting (credit, market, operational), regulatory analytics (Basel III/IV, CCAR/DFAST), financial crime analytics (AML/fraud), treasury analytics, CFO reporting automation."},
+          {q:"Explain what a stress test is for a bank and how data analytics enables it.",hint:"Simulate P&L and capital adequacy under adverse macro scenarios (GDP -4%, unemployment +6%, house prices -30%). Analytics: loss models for each portfolio, aggregation, regulatory submission. Data: positions + macro forecasts."},
+          {q:"How would you build a real-time dashboard for BofA's credit card portfolio risk in India?",hint:"KPIs: delinquency rate by bucket (30/60/90 DPD), charge-off rate, utilisation rate, revolve rate, vintage curves. Daily refresh. Drill-down by product, geography, customer segment. Alerts on threshold breaches."}
+        ],behavioral:[{q:"Global banks have strong processes and compliance culture. How do you thrive in a structured environment?",hint:"Show discipline, attention to detail, process orientation. Compliance culture aligns with your risk-aware mindset from BIFS programme."}],caseStudy:[{q:"CASE: BofA's India GBS team wants to automate credit card dispute resolution currently taking 8 analysts handling 500 disputes/day. Design the automation.",hint:"NLP to classify dispute type → rule engine for auto-resolution of clear cases (duplicate charges, merchant error) → ML model to predict approval probability → human review for complex cases. Target: 60% straight-through processing."}]
+      },
+      { id:"barclays",name:"Barclays",type:"bfsi",badge:"BC",color:"#00aeef",tagline:"Investment & Corporate Banking",tagColor:"tag-blue",roles:["Analyst","Risk Analyst","Finance Associate"],
+        technical:[
+          {q:"Barclays has a large India GCC. What is the typical work that an analyst in a banking GCC does day-to-day?",hint:"Regulatory reporting (PRA, FCA submissions), risk metrics production (VaR, stress testing), P&L reconciliation, client reporting, model validation support, financial control."},
+          {q:"Explain the concept of margin in fixed income trading. How does analytics help manage margin exposure?",hint:"Initial margin: collateral posted against potential loss. Variation margin: daily mark-to-market settlements. Analytics: forecast margin calls, optimise collateral allocation, predict stress margin requirements under scenarios."},
+          {q:"What is KYC (Know Your Customer) and how does machine learning improve the KYC process in a global bank?",hint:"NLP to extract information from onboarding documents, entity resolution (match customers across systems), adverse media screening, PEP/sanction list matching. Reduce false positives → analyst focus on true risks."}
+        ],behavioral:[{q:"Barclays places a lot of importance on citizenship and purpose. How has your BIFS programme shaped your view of responsible banking?",hint:"Link to financial inclusion, responsible lending, consumer protection, ESG investing. Show awareness of banking's role in society beyond profit."}],caseStudy:[{q:"CASE: Barclays India GCC is asked to build a model validation framework for their credit scoring models. What does a rigorous MV process look like?",hint:"Independent validation team → conceptual soundness review → data quality assessment → replication of model results → backtesting (discrimination: Gini/KS, calibration: PSI) → benchmarking → sensitivity analysis → documentation → sign-off."}]
+      },
+      { id:"crisil_bifs",name:"CRISIL",type:"bfsi",badge:"CR",color:"#1d4ed8",tagline:"Credit Ratings & Research",tagColor:"tag-blue",roles:["Rating Analyst","Research Analyst","Model Analyst"],
+        technical:[
+          {q:"Walk me through how CRISIL assigns a credit rating to an NBFC.",hint:"Business risk: asset quality, granularity of loan book, geographic concentration, segment focus. Financial risk: capitalisation (CAR), funding diversification, liquidity (ALM), asset quality (GNPA, NNPA, PCR). Governance: management quality, track record."},
+          {q:"What is the credit cycle and how does it affect ratings migration?",hint:"Expansion: credit quality improves, upgrades exceed downgrades. Peak: excessive leverage. Contraction: downgrades surge. Trough: distressed. Analytics: vintage analysis, migration matrices, sector-level correlation with macro."},
+          {q:"How would you use Python to build an early warning model for rating downgrades?",hint:"Features: QoQ change in ratios (D/E, DSCR, current ratio), rating watch flags, news sentiment, peer performance. Train on historical rating actions. Output: probability of downgrade in next 2 quarters."}
+        ],behavioral:[{q:"Credit ratings have significant market impact. How do you ensure analytical rigour when the stakes are high?",hint:"Multiple-reviewer process, committee-based decisions, clear documentation, conservative assumptions where uncertain, track historical accuracy of ratings."}],caseStudy:[{q:"CASE: You are a CRISIL analyst assigning a first-time rating to a fintech NBFC (3-year old, $200M AUM, digital-only lending). How do you approach it?",hint:"Challenges: short track record, untested business model through a credit cycle. Focus: quality of credit underwriting model, portfolio performance metrics, data-driven lending model's predictive accuracy, investor quality, management pedigree."}]
+      },
+      { id:"oxane",name:"Oxane Partners",type:"bfsi",badge:"OX",color:"#7c3aed",tagline:"Alternative Investment Analytics",tagColor:"tag-purple",roles:["Analyst","Finance Analyst","Investment Operations"],
+        technical:[
+          {q:"Oxane specialises in alternative investments (private equity, private credit). How does analytics for alternatives differ from traditional investments?",hint:"No daily mark-to-market (illiquid). Valuation: comparable company analysis, DCF, NAV. Reporting: ILPA standards, quarterly LP reports. Data challenges: heterogeneous, unstructured data, long time horizons."},
+          {q:"What is IRR in private equity and what are its limitations?",hint:"IRR = discount rate where NPV of cash flows = 0. Limitation: assumes reinvestment at IRR rate (unrealistic for high-IRR funds). MOIC (Multiple on Invested Capital) is a complementary metric. TVPI, DPI, RVPI also used."},
+          {q:"How would you build a portfolio monitoring dashboard for a private credit fund with 50 portfolio companies?",hint:"KPIs: DSCR, leverage ratio, revenue vs plan, covenant compliance, PIK vs cash interest, days past due. RAG status per company. Trend analysis. Stress scenario impact on each credit."}
+        ],behavioral:[{q:"Alternative investments is a niche field. Why are you interested in this over traditional banking?",hint:"Less commoditised, more analytical depth, deal-by-deal decision making, direct company impact, growing asset class in India (SEBI AIF regulations)."}],caseStudy:[{q:"CASE: Oxane's client (a PE fund) wants to build a data-driven deal sourcing platform. Design it.",hint:"Company universe: Dun & Bradstreet + regulatory filings + alternative data. Scoring: financial health, growth trajectory, ownership (family/PE-backed), management quality. Outreach automation. Integration with CRM."}]
+      },
+      { id:"yubi",name:"Yubi (CredAvenue)",type:"bfsi",badge:"YB",color:"#06b6d4",tagline:"Debt FinTech Platform",tagColor:"tag-blue",roles:["Analyst","Business Development","Credit Analyst"],
+        technical:[
+          {q:"Yubi is India's largest debt marketplace. Explain how a digital debt platform works and what analytics powers it.",hint:"Marketplace: connects corporate borrowers with lenders (banks, NBFCs, mutual funds). Analytics: borrower credit scoring, lender-borrower matching, pricing recommendation, covenant monitoring, portfolio analytics for lenders."},
+          {q:"How would you build a credit decisioning model for a corporate borrower seeking working capital on Yubi's platform?",hint:"Features: financials (D/E, DSCR, revenue trend), industry risk, bureau data, GST cash flows, bank statement analysis. Output: eligibility (Y/N) + interest rate band + covenants. Model: LightGBM + explainability."},
+          {q:"What is the TLTRO (Targeted Long-Term Repo Operations) scheme and how do fintech platforms like Yubi benefit from it?",hint:"RBI provides cheap funding to banks to lend to specific sectors. Yubi helps banks deploy this capital into qualifying assets (MSMEs, NBFCs). Analytics: identify eligible borrowers, track deployment, report compliance."}
+        ],behavioral:[{q:"Yubi is a high-growth fintech startup. How do you balance speed and accuracy in credit decisions?",hint:"Automation for standard decisions (clear approve/decline). Human review for edge cases. Continuous model monitoring. Speed does not compromise on KYC/AML compliance."}],caseStudy:[{q:"CASE: Yubi wants to launch a 'Supply Chain Finance' product for MSME suppliers of large corporates. Design the product analytics.",hint:"Anchor corporate creditworthiness → early payment offers to suppliers at discount → supplier onboarding scoring → utilisation analytics → impact on supplier cash conversion cycle → portfolio risk monitoring."}]
+      },
+      { id:"eyindia",name:"EY India (Financial Services)",type:"consulting",badge:"EY",color:"#f59e0b",tagline:"Financial Services Advisory",tagColor:"tag-gold",roles:["Analyst","Associate Consultant","Risk Analyst"],
+        technical:[
+          {q:"EY's financial services practice in India covers banking, insurance, and capital markets. What are the top analytics use cases EY solves for banks?",hint:"Credit risk modelling (IFRS 9 ECL), AML/compliance analytics, digital transformation analytics, regulatory reporting automation, fraud detection, customer analytics, model risk management."},
+          {q:"What is IFRS 9 and how does it change credit loss provisioning for banks?",hint:"Replaces IAS 39. Forward-looking ECL model (vs incurred loss under IAS 39). Stage 1 (12-month ECL), Stage 2 (lifetime ECL on SICR), Stage 3 (credit-impaired). Requires macro-economic overlay. Significant analytics investment."},
+          {q:"How would you build a suspicious transaction detection model for an EY banking client?",hint:"Supervised: label historical STRs as fraud/non-fraud, train classifier. Unsupervised: clustering + anomaly detection for unknown patterns. Network analytics for layering detection. Real-time scoring via API."}
+        ],behavioral:[{q:"EY requires both analytical and consulting skills. How do you communicate complex financial models to clients who may not be quantitative?",hint:"Executive summary in business terms. Visual: show output, not formula. Scenario analysis: what if rates go up 100bps? Relate to business decisions they need to make."}],caseStudy:[{q:"CASE: An Indian private bank's GNPA has risen from 2.1% to 4.8% over 6 months. EY is engaged to diagnose the issue. What is your approach?",hint:"Vintage analysis (which sanction cohort is deteriorating) → segment drill-down (MSME? Corporate? Retail?) → geographic concentration → underwriting standard review → macro factor impact → collector performance analysis."}]
+      },
+    ]
+  }
+};
+
+// ─────────────────────────────────────────
+// PROGRAMME SELECTOR LOGIC
+// ─────────────────────────────────────────
+let selectedProg = null;
+
+window.selectProg = function(prog) {
+  selectedProg = prog;
+  document.getElementById('progSelector').style.display = 'none';
+  document.getElementById('backBtn').style.display = 'flex';
+  document.getElementById('progBanner').style.display = 'flex';
+
+  const pd = progData[prog] || progData.bda;
+  const badge = document.getElementById('progBannerBadge');
+  badge.textContent = pd.badge;
+  badge.style.background = pd.color + '20';
+  badge.style.color = pd.color;
+  badge.style.border = '1px solid ' + pd.color + '40';
+  document.getElementById('progBannerName').textContent = pd.name;
+
+  // Update topbar stats
+  const statChips = document.querySelectorAll('.stat-chip');
+  if (statChips.length && pd.topbarStats) {
+    pd.topbarStats.forEach((s, i) => {
+      if (statChips[i]) statChips[i].innerHTML = `<b>${s.val}</b> ${s.label}`;
+    });
+  }
+
+  // If non-BDA programme, inject companies into company grid
+  if (prog !== 'bda' && progData[prog]?.companies) {
+    injectProgrammeCompanies(progData[prog].companies);
+  } else {
+    // BDA: reset to original companies (or show existing)
+    const grid = document.getElementById('companyGrid');
+    if (grid && grid.children.length === 0) buildCompanies();
+    // show all BDA companies
+    document.querySelectorAll('.company-card').forEach(c => c.style.display = '');
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.filter-btn')?.classList.add('active');
+  }
+
+  // Update overview section stats
+  const ds1 = document.querySelector('#overview .dash-num.c1');
+  if (ds1) ds1.textContent = pd.stats.companies;
+};
+
+window.backToSelector = function() {
+  document.getElementById('progSelector').style.display = 'flex';
+  document.getElementById('backBtn').style.display = 'none';
+  document.getElementById('progBanner').style.display = 'none';
+  selectedProg = null;
+};
+
+function injectProgrammeCompanies(comps) {
+  const grid = document.getElementById('companyGrid');
+  if (!grid) return;
+  grid.innerHTML = ''; // clear BDA companies
+
+  comps.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'company-card';
+    card.id = 'co-' + c.id;
+    card.dataset.type = c.type;
+
+    const roleTagsHTML = (c.roles||[]).map(r =>
+      `<span class="role-tag tag-blue" style="border-color:${c.color}20;color:${c.color}">${r}</span>`
+    ).join('');
+
+    const techHTML = (c.technical||[]).map((q,i)=>`
+      <div class="q-item">
+        <div class="q-num">Q${i+1}</div>
+        <div class="q-text">${q.q}${q.hint?`<div class="q-hint">💡 ${q.hint}</div>`:''}</div>
+      </div>`).join('');
+
+    const behavHTML = (c.behavioral||[]).map((q,i)=>`
+      <div class="q-item">
+        <div class="q-num">Q${i+1}</div>
+        <div class="q-text">${q.q}${q.hint?`<div class="q-hint">💡 ${q.hint}</div>`:''}</div>
+      </div>`).join('');
+
+    const caseHTML = (c.caseStudy||[]).map((q,i)=>`
+      <div class="q-item" style="border-left-color:var(--accent2)">
+        <div class="q-num">C${i+1}</div>
+        <div class="q-text">${q.q}${q.hint?`<div class="q-hint">💡 ${q.hint}</div>`:''}</div>
+      </div>`).join('');
+
+    card.innerHTML = `
+      <div class="company-card-head" onclick="toggleCompany('${c.id}')">
+        <div class="company-logo" style="background:${c.color}20;color:${c.color};border:1px solid ${c.color}40">${c.badge}</div>
+        <div class="company-info">
+          <div class="company-name">${c.name}</div>
+          <div class="company-type">${c.tagline}</div>
+        </div>
+        <div class="toggle">▼</div>
+      </div>
+      <div class="company-roles">${roleTagsHTML}</div>
+      <div class="company-questions" id="cq-${c.id}">
+        <div class="q-tabs">
+          <div class="q-tab active" data-tab="tech" onclick="showQTab('${c.id}','tech')">Technical</div>
+          <div class="q-tab" data-tab="behav" onclick="showQTab('${c.id}','behav')">Behavioural</div>
+          <div class="q-tab" data-tab="case" onclick="showQTab('${c.id}','case')">Case Study</div>
+        </div>
+        <div class="q-content active" data-content="tech">${techHTML}</div>
+        <div class="q-content" data-content="behav">${behavHTML}</div>
+        <div class="q-content" data-content="case">${caseHTML}</div>
+        <button class="download-btn" onclick="downloadSectionAsPDF('${c.name}', 'cq-${c.id}')">⬇ Download Q&A as PDF</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+// Auto-show programme selector on load
+window.addEventListener('DOMContentLoaded', function() {
+  // Programme selector is shown by default (via HTML)
+  // Don't auto-select BDA anymore
+});
+
 </script>
 </body>
 </html>
