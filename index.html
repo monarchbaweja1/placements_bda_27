@@ -859,7 +859,18 @@ code {
     <div class="lc-title">GIM <span>Placement</span><br>Prep Hub</div>
     <div class="lc-sub">The complete placement preparation environment for GIM students — companies, Q&A, roadmap &amp; cheatsheets.</div>
 
-    <div id="loginForm">
+    <!-- Loading state while checking auth -->
+    <div id="lcLoading" style="padding:20px 0;text-align:center">
+      <div style="font-family:var(--font-mono);font-size:13px;color:var(--text2);margin-bottom:12px">
+        <span id="lcLoadingDot" style="display:inline-block;animation:pulse 1s infinite">●</span>
+        &nbsp;Signing you in...
+      </div>
+      <div style="height:2px;background:var(--border);border-radius:2px;overflow:hidden;width:200px;margin:0 auto">
+        <div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));border-radius:2px;animation:ldfill 2s ease infinite alternate"></div>
+      </div>
+    </div>
+
+    <div id="loginForm" style="display:none">
       <input type="email" class="lc-input" id="lcEmail" placeholder="Enter your email address" autocomplete="email">
       <button class="lc-btn" id="lcBtn" onclick="doLogin()">Get Login Link →</button>
       <div class="lc-sent" id="lcSent">
@@ -3270,7 +3281,18 @@ function downloadSectionAsPDF(title, contentId) {
     <div class="lc-title">GIM <span>Placement</span><br>Prep Hub</div>
     <div class="lc-sub">The complete placement preparation environment for GIM students — companies, Q&A, roadmap &amp; cheatsheets.</div>
 
-    <div id="loginForm">
+    <!-- Loading state while checking auth -->
+    <div id="lcLoading" style="padding:20px 0;text-align:center">
+      <div style="font-family:var(--font-mono);font-size:13px;color:var(--text2);margin-bottom:12px">
+        <span id="lcLoadingDot" style="display:inline-block;animation:pulse 1s infinite">●</span>
+        &nbsp;Signing you in...
+      </div>
+      <div style="height:2px;background:var(--border);border-radius:2px;overflow:hidden;width:200px;margin:0 auto">
+        <div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));border-radius:2px;animation:ldfill 2s ease infinite alternate"></div>
+      </div>
+    </div>
+
+    <div id="loginForm" style="display:none">
       <input type="email" class="lc-input" id="lcEmail" placeholder="Enter your email address" autocomplete="email">
       <button class="lc-btn" id="lcBtn" onclick="doLogin()">Get Login Link →</button>
       <div class="lc-sent" id="lcSent">
@@ -3960,34 +3982,43 @@ const SB_KEY = 'sb_publishable_bLUTa913DWCoVFTt9r_vew_Wa_hjEbV';
 const { createClient: createSbClient } = supabase;
 const sbIndex = createSbClient(SB_URL, SB_KEY);
 
-// ── Check session on load (handle magic link redirect from URL hash)
+// ── Robust auth flow — handles magic link, PKCE and regular sessions
+const _hasAuthParams = () => {
+  const h = window.location.hash;
+  const s = window.location.search;
+  return h.includes('access_token') || h.includes('error_description') ||
+         s.includes('code=') || s.includes('error=');
+};
+
+// If URL has auth params (magic link redirect), show loading, let Supabase handle
+if (_hasAuthParams()) {
+  document.getElementById('lcLoading').style.display = 'block';
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('loggedInBar').style.display = 'none';
+} else {
+  // No auth params — check existing session
+  sbIndex.auth.getSession().then(({ data: { session } }) => {
+    if (session?.user) {
+      showLoggedIn(session.user.email);
+    } else {
+      showLoginForm();
+    }
+  });
+}
+
+// Auth state listener — handles all events
 sbIndex.auth.onAuthStateChange((event, session) => {
   if (session?.user) {
-    // Signed in — show "Enter Hub" button
-    showLoggedIn(session.user.email);
-    // If this was a redirect from magic link, auto-enter after brief delay
-    if (event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
-      setTimeout(() => {
-        window.history.replaceState(null, '', window.location.pathname);
-        enterHub();
-      }, 800);
+    if (event === 'SIGNED_IN') {
+      // Auto-enter hub when magic link is used
+      window.history.replaceState(null, '', window.location.pathname);
+      showLoggedIn(session.user.email);
+      setTimeout(() => enterHub(), 600);
+    } else {
+      showLoggedIn(session.user.email);
     }
   } else if (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
     showLoginForm();
-  }
-});
-
-// Initial session check
-sbIndex.auth.getSession().then(({ data: { session } }) => {
-  if (session?.user) {
-    showLoggedIn(session.user.email);
-  } else {
-    // No session — check if URL has token (magic link redirect)
-    const hash = window.location.hash;
-    if (!hash.includes('access_token')) {
-      showLoginForm();
-    }
-    // If hash has token, onAuthStateChange will handle it
   }
 });
 
@@ -3996,11 +4027,13 @@ function showLoginForm() {
   document.getElementById('progSelector').style.display = 'none';
   document.getElementById('loginForm').style.display = 'block';
   document.getElementById('loggedInBar').style.display = 'none';
+  document.getElementById('lcLoading').style.display = 'none';
 }
 
 function showLoggedIn(email) {
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('lcLoading').style.display = 'none';
   document.getElementById('loggedInBar').style.display = 'block';
   document.getElementById('lcUserEmail').textContent = email;
 }
