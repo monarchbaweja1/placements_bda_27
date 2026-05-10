@@ -1335,7 +1335,7 @@ code {
 
     <!-- Quick profile summary -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:30px;">
-      <div class="dash-card" style="grid-column:1/-1">
+      <div class="dash-card" style="grid-column:1/-1" id="overviewGlance">
         <div style="font-family:var(--font-head);font-size:18px;font-weight:800;letter-spacing:1px;color:var(--accent);margin-bottom:16px;">BATCH PLACEMENT AT A GLANCE</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
           <div>
@@ -1369,7 +1369,7 @@ code {
     </div>
 
     <!-- BDA sector distribution -->
-    <div class="dash-card" style="margin-bottom:0">
+    <div class="dash-card" style="margin-bottom:0" id="overviewSector">
       <div style="font-family:var(--font-head);font-size:16px;font-weight:800;letter-spacing:1px;color:var(--gold);margin-bottom:14px;">GIM BDA 2025 — SECTOR DISTRIBUTION</div>
       <div style="display:flex;flex-wrap:wrap;gap:12px;">
         <div style="text-align:center;background:var(--bg3);border-radius:10px;padding:14px 20px;border:1px solid var(--border);">
@@ -4536,6 +4536,89 @@ const progCheatData = {
 function rebuildForProg(prog) {
   const pd = progData[prog];
   if (!pd) return;
+
+  // ── Overview static content (glance + sector) ───────────────
+  const overviewGlance = {
+    bda: `<div style="font-family:var(--font-head);font-size:18px;font-weight:800;letter-spacing:1px;color:var(--accent);margin-bottom:16px;">BATCH PLACEMENT AT A GLANCE</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">WHAT THIS COVERS</div>
+          <div style="font-size:13px;margin-bottom:4px;"><span class="tag tag-blue">63</span> Companies from GIM BDA Reports</div>
+          <div style="font-size:13px;"><span class="tag tag-green">7</span> Role-wise Q&A banks</div></div>
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">TECH STACK</div>
+          <span class="tag tag-blue">Python</span><span class="tag tag-green">SQL</span><span class="tag tag-orange">Power BI</span>
+          <span class="tag tag-purple">LightGBM</span><span class="tag tag-blue">XGBoost</span><span class="tag tag-green">TensorFlow</span>
+          <span class="tag tag-gold">Tableau</span><span class="tag tag-orange">R</span></div>
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">DOMAINS</div>
+          <span class="tag tag-orange">BFSI</span><span class="tag tag-blue">Telecom</span><span class="tag tag-green">Risk Modeling</span>
+          <span class="tag tag-purple">Churn Prediction</span><span class="tag tag-gold">Segmentation</span></div>
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">CERTIFICATIONS</div>
+          <div style="font-size:12px;color:var(--text2);">KPMG Data Analytics · HSBC Banking Sim · Quant Modeling (UPenn) · Financial Statement Analysis</div></div>
+      </div>`,
+    core: `<div style="font-family:var(--font-head);font-size:18px;font-weight:800;letter-spacing:1px;color:var(--accent);margin-bottom:16px;">BATCH PLACEMENT AT A GLANCE</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">WHAT THIS COVERS</div>
+          <div style="font-size:13px;margin-bottom:4px;"><span class="tag tag-blue">60</span> Companies from GIM CORE Reports</div>
+          <div style="font-size:13px;"><span class="tag tag-green">6</span> Role-wise Q&A banks</div></div>
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">KEY SKILLS</div>
+          <span class="tag tag-blue">Excel</span><span class="tag tag-green">PowerPoint</span><span class="tag tag-orange">Salesforce CRM</span>
+          <span class="tag tag-purple">Market Research</span><span class="tag tag-gold">SAP</span><span class="tag tag-blue">Tableau</span></div>
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">DOMAINS</div>
+          <span class="tag tag-orange">FMCG</span><span class="tag tag-blue">Consulting</span><span class="tag tag-green">Operations</span>
+          <span class="tag tag-purple">Sales & BD</span><span class="tag tag-gold">Strategy</span></div>
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">CERTIFICATIONS</div>
+          <div style="font-size:12px;color:var(--text2);">Google Digital Marketing · HubSpot Sales · Case Interview Prep · Six Sigma Green Belt</div></div>
+      </div>`,
+    hcm: `<div style="font-family:var(--font-head);font-size:18px;font-weight:800;letter-spacing:1px;color:var(--accent);margin-bottom:16px;">BATCH PLACEMENT AT A GLANCE</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">WHAT THIS COVERS</div>
+          <div style="font-size:13px;margin-bottom:4px;"><span class="tag tag-blue">22</span> Companies from GIM HCM Reports</div>
+          <div style="font-size:13px;"><span class="tag tag-green">5</span> Role-wise Q&A banks</div></div>
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">KEY SKILLS</div>
+          <span class="tag tag-blue">Clinical Knowledge</span><span class="tag tag-green">Pharma Sales</span>
+          <span class="tag tag-orange">Hospital Ops</span><span class="tag tag-purple">GCP</span><span class="tag tag-gold">Healthcare Analytics</span></div>
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">DOMAINS</div>
+          <span class="tag tag-orange">Medical Devices</span><span class="tag tag-blue">Pharma</span><span class="tag tag-green">Hospital Chains</span>
+          <span class="tag tag-purple">Clinical Research</span><span class="tag tag-gold">Health Consulting</span></div>
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">CERTIFICATIONS</div>
+          <div style="font-size:12px;color:var(--text2);">GCP (NIH) · NISM Healthcare · Pharma Marketing (Coursera) · Hospital Admin</div></div>
+      </div>`,
+    bifs: `<div style="font-family:var(--font-head);font-size:18px;font-weight:800;letter-spacing:1px;color:var(--accent);margin-bottom:16px;">BATCH PLACEMENT AT A GLANCE</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">WHAT THIS COVERS</div>
+          <div style="font-size:13px;margin-bottom:4px;"><span class="tag tag-blue">23</span> Companies from GIM BIFS Reports</div>
+          <div style="font-size:13px;"><span class="tag tag-green">5</span> Role-wise Q&A banks</div></div>
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">KEY SKILLS</div>
+          <span class="tag tag-blue">Financial Modelling</span><span class="tag tag-green">Credit Analysis</span>
+          <span class="tag tag-orange">Excel / VBA</span><span class="tag tag-purple">Bloomberg</span><span class="tag tag-gold">Valuation</span></div>
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">DOMAINS</div>
+          <span class="tag tag-orange">Banking</span><span class="tag tag-blue">Investment Banking</span><span class="tag tag-green">Insurance</span>
+          <span class="tag tag-purple">Credit & Risk</span><span class="tag tag-gold">Capital Markets</span></div>
+        <div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:6px;">CERTIFICATIONS</div>
+          <div style="font-size:12px;color:var(--text2);">CFA Level 1 · NISM Series V-A · Financial Modelling (CFI) · Bloomberg Market Concepts</div></div>
+      </div>`
+  };
+
+  const sectorDistrib = {
+    bda: [['57%','var(--accent)','IT/ITES'],['19%','var(--accent2)','Operations'],['10%','var(--accent3)','Engg/Design'],['5%','var(--accent4)','Consulting'],['5%','var(--gold)','Finance'],['4%','var(--text2)','Others']],
+    core:[['38%','var(--accent2)','FMCG & Consumer'],['22%','var(--accent)','Consulting'],['18%','var(--accent4)','BFSI'],['12%','var(--accent3)','Operations'],['6%','var(--gold)','IT/Tech'],['4%','var(--text2)','Others']],
+    hcm: [['42%','var(--accent3)','Pharma & Biotech'],['28%','var(--accent2)','Medical Devices'],['16%','var(--accent)','Hospital Chains'],['8%','var(--accent4)','Health Consulting'],['4%','var(--gold)','CROs'],['2%','var(--text2)','Others']],
+    bifs:[['36%','var(--accent)','Banking (Pvt/MNC)'],['24%','var(--accent4)','NBFCs & Fintech'],['18%','var(--accent3)','Insurance'],['14%','var(--accent2)','Investment Banking'],['5%','var(--gold)','Rating & Research'],['3%','var(--text2)','Others']]
+  };
+
+  const glanceEl = document.getElementById('overviewGlance');
+  if (glanceEl) glanceEl.innerHTML = overviewGlance[prog] || overviewGlance.bda;
+
+  const sectorEl = document.getElementById('overviewSector');
+  if (sectorEl) {
+    const dist = sectorDistrib[prog] || sectorDistrib.bda;
+    const progName = {bda:'BDA',core:'CORE',hcm:'HCM',bifs:'BIFS'}[prog] || 'BDA';
+    sectorEl.innerHTML = `<div style="font-family:var(--font-head);font-size:16px;font-weight:800;letter-spacing:1px;color:var(--gold);margin-bottom:14px;">GIM ${progName} 2025 — SECTOR DISTRIBUTION</div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;">
+        ${dist.map(([pct,col,label])=>`<div style="text-align:center;background:var(--bg3);border-radius:10px;padding:14px 20px;border:1px solid var(--border);">
+          <div style="font-family:var(--font-head);font-size:30px;font-weight:900;color:${col};">${pct}</div>
+          <div style="font-size:12px;color:var(--text2);">${label}</div></div>`).join('')}
+      </div>`;
+  }
 
   // ── Overview labels ───────────────────────────────────────────
   const overviewTitles = {
