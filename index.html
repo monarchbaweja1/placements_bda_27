@@ -5224,6 +5224,7 @@ const SB_URL = 'https://dsrwktqgpngrviavceal.supabase.co';
 const SB_KEY = 'sb_publishable_bLUTa913DWCoVFTt9r_vew_Wa_hjEbV';
 const { createClient: createSbClient } = supabase;
 const sbIndex = createSbClient(SB_URL, SB_KEY);
+window.sbIndex = sbIndex;
 
 _authEmail = _authEmail || '';
 
