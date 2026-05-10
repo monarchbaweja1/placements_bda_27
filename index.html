@@ -846,18 +846,188 @@ code {
 .lc-signout{color:var(--red);cursor:pointer;font-size:11px}
 .lc-signout:hover{text-decoration:underline}
 
+
+/* ══════════════════════════════════════════
+   FULL-PAGE AUTH SCREENS
+══════════════════════════════════════════ */
+.auth-screen {
+  position: fixed; inset: 0; z-index: 9998;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; padding: 24px;
+  background: var(--bg);
+  overflow-y: auto;
+}
+.auth-screen.hidden { display: none; }
+
+/* Animated background blobs */
+.auth-screen::before {
+  content: ''; position: fixed;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(59,130,246,.08) 0%, transparent 70%);
+  top: -150px; left: -100px; pointer-events: none;
+}
+.auth-screen::after {
+  content: ''; position: fixed;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(167,139,250,.06) 0%, transparent 70%);
+  bottom: -100px; right: -100px; pointer-events: none;
+}
+
+/* ── Screen 1: Email ── */
+.auth-header {
+  text-align: center;
+  margin-bottom: 56px;
+  position: relative; z-index: 2;
+}
+.auth-gim-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(59,130,246,.08);
+  border: 1px solid rgba(59,130,246,.15);
+  border-radius: 20px; padding: 6px 16px;
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--accent); letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 24px;
+}
+.auth-gim-tag::before {
+  content: ''; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--accent);
+  animation: pulse 2s infinite;
+}
+.auth-main-title {
+  font-family: var(--font-head);
+  font-size: clamp(40px, 7vw, 72px);
+  font-weight: 900; line-height: 1;
+  letter-spacing: -1px; margin-bottom: 16px;
+}
+.auth-main-title .line2 { color: var(--accent); }
+.auth-main-sub {
+  color: var(--text2); font-size: 16px;
+  max-width: 460px; margin: 0 auto; line-height: 1.6;
+}
+
+.auth-form-wrap {
+  width: 100%; max-width: 440px;
+  position: relative; z-index: 2;
+}
+.auth-input {
+  width: 100%; padding: 16px 20px;
+  background: var(--bg2);
+  border: 1.5px solid var(--border2);
+  border-radius: 14px; color: var(--text);
+  font-family: var(--font-body); font-size: 16px;
+  outline: none; transition: all .2s;
+  margin-bottom: 12px;
+}
+.auth-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(59,130,246,.1);
+  background: var(--bg3);
+}
+.auth-input::placeholder { color: var(--text3); }
+.auth-cta {
+  width: 100%; padding: 16px;
+  background: linear-gradient(135deg, var(--accent), #0ea5e9);
+  border: none; border-radius: 14px;
+  color: #fff; font-family: var(--font-head);
+  font-size: 17px; font-weight: 800;
+  cursor: pointer; transition: all .25s;
+  letter-spacing: .5px;
+  box-shadow: 0 4px 24px rgba(59,130,246,.25);
+}
+.auth-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(59,130,246,.4);
+}
+.auth-cta:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.auth-helper {
+  text-align: center; margin-top: 14px;
+  font-size: 13px; color: var(--text3);
+  font-family: var(--font-mono); line-height: 1.7;
+}
+
+/* ── Stats bar ── */
+.auth-stats {
+  display: flex; gap: 0;
+  margin-top: 48px; position: relative; z-index: 2;
+  border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+  max-width: 440px; width: 100%;
+}
+.auth-stat {
+  flex: 1; text-align: center; padding: 16px 12px;
+  border-right: 1px solid var(--border);
+  background: var(--card);
+}
+.auth-stat:last-child { border-right: none; }
+.auth-stat-n {
+  font-family: var(--font-head);
+  font-size: 26px; font-weight: 900; line-height: 1;
+}
+.auth-stat-l {
+  font-size: 11px; color: var(--text3);
+  font-family: var(--font-mono); margin-top: 4px;
+}
+
+/* ── Screen 2: OTP ── */
+.otp-back {
+  position: absolute; top: 24px; left: 24px;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--text2);
+  font-family: var(--font-mono); cursor: pointer;
+  transition: color .2s; z-index: 3;
+}
+.otp-back:hover { color: var(--accent); }
+.otp-email-badge {
+  display: inline-block;
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 8px 16px;
+  font-family: var(--font-mono); font-size: 13px;
+  color: var(--accent); margin-bottom: 32px;
+}
+.otp-boxes {
+  display: flex; gap: 10px;
+  justify-content: center; margin-bottom: 24px;
+}
+.otp-box {
+  width: 52px; height: 60px;
+  background: var(--bg2); border: 1.5px solid var(--border2);
+  border-radius: 12px; color: var(--text);
+  font-family: var(--font-head); font-size: 26px;
+  font-weight: 800; text-align: center;
+  outline: none; transition: all .2s;
+  caret-color: var(--accent);
+}
+.otp-box:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(59,130,246,.12);
+  background: var(--bg3);
+}
+.otp-box.filled { border-color: var(--accent); color: var(--accent); }
+.otp-resend {
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--text3); text-align: center; margin-top: 16px;
+}
+.otp-resend span {
+  color: var(--accent); cursor: pointer;
+}
+.otp-resend span:hover { text-decoration: underline; }
+
+/* ── Already logged in bar ── */
+.auth-logged-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: rgba(34,197,94,.06);
+  border: 1px solid rgba(34,197,94,.2);
+  border-radius: 12px; margin-bottom: 12px;
+  font-size: 13px; font-family: var(--font-mono);
+}
+.auth-logged-email { flex: 1; color: var(--green); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.auth-logged-out { color: var(--text3); cursor: pointer; font-size: 11px; }
+.auth-logged-out:hover { color: var(--red); }
+
 </style>
 </head>
 <body>
-
-<!-- ══════════════════════════════════════════
-     LOGIN SCREEN
-══════════════════════════════════════════ -->
-<div id="loginScreen">
-  <div class="login-card">
-    <div class="lc-gim">Goa Institute of Management</div>
-    <div class="lc-title">GIM <span>Placement</span><br>Prep Hub</div>
-    <div class="lc-sub">The complete placement preparation environment for GIM students — companies, Q&A, roadmap &amp; cheatsheets.</div>
 
     <!-- Step 1: Enter email -->
     <div id="lcLoading" style="display:none;padding:20px 0;text-align:center">
@@ -901,6 +1071,101 @@ code {
       <div><div class="lcs-n">4</div><div class="lcs-l">Programmes</div></div>
       <div><div class="lcs-n">130+</div><div class="lcs-l">Companies</div></div>
       <div><div class="lcs-n">800+</div><div class="lcs-l">Questions</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 1: EMAIL LOGIN (Full Page)
+══════════════════════════════════════════ -->
+<div id="screen-email" class="auth-screen">
+  <div class="auth-header">
+    <div class="auth-gim-tag">Goa Institute of Management</div>
+    <div class="auth-main-title">
+      GIM Placement<br><span class="line2">Prep Hub</span>
+    </div>
+    <div class="auth-main-sub">
+      The complete placement preparation environment — 130+ companies, 800+ interview questions, AI/ML roadmap &amp; cheatsheets.
+    </div>
+  </div>
+
+  <div class="auth-form-wrap">
+    <!-- Already signed in state -->
+    <div id="alreadySignedIn" style="display:none;margin-bottom:12px">
+      <div class="auth-logged-bar">
+        <div class="auth-logged-email">✅ &nbsp;<span id="asiEmail">—</span></div>
+        <div class="auth-logged-out" onclick="doSignOutIndex()">Sign out</div>
+      </div>
+      <button class="auth-cta" onclick="enterHub()">Enter Prep Hub →</button>
+    </div>
+
+    <!-- Email form -->
+    <div id="emailFormWrap">
+      <input type="email" class="auth-input" id="authEmail"
+        placeholder="Enter your email address"
+        autocomplete="email"
+        onkeydown="if(event.key==='Enter')sendOTP()">
+      <button class="auth-cta" id="sendOtpBtn" onclick="sendOTP()">
+        Continue with Email →
+      </button>
+      <div class="auth-helper">
+        We'll send a 6-digit code to your inbox.<br>
+        No password · Free forever · Any email
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-stats">
+    <div class="auth-stat">
+      <div class="auth-stat-n" style="color:var(--accent)">4</div>
+      <div class="auth-stat-l">Programmes</div>
+    </div>
+    <div class="auth-stat">
+      <div class="auth-stat-n" style="color:#22c55e">130+</div>
+      <div class="auth-stat-l">Companies</div>
+    </div>
+    <div class="auth-stat">
+      <div class="auth-stat-n" style="color:#f59e0b">800+</div>
+      <div class="auth-stat-l">Questions</div>
+    </div>
+    <div class="auth-stat">
+      <div class="auth-stat-n" style="color:#a78bfa">∞</div>
+      <div class="auth-stat-l">Free Forever</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 2: OTP VERIFICATION (Full Page)
+══════════════════════════════════════════ -->
+<div id="screen-otp" class="auth-screen hidden">
+  <div class="otp-back" onclick="backToEmail()">← Back</div>
+
+  <div class="auth-header" style="margin-bottom:32px">
+    <div class="auth-gim-tag">Check your inbox</div>
+    <div class="auth-main-title" style="font-size:clamp(32px,5vw,52px)">
+      Enter the<br><span class="line2">6-digit code</span>
+    </div>
+    <div class="auth-main-sub" style="margin-top:12px">Code sent to</div>
+    <div class="otp-email-badge" id="otpEmailShow">—</div>
+  </div>
+
+  <div style="position:relative;z-index:2;width:100%;max-width:400px;text-align:center">
+    <div class="otp-boxes" id="otpBoxes">
+      <input class="otp-box" id="otp0" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="otp1" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="otp2" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="otp3" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="otp4" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="otp5" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+    </div>
+
+    <button class="auth-cta" id="verifyOtpBtn" onclick="verifyOTP()" style="max-width:340px">
+      Verify &amp; Continue →
+    </button>
+
+    <div class="otp-resend">
+      Didn't receive it? &nbsp;<span onclick="resendOTP()">Resend code</span>
     </div>
   </div>
 </div>
@@ -3277,6 +3542,185 @@ function downloadSectionAsPDF(title, contentId) {
 .lc-signout{color:var(--red);cursor:pointer;font-size:11px}
 .lc-signout:hover{text-decoration:underline}
 
+
+/* ══════════════════════════════════════════
+   FULL-PAGE AUTH SCREENS
+══════════════════════════════════════════ */
+.auth-screen {
+  position: fixed; inset: 0; z-index: 9998;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; padding: 24px;
+  background: var(--bg);
+  overflow-y: auto;
+}
+.auth-screen.hidden { display: none; }
+
+/* Animated background blobs */
+.auth-screen::before {
+  content: ''; position: fixed;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(59,130,246,.08) 0%, transparent 70%);
+  top: -150px; left: -100px; pointer-events: none;
+}
+.auth-screen::after {
+  content: ''; position: fixed;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(167,139,250,.06) 0%, transparent 70%);
+  bottom: -100px; right: -100px; pointer-events: none;
+}
+
+/* ── Screen 1: Email ── */
+.auth-header {
+  text-align: center;
+  margin-bottom: 56px;
+  position: relative; z-index: 2;
+}
+.auth-gim-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(59,130,246,.08);
+  border: 1px solid rgba(59,130,246,.15);
+  border-radius: 20px; padding: 6px 16px;
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--accent); letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 24px;
+}
+.auth-gim-tag::before {
+  content: ''; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--accent);
+  animation: pulse 2s infinite;
+}
+.auth-main-title {
+  font-family: var(--font-head);
+  font-size: clamp(40px, 7vw, 72px);
+  font-weight: 900; line-height: 1;
+  letter-spacing: -1px; margin-bottom: 16px;
+}
+.auth-main-title .line2 { color: var(--accent); }
+.auth-main-sub {
+  color: var(--text2); font-size: 16px;
+  max-width: 460px; margin: 0 auto; line-height: 1.6;
+}
+
+.auth-form-wrap {
+  width: 100%; max-width: 440px;
+  position: relative; z-index: 2;
+}
+.auth-input {
+  width: 100%; padding: 16px 20px;
+  background: var(--bg2);
+  border: 1.5px solid var(--border2);
+  border-radius: 14px; color: var(--text);
+  font-family: var(--font-body); font-size: 16px;
+  outline: none; transition: all .2s;
+  margin-bottom: 12px;
+}
+.auth-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(59,130,246,.1);
+  background: var(--bg3);
+}
+.auth-input::placeholder { color: var(--text3); }
+.auth-cta {
+  width: 100%; padding: 16px;
+  background: linear-gradient(135deg, var(--accent), #0ea5e9);
+  border: none; border-radius: 14px;
+  color: #fff; font-family: var(--font-head);
+  font-size: 17px; font-weight: 800;
+  cursor: pointer; transition: all .25s;
+  letter-spacing: .5px;
+  box-shadow: 0 4px 24px rgba(59,130,246,.25);
+}
+.auth-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(59,130,246,.4);
+}
+.auth-cta:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.auth-helper {
+  text-align: center; margin-top: 14px;
+  font-size: 13px; color: var(--text3);
+  font-family: var(--font-mono); line-height: 1.7;
+}
+
+/* ── Stats bar ── */
+.auth-stats {
+  display: flex; gap: 0;
+  margin-top: 48px; position: relative; z-index: 2;
+  border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+  max-width: 440px; width: 100%;
+}
+.auth-stat {
+  flex: 1; text-align: center; padding: 16px 12px;
+  border-right: 1px solid var(--border);
+  background: var(--card);
+}
+.auth-stat:last-child { border-right: none; }
+.auth-stat-n {
+  font-family: var(--font-head);
+  font-size: 26px; font-weight: 900; line-height: 1;
+}
+.auth-stat-l {
+  font-size: 11px; color: var(--text3);
+  font-family: var(--font-mono); margin-top: 4px;
+}
+
+/* ── Screen 2: OTP ── */
+.otp-back {
+  position: absolute; top: 24px; left: 24px;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--text2);
+  font-family: var(--font-mono); cursor: pointer;
+  transition: color .2s; z-index: 3;
+}
+.otp-back:hover { color: var(--accent); }
+.otp-email-badge {
+  display: inline-block;
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 8px 16px;
+  font-family: var(--font-mono); font-size: 13px;
+  color: var(--accent); margin-bottom: 32px;
+}
+.otp-boxes {
+  display: flex; gap: 10px;
+  justify-content: center; margin-bottom: 24px;
+}
+.otp-box {
+  width: 52px; height: 60px;
+  background: var(--bg2); border: 1.5px solid var(--border2);
+  border-radius: 12px; color: var(--text);
+  font-family: var(--font-head); font-size: 26px;
+  font-weight: 800; text-align: center;
+  outline: none; transition: all .2s;
+  caret-color: var(--accent);
+}
+.otp-box:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(59,130,246,.12);
+  background: var(--bg3);
+}
+.otp-box.filled { border-color: var(--accent); color: var(--accent); }
+.otp-resend {
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--text3); text-align: center; margin-top: 16px;
+}
+.otp-resend span {
+  color: var(--accent); cursor: pointer;
+}
+.otp-resend span:hover { text-decoration: underline; }
+
+/* ── Already logged in bar ── */
+.auth-logged-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: rgba(34,197,94,.06);
+  border: 1px solid rgba(34,197,94,.2);
+  border-radius: 12px; margin-bottom: 12px;
+  font-size: 13px; font-family: var(--font-mono);
+}
+.auth-logged-email { flex: 1; color: var(--green); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.auth-logged-out { color: var(--text3); cursor: pointer; font-size: 11px; }
+.auth-logged-out:hover { color: var(--red); }
+
 </style></head><body>
 
 <!-- ══════════════════════════════════════════
@@ -3330,6 +3774,101 @@ function downloadSectionAsPDF(title, contentId) {
       <div><div class="lcs-n">4</div><div class="lcs-l">Programmes</div></div>
       <div><div class="lcs-n">130+</div><div class="lcs-l">Companies</div></div>
       <div><div class="lcs-n">800+</div><div class="lcs-l">Questions</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 1: EMAIL LOGIN (Full Page)
+══════════════════════════════════════════ -->
+<div id="screen-email" class="auth-screen">
+  <div class="auth-header">
+    <div class="auth-gim-tag">Goa Institute of Management</div>
+    <div class="auth-main-title">
+      GIM Placement<br><span class="line2">Prep Hub</span>
+    </div>
+    <div class="auth-main-sub">
+      The complete placement preparation environment — 130+ companies, 800+ interview questions, AI/ML roadmap &amp; cheatsheets.
+    </div>
+  </div>
+
+  <div class="auth-form-wrap">
+    <!-- Already signed in state -->
+    <div id="alreadySignedIn" style="display:none;margin-bottom:12px">
+      <div class="auth-logged-bar">
+        <div class="auth-logged-email">✅ &nbsp;<span id="asiEmail">—</span></div>
+        <div class="auth-logged-out" onclick="doSignOutIndex()">Sign out</div>
+      </div>
+      <button class="auth-cta" onclick="enterHub()">Enter Prep Hub →</button>
+    </div>
+
+    <!-- Email form -->
+    <div id="emailFormWrap">
+      <input type="email" class="auth-input" id="authEmail"
+        placeholder="Enter your email address"
+        autocomplete="email"
+        onkeydown="if(event.key==='Enter')sendOTP()">
+      <button class="auth-cta" id="sendOtpBtn" onclick="sendOTP()">
+        Continue with Email →
+      </button>
+      <div class="auth-helper">
+        We'll send a 6-digit code to your inbox.<br>
+        No password · Free forever · Any email
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-stats">
+    <div class="auth-stat">
+      <div class="auth-stat-n" style="color:var(--accent)">4</div>
+      <div class="auth-stat-l">Programmes</div>
+    </div>
+    <div class="auth-stat">
+      <div class="auth-stat-n" style="color:#22c55e">130+</div>
+      <div class="auth-stat-l">Companies</div>
+    </div>
+    <div class="auth-stat">
+      <div class="auth-stat-n" style="color:#f59e0b">800+</div>
+      <div class="auth-stat-l">Questions</div>
+    </div>
+    <div class="auth-stat">
+      <div class="auth-stat-n" style="color:#a78bfa">∞</div>
+      <div class="auth-stat-l">Free Forever</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 2: OTP VERIFICATION (Full Page)
+══════════════════════════════════════════ -->
+<div id="screen-otp" class="auth-screen hidden">
+  <div class="otp-back" onclick="backToEmail()">← Back</div>
+
+  <div class="auth-header" style="margin-bottom:32px">
+    <div class="auth-gim-tag">Check your inbox</div>
+    <div class="auth-main-title" style="font-size:clamp(32px,5vw,52px)">
+      Enter the<br><span class="line2">6-digit code</span>
+    </div>
+    <div class="auth-main-sub" style="margin-top:12px">Code sent to</div>
+    <div class="otp-email-badge" id="otpEmailShow">—</div>
+  </div>
+
+  <div style="position:relative;z-index:2;width:100%;max-width:400px;text-align:center">
+    <div class="otp-boxes" id="otpBoxes">
+      <input class="otp-box" id="otp0" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="otp1" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="otp2" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="otp3" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="otp4" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="otp5" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+    </div>
+
+    <button class="auth-cta" id="verifyOtpBtn" onclick="verifyOTP()" style="max-width:340px">
+      Verify &amp; Continue →
+    </button>
+
+    <div class="otp-resend">
+      Didn't receive it? &nbsp;<span onclick="resendOTP()">Resend code</span>
     </div>
   </div>
 </div>
@@ -3989,106 +4528,181 @@ window.addEventListener('DOMContentLoaded', function() {
 
 
 // ═══════════════════════════════════════════
-// SUPABASE AUTH FOR INDEX (PREP HUB)
+// SUPABASE AUTH — FULL PAGE FLOW
 // ═══════════════════════════════════════════
 const SB_URL = 'https://dsrwktqgpngrviavceal.supabase.co';
 const SB_KEY = 'sb_publishable_bLUTa913DWCoVFTt9r_vew_Wa_hjEbV';
 const { createClient: createSbClient } = supabase;
 const sbIndex = createSbClient(SB_URL, SB_KEY);
 
-// ── Simple session check (OTP flow - no URL redirect needed)
+let _authEmail = '';
+
+// ── Screen helpers
+function showScreen(id) {
+  ['screen-email','screen-otp'].forEach(s => {
+    const el = document.getElementById(s);
+    if (el) el.classList.toggle('hidden', s !== id);
+  });
+  // Hide prog selector if showing auth screen
+  const prog = document.getElementById('progSelector');
+  if (prog) prog.style.display = 'none';
+}
+
+function enterHub() {
+  document.getElementById('screen-email').classList.add('hidden');
+  document.getElementById('screen-otp').classList.add('hidden');
+  document.getElementById('progSelector').style.display = 'flex';
+  document.getElementById('backBtn').style.display = 'none';
+}
+
+// ── On load: check existing session
 sbIndex.auth.getSession().then(({ data: { session } }) => {
   if (session?.user) {
-    showLoggedIn(session.user.email);
+    // Already logged in — show email screen with "Enter Hub" button
+    document.getElementById('alreadySignedIn').style.display = 'block';
+    document.getElementById('emailFormWrap').style.display = 'none';
+    document.getElementById('asiEmail').textContent = session.user.email;
+    showScreen('screen-email');
   } else {
-    showLoginForm();
+    showScreen('screen-email');
   }
 });
 
 sbIndex.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_OUT') showLoginForm();
+  if (event === 'SIGNED_OUT') {
+    document.getElementById('alreadySignedIn').style.display = 'none';
+    document.getElementById('emailFormWrap').style.display = 'block';
+    showScreen('screen-email');
+  }
 });
 
-function showLoginForm() {
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('progSelector').style.display = 'none';
-  document.getElementById('loginForm').style.display = 'block';
-  document.getElementById('loggedInBar').style.display = 'none';
-  document.getElementById('lcLoading').style.display = 'none';
-}
+// ── Step 1: Send OTP
+window.sendOTP = async function() {
+  const email = document.getElementById('authEmail').value.trim();
+  if (!email || !email.includes('@')) {
+    showToastIdx('Enter a valid email address', 'err'); return;
+  }
+  const btn = document.getElementById('sendOtpBtn');
+  btn.disabled = true; btn.textContent = 'Sending...';
 
-function showLoggedIn(email) {
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('lcLoading').style.display = 'none';
-  document.getElementById('loggedInBar').style.display = 'block';
-  document.getElementById('lcUserEmail').textContent = email;
-}
+  const { error } = await sbIndex.auth.signInWithOtp({
+    email, options: { shouldCreateUser: true }
+  });
 
-window.enterHub = function() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('progSelector').style.display = 'flex';
-  document.getElementById('loader').style.opacity = '0';
-  setTimeout(() => document.getElementById('loader').style.display = 'none', 400);
+  if (error) {
+    showToastIdx('Error: ' + error.message, 'err');
+    btn.disabled = false; btn.textContent = 'Continue with Email →'; return;
+  }
+
+  _authEmail = email;
+  document.getElementById('otpEmailShow').textContent = email;
+  showScreen('screen-otp');
+  document.getElementById('otp0').focus();
+  btn.disabled = false; btn.textContent = 'Continue with Email →';
 };
 
-let _otpEmail = '';
+// ── Step 2: Verify OTP
+window.verifyOTP = async function() {
+  const token = ['otp0','otp1','otp2','otp3','otp4','otp5']
+    .map(id => document.getElementById(id).value).join('');
+  if (token.length !== 6) { showToastIdx('Enter all 6 digits', 'err'); return; }
 
-window.doLogin = async function() {
-  const email = document.getElementById('lcEmail').value.trim();
-  if (!email || !email.includes('@')) {
-    showToastIndex('Enter a valid email address', 'err');
+  const btn = document.getElementById('verifyOtpBtn');
+  btn.disabled = true; btn.textContent = 'Verifying...';
+
+  const { data, error } = await sbIndex.auth.verifyOtp({
+    email: _authEmail, token, type: 'email'
+  });
+
+  if (error) {
+    showToastIdx('Wrong code. Try again.', 'err');
+    btn.disabled = false; btn.textContent = 'Verify & Continue →';
+    ['otp0','otp1','otp2','otp3','otp4','otp5'].forEach(id => {
+      document.getElementById(id).value = '';
+      document.getElementById(id).classList.remove('filled');
+    });
+    document.getElementById('otp0').focus();
     return;
   }
-  const btn = document.getElementById('lcBtn');
-  btn.disabled = true; btn.textContent = 'Sending...';
-  // Use OTP (6-digit code) — no redirect needed, works everywhere
-  const { error } = await sbIndex.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
-  if (error) {
-    showToastIndex('Error: ' + error.message, 'err');
-    btn.disabled = false; btn.textContent = 'Send OTP Code →'; return;
+
+  if (data?.user) {
+    showToastIdx('✅ Signed in!', 'ok');
+    setTimeout(() => enterHub(), 400);
   }
-  _otpEmail = email;
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('otpForm').style.display = 'block';
-  document.getElementById('otpEmailLabel').textContent = email;
-  showToastIndex('Code sent! Check your inbox.', 'ok');
 };
 
-window.verifyOTP = async function() {
-  const token = document.getElementById('lcOTP').value.trim();
-  if (token.length !== 6) { showToastIndex('Enter the 6-digit code', 'err'); return; }
-  const btn = document.getElementById('otpBtn');
-  btn.disabled = true; btn.textContent = 'Verifying...';
-  const { data, error } = await sbIndex.auth.verifyOtp({ email: _otpEmail, token, type: 'email' });
-  if (error) {
-    showToastIndex('Invalid code: ' + error.message, 'err');
-    btn.disabled = false; btn.textContent = 'Verify & Enter Hub →'; return;
-  }
-  if (data?.user) { showLoggedIn(data.user.email); setTimeout(enterHub, 400); }
+// ── Resend
+window.resendOTP = async function() {
+  await sbIndex.auth.signInWithOtp({ email: _authEmail, options: { shouldCreateUser: true } });
+  showToastIdx('New code sent!', 'ok');
+  ['otp0','otp1','otp2','otp3','otp4','otp5'].forEach(id => {
+    document.getElementById(id).value = '';
+    document.getElementById(id).classList.remove('filled');
+  });
+  document.getElementById('otp0').focus();
 };
 
-window.resetLogin = function() {
-  document.getElementById('otpForm').style.display = 'none';
-  document.getElementById('loginForm').style.display = 'block';
-  document.getElementById('lcEmail').value = '';
-  document.getElementById('lcBtn').disabled = false;
-  document.getElementById('lcBtn').textContent = 'Send OTP Code →';
+// ── Back to email
+window.backToEmail = function() {
+  showScreen('screen-email');
+  ['otp0','otp1','otp2','otp3','otp4','otp5'].forEach(id => {
+    document.getElementById(id).value = '';
+    document.getElementById(id).classList.remove('filled');
+  });
 };
 
+// ── Sign out
 window.doSignOutIndex = async function() {
   await sbIndex.auth.signOut();
-  showLoginForm();
 };
 
-function showToastIndex(msg, type) {
+// ── OTP box keyboard navigation (auto-advance)
+document.addEventListener('DOMContentLoaded', function() {
+  const boxes = ['otp0','otp1','otp2','otp3','otp4','otp5'];
+  boxes.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', function() {
+      this.value = this.value.replace(/[^0-9]/g,'').slice(-1);
+      if (this.value) {
+        this.classList.add('filled');
+        if (i < 5) document.getElementById(boxes[i+1]).focus();
+        // Auto-verify when all filled
+        const allFilled = boxes.every(bid => document.getElementById(bid).value);
+        if (allFilled) verifyOTP();
+      } else {
+        this.classList.remove('filled');
+      }
+    });
+    el.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' && !this.value && i > 0) {
+        document.getElementById(boxes[i-1]).focus();
+      }
+      if (e.key === 'Enter') verifyOTP();
+    });
+    // Handle paste of full code
+    el.addEventListener('paste', function(e) {
+      e.preventDefault();
+      const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g,'');
+      if (paste.length === 6) {
+        boxes.forEach((bid, bi) => {
+          const b = document.getElementById(bid);
+          b.value = paste[bi] || '';
+          b.classList.toggle('filled', !!b.value);
+        });
+        verifyOTP();
+      }
+    });
+  });
+});
+
+function showToastIdx(msg, type) {
   const t = document.getElementById('toast');
   if (!t) return;
   t.textContent = msg;
   t.className = 'toast ' + (type === 'err' ? 'err' : 'ok') + ' show';
   setTimeout(() => t.classList.remove('show'), 3000);
 }
-
 </script>
 </body>
 </html>
