@@ -369,13 +369,14 @@ h2.section-h2 {
   margin-top: 10px;
 }
 .auth-visual-icon {
-  width: 34px;
+  width: 46px;
   height: 34px;
   border-radius: 11px;
   display: grid;
   place-items: center;
   background: var(--green);
   color: #03140a;
+  font-size: 12px;
   font-weight: 900;
 }
 .auth-visual-float {
@@ -583,6 +584,47 @@ h2.section-h2 {
   padding: 14px 18px; font-size: 12px; color: var(--text2); line-height: 1.7;
 }
 .prog-disclaimer strong { color: var(--green); }
+.session-actions {
+  position: fixed;
+  top: 22px;
+  right: 28px;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px;
+  background: rgba(17,17,17,0.82);
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 12px 42px rgba(0,0,0,0.36);
+}
+.session-action-btn {
+  border: 1px solid transparent;
+  border-radius: 100px;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+.session-action-btn:hover {
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+  border-color: var(--border);
+}
+.session-action-btn.primary {
+  color: #03140a;
+  background: var(--green);
+}
+.session-action-btn.primary:hover {
+  background: #4ade80;
+  color: #03140a;
+}
 
 /* ═══════════════════════════════════════════
    MAIN APP
@@ -863,6 +905,7 @@ h2.section-h2 {
   .prog-stats-strip-item { border-right: none; border-bottom: 1px solid var(--border); flex: 1 1 40%; }
   .section-wrap { padding: 40px 20px 80px; }
   .navbar-links { display: none; }
+  .session-actions { left: 50%; right: auto; transform: translateX(-50%); top: 16px; }
   .auth-visual { display: none; }
   h1.hero-h1, .auth-headline h1, .prog-sel-hero h1 { font-size: 40px; }
 }
@@ -914,6 +957,7 @@ h2.section-h2 {
       <span id="progPillName">BDA</span>
       <span style="color:var(--text3);font-size:11px">↩ Switch</span>
     </button>
+    <button class="navbar-cta" onclick="goHomeLogin()" style="background:var(--bg2);color:var(--text3);border:1px solid var(--border);font-weight:500">Home / Login</button>
     <button class="navbar-cta" onclick="signOut()" style="background:var(--bg2);color:var(--text3);border:1px solid var(--border);font-weight:500">Sign out</button>
   </div>
 </nav>
@@ -971,8 +1015,8 @@ h2.section-h2 {
 
   <div class="auth-inner">
     <div class="auth-visual reveal reveal-delay-1" aria-hidden="true">
-      <div class="auth-visual-float one">Q</div>
-      <div class="auth-visual-float two">AI</div>
+      <div class="auth-visual-float one">FIN</div>
+      <div class="auth-visual-float two">OPS</div>
       <div class="auth-visual-card large">
         <div class="auth-window-bar"><span></span><span></span><span></span></div>
         <div class="auth-visual-content">
@@ -980,14 +1024,14 @@ h2.section-h2 {
           <div class="auth-visual-line" style="width:86%"></div>
           <div class="auth-visual-line" style="width:72%"></div>
           <div class="auth-visual-row">
-            <div class="auth-visual-icon">63</div>
+            <div class="auth-visual-icon">CORE</div>
             <div style="flex:1">
               <div class="auth-visual-line green" style="width:72%;height:8px"></div>
               <div class="auth-visual-line" style="width:48%;height:8px"></div>
             </div>
           </div>
           <div class="auth-visual-row">
-            <div class="auth-visual-icon">QA</div>
+            <div class="auth-visual-icon">HCM</div>
             <div style="flex:1">
               <div class="auth-visual-line" style="width:82%;height:8px"></div>
               <div class="auth-visual-line green" style="width:44%;height:8px"></div>
@@ -998,14 +1042,14 @@ h2.section-h2 {
       <div class="auth-visual-card medium">
         <div class="auth-visual-content">
           <div class="auth-visual-row">
-            <div class="auth-visual-icon">ML</div>
+            <div class="auth-visual-icon">BDA</div>
             <div style="flex:1">
               <div class="auth-visual-line green" style="width:64%;height:8px"></div>
               <div class="auth-visual-line" style="width:86%;height:8px"></div>
             </div>
           </div>
           <div class="auth-visual-row">
-            <div class="auth-visual-icon">SQL</div>
+            <div class="auth-visual-icon">BIFS</div>
             <div style="flex:1">
               <div class="auth-visual-line" style="width:74%;height:8px"></div>
               <div class="auth-visual-line" style="width:50%;height:8px"></div>
@@ -1103,6 +1147,10 @@ h2.section-h2 {
 ═══════════════════════════════════════ -->
 <div id="progSelector">
   <div class="green-sphere sphere-top-right" style="position:absolute"></div>
+  <div class="session-actions">
+    <button class="session-action-btn" onclick="goHomeLogin()">Home / Login</button>
+    <button class="session-action-btn primary" onclick="signOut()">Sign out</button>
+  </div>
   <div class="prog-sel-inner">
     <div class="prog-sel-hero reveal">
       <span class="section-label">Goa Institute of Management · Batch 2025-27</span>
@@ -6061,7 +6109,26 @@ function showAuthGate() {
   document.getElementById('authNav').style.display = 'flex';
   document.getElementById('screen-otp')?.classList.add('hidden');
   document.getElementById('screen-email')?.classList.remove('hidden');
+  document.getElementById('authEmail')?.focus();
 }
+
+window.goHomeLogin = function() {
+  selectedProg = null;
+  clearOtpTimer?.();
+  showAuthGate();
+};
+
+window.signOut = async function() {
+  try {
+    if (typeof sbIndex !== 'undefined' && sbIndex?.auth) {
+      await sbIndex.auth.signOut();
+    }
+  } catch (error) {
+    console.warn('Sign out failed, returning to login screen anyway:', error);
+  }
+  sessionStorage.clear();
+  window.goHomeLogin();
+};
 
 window.addEventListener('DOMContentLoaded', () => {
   showAuthGate();
