@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GIM BDA Placement Hub — Login & Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg:#06090f; --bg2:#0c1220; --bg3:#111d35; --card:#0f1c33;
+  --border:#1a2f50; --border2:#243d6a;
+  --accent:#3b82f6; --cyan:#06b6d4; --green:#22c55e;
+  --orange:#f59e0b; --red:#ef4444; --purple:#a78bfa;
+  --text:#e2e8f0; --text2:#94a3b8; --text3:#475569;
+  --font-head:'Syne',sans-serif; --font-body:'DM Sans',sans-serif;
+  --font-mono:'JetBrains Mono',monospace; --r:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.6;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── LOADER ── */
+#loader{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
+.ld-logo{font-family:var(--font-head);font-size:28px;font-weight:800;color:var(--accent);letter-spacing:3px;margin-bottom:20px}
+.ld-bar{width:180px;height:2px;background:var(--border);border-radius:2px;overflow:hidden}
+.ld-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));animation:ldfill 1.2s ease forwards}
+@keyframes ldfill{from{width:0}to{width:100%}}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh}
+.screen.on{display:flex}
+
+/* ══ LOGIN ══ */
+#s-login{align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 80% 50% at 50% -5%,rgba(59,130,246,.1),transparent),var(--bg)}
+.login-wrap{width:90%;max-width:420px}
+.login-card{background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:44px;position:relative;overflow:hidden;text-align:center}
+.login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--cyan),var(--purple))}
+.lc-badge{display:inline-block;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:20px;padding:4px 14px;font-family:var(--font-mono);font-size:11px;color:var(--accent);letter-spacing:1px;margin-bottom:18px}
+.lc-title{font-family:var(--font-head);font-size:28px;font-weight:800;line-height:1.2;margin-bottom:8px}
+.lc-title span{color:var(--accent)}
+.lc-sub{color:var(--text2);font-size:13.5px;margin-bottom:28px}
+.lc-input{width:100%;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;margin-bottom:10px}
+.lc-input:focus{border-color:var(--accent)}
+.lc-input::placeholder{color:var(--text3)}
+.lc-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--cyan));border:none;border-radius:var(--r);color:#fff;font-family:var(--font-head);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.lc-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(59,130,246,.3)}
+.lc-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.lc-note{font-size:12px;color:var(--text3);font-family:var(--font-mono);margin-top:16px;line-height:1.6}
+.lc-stats{display:flex;justify-content:center;gap:24px;margin-top:28px;padding-top:22px;border-top:1px solid var(--border)}
+.lcs-n{font-family:var(--font-head);font-size:22px;font-weight:800;color:var(--accent)}
+.lcs-l{font-size:11px;color:var(--text3);font-family:var(--font-mono)}
+.magic-sent{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:var(--r);padding:16px;color:var(--green);font-size:13px;text-align:center;display:none;margin-top:12px}
+
+/* ══ ONBOARD ══ */
+#s-onboard{align-items:center;justify-content:center;padding:40px 20px;background:var(--bg)}
+.ob-card{background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:36px;max-width:580px;width:100%;position:relative;overflow:hidden}
+.ob-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),var(--accent))}
+.ob-step{font-family:var(--font-mono);font-size:11px;color:var(--green);letter-spacing:2px;margin-bottom:6px}
+.ob-title{font-family:var(--font-head);font-size:24px;font-weight:800;margin-bottom:4px}
+.ob-sub{color:var(--text2);font-size:13px;margin-bottom:24px}
+
+/* Forms */
+.fg{margin-bottom:16px}
+.fl{font-size:11px;font-weight:600;color:var(--text2);font-family:var(--font-mono);letter-spacing:.5px;margin-bottom:7px;display:block}
+.fi{width:100%;padding:10px 13px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--font-body);font-size:14px;transition:border-color .2s;outline:none}
+.fi:focus{border-color:var(--accent)}
+.fi::placeholder{color:var(--text3)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{padding:5px 11px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);font-size:12px;cursor:pointer;transition:all .15s;color:var(--text2);font-family:var(--font-mono)}
+.chip.sel{background:rgba(59,130,246,.12);border-color:var(--accent);color:var(--accent)}
+.chip.gsel{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
+.co-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:7px;max-height:190px;overflow-y:auto;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r)}
+.sbtn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--cyan));border:none;border-radius:var(--r);color:#fff;font-family:var(--font-head);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:6px}
+.sbtn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(59,130,246,.3)}
+.sbtn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ══ APP ══ */
+#s-app{flex-direction:row}
+.sidebar{width:230px;min-width:230px;background:var(--bg2);border-right:1px solid var(--border);position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;display:flex;flex-direction:column}
+.sb-top{padding:18px 16px;border-bottom:1px solid var(--border)}
+.sb-logo{font-family:var(--font-head);font-size:17px;font-weight:800;color:var(--accent);letter-spacing:1px;line-height:1.2}
+.sb-sub{font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:2px}
+.sb-user{display:flex;align-items:center;gap:9px;padding:13px 16px;border-bottom:1px solid var(--border)}
+.sb-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.sb-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-roll{font-size:11px;color:var(--text3);font-family:var(--font-mono)}
+.nav-sec{padding:8px 0}
+.nav-lbl{font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;padding:3px 16px 7px}
+.nl{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}
+.nl:hover,.nl.on{color:var(--accent);background:rgba(59,130,246,.06);border-left-color:var(--accent)}
+.nl .ic{font-size:14px;width:16px;text-align:center}
+.nb{margin-left:auto;font-size:10px;background:var(--accent);color:#fff;padding:1px 6px;border-radius:8px;font-weight:700}
+.nb.g{background:var(--green)}
+.sb-bot{margin-top:auto;padding:13px 16px;border-top:1px solid var(--border)}
+.so-btn{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text3);cursor:pointer;transition:color .2s;font-family:var(--font-mono)}
+.so-btn:hover{color:var(--red)}
+
+/* Main */
+.main{margin-left:230px;flex:1;min-height:100vh}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:13px 28px;position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between}
+.tb-title{font-family:var(--font-head);font-size:18px;font-weight:800;letter-spacing:.5px}
+.tb-title span{color:var(--accent)}
+.status-pill{display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:20px;border:1px solid var(--border2);font-size:12px;font-family:var(--font-mono);color:var(--text2);cursor:pointer;transition:all .2s}
+.status-pill:hover{border-color:var(--accent);color:var(--accent)}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pc{padding:28px}
+.page{display:none}
+.page.on{display:block;animation:fu .25s ease}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* Page header */
+.ph-tag{font-family:var(--font-mono);font-size:11px;color:var(--accent);letter-spacing:2px;margin-bottom:6px}
+.ph-title{font-family:var(--font-head);font-size:32px;font-weight:800;line-height:1.1;text-transform:uppercase;margin-bottom:4px}
+.ph-title .hi{color:var(--accent)}
+.ph-sub{color:var(--text2);font-size:13px;margin-bottom:24px}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;transition:border-color .2s}
+.card:hover{border-color:var(--border2)}
+.ct{font-family:var(--font-head);font-size:13px;font-weight:700;letter-spacing:.5px;margin-bottom:12px;color:var(--cyan)}
+
+/* Stat grid */
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.sn{font-family:var(--font-head);font-size:32px;font-weight:800;line-height:1}
+.sl{font-size:12px;color:var(--text2);margin-top:5px}
+.ca{color:var(--accent)}.cg{color:var(--green)}.co{color:var(--orange)}.cp{color:var(--purple)}
+
+/* Tracker */
+.stages{display:flex;gap:0;margin-bottom:16px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
+.stg{flex:1;padding:9px 6px;text-align:center;font-size:11px;font-weight:600;cursor:pointer;background:var(--card);color:var(--text3);border:none;border-right:1px solid var(--border);transition:all .2s;font-family:var(--font-mono)}
+.stg:last-child{border-right:none}
+.stg.on{background:var(--accent);color:#fff}
+.stg:hover:not(.on){color:var(--text);background:var(--bg3)}
+.int-log{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.ic{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start}
+.ic-co{font-weight:700;font-size:14px}
+.ic-meta{font-size:12px;color:var(--text2);font-family:var(--font-mono);margin-top:2px}
+.ic-notes{font-size:12px;color:var(--text2);margin-top:5px;border-top:1px solid var(--border);padding-top:5px}
+.ist{padding:2px 9px;border-radius:8px;font-size:10px;font-weight:700;font-family:var(--font-mono)}
+.ist.pass{background:rgba(34,197,94,.1);color:var(--green)}
+.ist.fail{background:rgba(239,68,68,.1);color:var(--red)}
+.ist.pending{background:rgba(245,158,11,.1);color:var(--orange)}
+.ist.offer{background:rgba(59,130,246,.1);color:var(--accent)}
+.add-btn{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:var(--r);border:1px dashed var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font-body);font-size:13px;transition:all .2s;width:100%;justify-content:center;margin-top:10px}
+.add-btn:hover{border-color:var(--accent);color:var(--accent)}
+.offer-banner{background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(6,182,212,.05));border:1px solid rgba(34,197,94,.2);border-radius:var(--r);padding:18px;display:flex;align-items:center;gap:14px;margin-bottom:16px;display:none}
+.ob-em{font-size:28px}
+.ob-co{font-family:var(--font-head);font-size:18px;font-weight:800}
+.ob-ro{color:var(--text2);font-size:12px}
+.ob-ctc{font-family:var(--font-head);font-size:22px;font-weight:800;color:var(--green);margin-left:auto}
+
+/* Admin table */
+.atbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.atbl th{text-align:left;padding:9px 10px;font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:1px;border-bottom:1px solid var(--border);background:var(--bg3)}
+.atbl td{padding:11px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.atbl tr:hover td{background:rgba(59,130,246,.02)}
+.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:7px;font-family:var(--font-mono);font-weight:600}
+.b-bl{background:rgba(59,130,246,.1);color:var(--accent);border:1px solid rgba(59,130,246,.2)}
+.b-gr{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.b-or{background:rgba(245,158,11,.1);color:var(--orange);border:1px solid rgba(245,158,11,.2)}
+.b-re{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.b-pu{background:rgba(167,139,250,.1);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+
+/* Modal */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.mo.on{display:flex}
+.md{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:26px;max-width:460px;width:90%;max-height:85vh;overflow-y:auto}
+.md-title{font-family:var(--font-head);font-size:19px;font-weight:800;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+.md-close{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer}
+.md-close:hover{color:var(--red)}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:13px;z-index:999;transform:translateY(70px);opacity:0;transition:all .3s;pointer-events:none;max-width:300px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-left:3px solid var(--green)}
+.toast.err{border-left:3px solid var(--red)}
+
+/* Bar chart */
+.bar-row{margin-bottom:10px}
+.bar-meta{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.bar-track{height:5px;background:var(--border);border-radius:3px}
+.bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
+
+/* Target tags */
+.ttag{display:inline-block;padding:4px 10px;border-radius:16px;font-size:11px;border:1px solid var(--border2);color:var(--text2);font-family:var(--font-mono);background:var(--bg3);margin:3px}
+
+@media(max-width:768px){
+  .sidebar{width:0;overflow:hidden}
+  .main{margin-left:0}
+  .frow{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="ld-logo">GIM BDA</div>
+  <div class="ld-bar"><div class="ld-fill"></div></div>
+</div>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="s-login" class="screen">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="lc-badge">PGDM BDA · BATCH 2025-27</div>
+      <div class="lc-title">GIM BDA<br><span>Placement Hub</span></div>
+      <div class="lc-sub">Your batch's complete placement tracker. Log interviews, track offers, see live batch stats.</div>
+      <input type="email" class="lc-input" id="loginEmail" placeholder="yourname@gim.ac.in" autocomplete="email">
+      <button class="lc-btn" id="loginBtn" onclick="sendMagicLink()">Send Login Link →</button>
+      <div class="magic-sent" id="magicSent">
+        ✅ Magic link sent! Check your GIM email and click the link to sign in.
+      </div>
+      <div class="lc-note">Enter your GIM email → get a one-click login link.<br>No password needed. Free forever.</div>
+      <div class="lc-stats">
+        <div><div class="lcs-n">63</div><div class="lcs-l">Companies</div></div>
+        <div><div class="lcs-n">600+</div><div class="lcs-l">Questions</div></div>
+        <div><div class="lcs-n">∞</div><div class="lcs-l">Free</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ONBOARD ══════════ -->
+<div id="s-onboard" class="screen">
+  <div class="ob-card">
+    <div class="ob-step">FIRST TIME SETUP</div>
+    <div class="ob-title">Set up your profile</div>
+    <div class="ob-sub">Helps personalise your tracker and contributes to batch placement stats.</div>
+
+    <div class="frow">
+      <div class="fg"><label class="fl">FULL NAME</label><input type="text" class="fi" id="ob_name" placeholder="Your name"></div>
+      <div class="fg"><label class="fl">ROLL NUMBER</label><input type="text" class="fi" id="ob_roll" placeholder="BDA2025001"></div>
+    </div>
+    <div class="fg"><label class="fl">CURRENT INTERNSHIP / LAST ROLE</label><input type="text" class="fi" id="ob_intern" placeholder="Data Analyst Intern @ ABC Corp"></div>
+    <div class="fg"><label class="fl">RESUME / LINKEDIN LINK</label><input type="url" class="fi" id="ob_resume" placeholder="https://linkedin.com/in/yourname"></div>
+    <div class="fg">
+      <label class="fl">TARGET ROLE(S)</label>
+      <div class="chips" id="ob_roles"></div>
+    </div>
+    <div class="fg">
+      <label class="fl">TARGET COMPANIES (select all that apply)</label>
+      <div class="co-grid" id="ob_companies"></div>
+    </div>
+    <button class="sbtn" id="ob_save" onclick="saveProfile()">Save &amp; Enter Hub →</button>
+  </div>
+</div>
+
+<!-- ══════════ APP ══════════ -->
+<div id="s-app" class="screen">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sb-top">
+      <div class="sb-logo">GIM BDA HUB</div>
+      <div class="sb-sub">// batch.2025.27</div>
+    </div>
+    <div class="sb-user">
+      <div class="sb-av" id="sbAv">?</div>
+      <div>
+        <div class="sb-name" id="sbName">—</div>
+        <div class="sb-roll" id="sbRoll">—</div>
+      </div>
+    </div>
+    <div class="nav-sec">
+      <div class="nav-lbl">Main</div>
+      <div class="nl on" onclick="go('dashboard')"><span class="ic">⚡</span>Dashboard</div>
+      <div class="nl" onclick="go('tracker')"><span class="ic">🎯</span>My Tracker<span class="nb g" id="tc">0</span></div>
+      <div class="nl" onclick="go('profile')"><span class="ic">👤</span>My Profile</div>
+    </div>
+    <div class="nav-sec">
+      <div class="nav-lbl">Prep</div>
+      <div class="nl" onclick="window.open('https://gimplacementsguide.netlify.app','_blank')"><span class="ic">🏢</span>Full Prep Hub ↗</div>
+    </div>
+    <div class="nav-sec" id="adminNav" style="display:none">
+      <div class="nav-lbl">Admin</div>
+      <div class="nl" onclick="go('admin')" style="color:var(--orange)"><span class="ic">👑</span>Admin Panel</div>
+    </div>
+    <div class="sb-bot">
+      <div class="so-btn" onclick="doSignOut()">⎋ Sign out</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title">GIM BDA <span>Hub</span></div>
+      <div class="status-pill" onclick="go('tracker')">
+        <div class="sdot"></div>
+        <span id="myStatusLabel">Searching</span>
+      </div>
+    </div>
+
+    <div class="pc">
+
+      <!-- DASHBOARD -->
+      <div id="p-dashboard" class="page on">
+        <div class="ph-tag">// HOME</div>
+        <div class="ph-title">YOUR <span class="hi">DASHBOARD</span></div>
+        <div class="ph-sub" id="dashWelcome">Welcome back!</div>
+        <div class="sg">
+          <div class="stat"><div class="sn ca" id="st-targets">0</div><div class="sl">Target Companies</div></div>
+          <div class="stat"><div class="sn co" id="st-ints">0</div><div class="sl">Interviews Logged</div></div>
+          <div class="stat"><div class="sn cg" id="st-offers">0</div><div class="sl">Offers Received</div></div>
+          <div class="stat"><div class="sn cp" id="st-batch">—</div><div class="sl">Batch Placed</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div class="card">
+            <div class="ct">YOUR TARGET COMPANIES</div>
+            <div id="dash-targets"><span style="color:var(--text3);font-size:13px">None set — edit profile</span></div>
+          </div>
+          <div class="card">
+            <div class="ct">BATCH STATUS</div>
+            <div id="dash-batch-chart"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">RECENT BATCH ACTIVITY</div>
+          <div id="dash-activity" style="color:var(--text3);font-size:13px">Loading...</div>
+        </div>
+      </div>
+
+      <!-- TRACKER -->
+      <div id="p-tracker" class="page">
+        <div class="ph-tag">// MY JOURNEY</div>
+        <div class="ph-title">PLACEMENT <span class="hi">TRACKER</span></div>
+        <div class="ph-sub">Log every round, update your status, track your offers</div>
+
+        <div id="offerBanner" class="offer-banner">
+          <div class="ob-em">🎉</div>
+          <div><div class="ob-co" id="ob-co">—</div><div class="ob-ro" id="ob-ro">—</div></div>
+          <div class="ob-ctc" id="ob-ctc">—</div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px">
+          <div class="ct">CURRENT STATUS</div>
+          <div class="stages">
+            <button class="stg" data-s="searching" onclick="setStatus('searching',this)">🔍 Searching</button>
+            <button class="stg" data-s="interviewing" onclick="setStatus('interviewing',this)">🎤 Interviewing</button>
+            <button class="stg" data-s="offer_received" onclick="setStatus('offer_received',this)">📝 Offer</button>
+            <button class="stg" data-s="placed" onclick="setStatus('placed',this)">✅ Placed</button>
+            <button class="stg" data-s="opted_out" onclick="setStatus('opted_out',this)">⏸ Opted Out</button>
+          </div>
+          <div id="offerForm" style="display:none;margin-top:14px">
+            <div class="frow">
+              <div class="fg"><label class="fl">COMPANY</label><input type="text" class="fi" id="of_co" placeholder="Company"></div>
+              <div class="fg"><label class="fl">ROLE</label><input type="text" class="fi" id="of_ro" placeholder="Role"></div>
+            </div>
+            <div class="frow">
+              <div class="fg"><label class="fl">CTC (LPA) — optional</label><input type="number" class="fi" id="of_ctc" placeholder="e.g. 15.5" step="0.1"></div>
+              <div class="fg"><label class="fl">JOINING DATE — optional</label><input type="date" class="fi" id="of_date"></div>
+            </div>
+            <button class="sbtn" onclick="saveOffer()" style="margin-top:4px">Save Offer Details</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ct">INTERVIEW LOG</div>
+          <div class="int-log" id="intLog"><div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">No interviews logged yet</div></div>
+          <button class="add-btn" onclick="openIntModal()">+ Log Interview Round</button>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div id="p-profile" class="page">
+        <div class="ph-tag">// PROFILE</div>
+        <div class="ph-title">MY <span class="hi">PROFILE</span></div>
+        <div style="display:grid;grid-template-columns:200px 1fr;gap:16px">
+          <div class="card" style="height:fit-content;text-align:center">
+            <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:20px;font-weight:800;color:#fff;margin:0 auto 10px" id="pAvBig">?</div>
+            <div style="font-family:var(--font-head);font-size:16px;font-weight:800" id="pName">—</div>
+            <div style="font-size:11px;color:var(--text2);font-family:var(--font-mono)" id="pRoll">—</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px" id="pEmail">—</div>
+            <a id="pResume" href="#" target="_blank" style="display:block;margin-top:10px;font-size:12px;color:var(--accent);font-family:var(--font-mono)">→ LinkedIn / Resume</a>
+          </div>
+          <div class="card">
+            <div class="ct">EDIT PROFILE</div>
+            <div class="fg"><label class="fl">INTERNSHIP</label><input type="text" class="fi" id="ed_intern"></div>
+            <div class="fg"><label class="fl">RESUME / LINKEDIN</label><input type="url" class="fi" id="ed_resume"></div>
+            <div class="fg"><label class="fl">TARGET ROLES</label><div class="chips" id="ed_roles"></div></div>
+            <div class="fg"><label class="fl">TARGET COMPANIES</label><div class="co-grid" id="ed_companies"></div></div>
+            <button class="sbtn" onclick="updateProfile()">Update Profile</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN -->
+      <div id="p-admin" class="page">
+        <div class="ph-tag">// ADMIN ONLY</div>
+        <div class="ph-title">ADMIN <span class="hi">PANEL</span></div>
+        <div class="ph-sub">Live batch placement data</div>
+        <div class="sg" style="margin-bottom:20px">
+          <div class="stat"><div class="sn ca" id="adm-total">0</div><div class="sl">Registered</div></div>
+          <div class="stat"><div class="sn co" id="adm-int">0</div><div class="sl">Interviewing</div></div>
+          <div class="stat"><div class="sn cg" id="adm-placed">0</div><div class="sl">Placed</div></div>
+          <div class="stat"><div class="sn cp" id="adm-ctc">—</div><div class="sl">Avg CTC (LPA)</div></div>
+        </div>
+        <div class="card">
+          <div class="ct" style="display:flex;align-items:center;justify-content:space-between">
+            ALL STUDENTS
+            <button onclick="exportCSV()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:4px 11px;color:var(--text2);cursor:pointer;font-size:11px;font-family:var(--font-mono)">⬇ CSV</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="atbl">
+              <thead><tr><th>NAME</th><th>ROLL</th><th>EMAIL</th><th>INTERNSHIP</th><th>TARGET ROLE</th><th>STATUS</th><th>PLACED AT</th><th>CTC</th></tr></thead>
+              <tbody id="admTbody"><tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /pc -->
+  </div><!-- /main -->
+</div><!-- /s-app -->
+
+<!-- MODAL: Add Interview -->
+<div class="mo" id="intModal">
+  <div class="md">
+    <div class="md-title">Log Interview Round <button class="md-close" onclick="closeModal()">✕</button></div>
+    <div class="fg"><label class="fl">COMPANY</label><input type="text" class="fi" id="int_co" placeholder="Company name"></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">ROUND</label>
+        <select class="fi" id="int_round">
+          <option>Aptitude Test</option><option>Group Discussion</option>
+          <option>Technical Round 1</option><option>Technical Round 2</option>
+          <option>Case Study Round</option><option>HR Round</option><option>Final Interview</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">DATE</label><input type="date" class="fi" id="int_date"></div>
+    </div>
+    <div class="fg"><label class="fl">RESULT</label>
+      <select class="fi" id="int_result">
+        <option value="pending">Pending / Awaiting</option>
+        <option value="pass">Cleared / Passed</option>
+        <option value="fail">Not Selected</option>
+        <option value="offer">Offer Received</option>
+      </select>
+    </div>
+    <div class="fg"><label class="fl">NOTES (optional — visible to batch)</label><textarea class="fi" id="int_notes" rows="3" placeholder="Questions asked, tips for others..."></textarea></div>
+    <button class="sbtn" onclick="saveInterview()">Save Interview Log</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+// SUPABASE CONFIG
+// ════════════════════════════════════════
+const SUPABASE_URL = 'https://dsrwktqgpngrviavceal.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_bLUTa913DWCoVFTt9r_vew_Wa_hjEbV';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const ADMIN_EMAILS = ['monarch.baweja25b@gim.ac.in'];
+
+const COMPANIES = [
+  'McKinsey','Bain','Deloitte','KPMG','EY','Accenture','PwC','Thoucentric',
+  'Goldman Sachs','JP Morgan','HSBC','NatWest','BNY Mellon','Nomura',
+  'Axis Bank','Kotak','HDFC Bank','HDFC Life','ICICI','Standard Chartered',
+  'IDFC First','Future Generali','Tata Capital','Northern Arc',
+  'Fractal','Tiger Analytics','EXL','Latentview','Tredence','dunnhumby',
+  'Analytics Quotient','Course5i','WNS','Genpact','Mu Sigma',
+  'Flipkart','Dell','Cognizant','TCS','Infosys','Wipro','IBM',
+  'Capgemini','Tech Mahindra',"Lowe's",'Jio','Prodapt','Reliance Retail',
+  'FedEx','NetApp','Philips','Optum','MSD','Novartis','ZS Associates',
+  'Mondelez',"Kellogg's",'HUL','J&J','Mahindra','Godrej','Kantar','D.E. Shaw'
+];
+
+const ROLES = ['Data Scientist','Business Analyst','Data Engineer',
+  'Management Trainee','Product Analyst','Financial Analyst','Analytics Consultant'];
+
+const STATUS_MAP = {
+  searching:'🔍 Searching', interviewing:'🎤 Interviewing',
+  offer_received:'📝 Offer Received', placed:'✅ Placed', opted_out:'⏸ Opted Out'
+};
+const STATUS_BADGE = {
+  searching:'b-bl', interviewing:'b-or', offer_received:'b-pu', placed:'b-gr', opted_out:'b-re'
+};
+
+let CU = null, CP = null, CPlac = null;
+
+// ── Init ──
+window.addEventListener('DOMContentLoaded', () => {
+  buildChips();
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (session?.user) {
+      CU = session.user;
+      await loadAll();
+    } else if (event === 'SIGNED_OUT') {
+      showScreen('s-login');
+    }
+  });
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (session?.user) { CU = session.user; await loadAll(); }
+    else showScreen('s-login');
+    setTimeout(() => {
+      const ld = document.getElementById('loader');
+      ld.style.opacity = '0';
+      setTimeout(() => ld.style.display = 'none', 400);
+    }, 1400);
+  });
+});
+
+// ── Build chip UI ──
+function buildChips() {
+  ['ob_roles','ed_roles'].forEach(id => {
+    const c = document.getElementById(id);
+    if (!c) return;
+    ROLES.forEach(r => {
+      const d = document.createElement('div');
+      d.className='chip'; d.textContent=r; d.dataset.v=r;
+      d.onclick=()=>d.classList.toggle('gsel');
+      c.appendChild(d);
+    });
+  });
+  ['ob_companies','ed_companies'].forEach(id => {
+    const c = document.getElementById(id);
+    if (!c) return;
+    COMPANIES.forEach(r => {
+      const d = document.createElement('div');
+      d.className='chip'; d.textContent=r; d.dataset.v=r;
+      d.onclick=()=>d.classList.toggle('sel');
+      c.appendChild(d);
+    });
+  });
+}
+
+// ── Load all data ──
+async function loadAll() {
+  try {
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', CU.id).single();
+    if (!profile) { showScreen('s-onboard'); return; }
+    CP = profile;
+    const { data: plac } = await sb.from('placements').select('*').eq('id', CU.id).single();
+    CPlac = plac || { status:'searching', interviews:[] };
+    if (!plac) await sb.from('placements').insert({ id: CU.id, status:'searching', interviews:[] });
+    showApp();
+  } catch(e) { showScreen('s-onboard'); }
+}
+
+// ── Magic link ──
+window.sendMagicLink = async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email || !email.includes('@')) { toast('Enter a valid email','err'); return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.href }
+  });
+  if (error) { toast('Error: ' + error.message,'err'); btn.disabled=false; btn.textContent='Send Login Link →'; return; }
+  document.getElementById('magicSent').style.display = 'block';
+  btn.textContent = 'Link Sent! Check your email ✓';
+};
+
+// ── Sign out ──
+window.doSignOut = async () => { await sb.auth.signOut(); CU=null; CP=null; CPlac=null; showScreen('s-login'); };
+
+// ── Save profile (onboard) ──
+window.saveProfile = async () => {
+  const name = document.getElementById('ob_name').value.trim();
+  const roll = document.getElementById('ob_roll').value.trim();
+  if (!name||!roll) { toast('Fill in name and roll number','err'); return; }
+  const btn = document.getElementById('ob_save');
+  btn.disabled=true; btn.textContent='Saving...';
+  const roles = [...document.querySelectorAll('#ob_roles .gsel')].map(c=>c.dataset.v);
+  const companies = [...document.querySelectorAll('#ob_companies .sel')].map(c=>c.dataset.v);
+  const { error } = await sb.from('profiles').upsert({
+    id: CU.id, name, roll_no: roll, email: CU.email,
+    internship: document.getElementById('ob_intern').value.trim(),
+    resume_link: document.getElementById('ob_resume').value.trim(),
+    target_roles: roles, target_companies: companies,
+    updated_at: new Date().toISOString()
+  });
+  if (error) { toast('Error: '+error.message,'err'); btn.disabled=false; btn.textContent='Save & Enter Hub →'; return; }
+  CP = { name, roll_no:roll, email:CU.email, target_roles:roles, target_companies:companies };
+  CPlac = { status:'searching', interviews:[] };
+  await sb.from('placements').upsert({ id:CU.id, status:'searching', interviews:[], updated_at:new Date().toISOString() });
+  showApp();
+  toast('Welcome to the Hub! 🎉','ok');
+};
+
+// ── Update profile ──
+window.updateProfile = async () => {
+  const roles = [...document.querySelectorAll('#ed_roles .gsel')].map(c=>c.dataset.v);
+  const companies = [...document.querySelectorAll('#ed_companies .sel')].map(c=>c.dataset.v);
+  const { error } = await sb.from('profiles').update({
+    internship: document.getElementById('ed_intern').value.trim(),
+    resume_link: document.getElementById('ed_resume').value.trim(),
+    target_roles: roles, target_companies: companies,
+    updated_at: new Date().toISOString()
+  }).eq('id', CU.id);
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  CP = {...CP, target_roles:roles, target_companies:companies};
+  renderDashboard();
+  toast('Profile updated ✅','ok');
+};
+
+// ── Show app ──
+function showApp() {
+  showScreen('s-app');
+  const initials = (CP.name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('sbAv').textContent = initials;
+  document.getElementById('sbName').textContent = CP.name||'—';
+  document.getElementById('sbRoll').textContent = CP.roll_no||'—';
+  if (ADMIN_EMAILS.includes(CU.email)) document.getElementById('adminNav').style.display='block';
+  renderDashboard();
+  renderTracker();
+  renderProfile();
+  loadBatchStats();
+}
+
+// ── Dashboard ──
+function renderDashboard() {
+  const first = (CP.name||'there').split(' ')[0];
+  document.getElementById('dashWelcome').textContent = `Welcome back, ${first}! Here's your snapshot.`;
+  document.getElementById('st-targets').textContent = (CP.target_companies||[]).length;
+  document.getElementById('st-ints').textContent = (CPlac?.interviews||[]).length;
+  document.getElementById('st-offers').textContent = (CPlac?.interviews||[]).filter(i=>i.result==='offer').length;
+
+  const tg = document.getElementById('dash-targets');
+  tg.innerHTML = (CP.target_companies||[]).length
+    ? (CP.target_companies||[]).map(c=>`<span class="ttag">${c}</span>`).join('')
+    : '<span style="color:var(--text3);font-size:13px">None — edit profile</span>';
+}
+
+// ── Tracker ──
+function renderTracker() {
+  const s = CPlac?.status||'searching';
+  document.querySelectorAll('.stg').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
+  document.getElementById('myStatusLabel').textContent = STATUS_MAP[s]||s;
+  document.getElementById('offerForm').style.display = ['offer_received','placed'].includes(s)?'block':'none';
+  if (CPlac?.offer_company) {
+    const ob = document.getElementById('offerBanner');
+    ob.style.display='flex';
+    document.getElementById('ob-co').textContent = CPlac.offer_company;
+    document.getElementById('ob-ro').textContent = CPlac.offer_role||'';
+    document.getElementById('ob-ctc').textContent = CPlac.ctc?`₹${CPlac.ctc} LPA`:'Offer ✅';
+    document.getElementById('of_co').value = CPlac.offer_company||'';
+    document.getElementById('of_ro').value = CPlac.offer_role||'';
+    document.getElementById('of_ctc').value = CPlac.ctc||'';
+  }
+  renderIntLog(CPlac?.interviews||[]);
+  document.getElementById('tc').textContent = (CPlac?.interviews||[]).length;
+}
+
+function renderIntLog(interviews) {
+  const log = document.getElementById('intLog');
+  if (!interviews.length) {
+    log.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">No interviews logged yet</div>'; return;
+  }
+  log.innerHTML=[...interviews].reverse().map(i=>`
+    <div class="ic">
+      <div>
+        <div class="ic-co">${i.company}</div>
+        <div class="ic-meta">${i.round} · ${i.date||'—'}</div>
+        ${i.notes?`<div class="ic-notes">${i.notes}</div>`:''}
+      </div>
+      <span class="ist ${i.result||'pending'}">${(i.result||'pending').toUpperCase()}</span>
+    </div>`).join('');
+}
+
+// ── Profile page ──
+function renderProfile() {
+  document.getElementById('pName').textContent=CP.name||'—';
+  document.getElementById('pRoll').textContent=CP.roll_no||'—';
+  document.getElementById('pEmail').textContent=CU.email||'—';
+  document.getElementById('pResume').href=CP.resume_link||'#';
+  document.getElementById('pAvBig').textContent=(CP.name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('ed_intern').value=CP.internship||'';
+  document.getElementById('ed_resume').value=CP.resume_link||'';
+  document.querySelectorAll('#ed_roles .chip').forEach(c=>c.classList.toggle('gsel',(CP.target_roles||[]).includes(c.dataset.v)));
+  document.querySelectorAll('#ed_companies .chip').forEach(c=>c.classList.toggle('sel',(CP.target_companies||[]).includes(c.dataset.v)));
+}
+
+// ── Batch stats ──
+async function loadBatchStats() {
+  try {
+    const { data: profiles } = await sb.from('profiles').select('id,name,target_roles');
+    const { data: placs } = await sb.from('placements').select('*');
+    const pm = {};
+    (placs||[]).forEach(p=>pm[p.id]=p);
+    let placed=0,inting=0,ctcSum=0,ctcCnt=0;
+    (profiles||[]).forEach(p=>{
+      const pl=pm[p.id];
+      if(pl?.status==='placed'){placed++;if(pl.ctc){ctcSum+=parseFloat(pl.ctc);ctcCnt++;}}
+      if(pl?.status==='interviewing')inting++;
+    });
+    document.getElementById('st-batch').textContent=placed;
+
+    // Batch chart
+    const total=profiles?.length||0;
+    const chart=document.getElementById('dash-batch-chart');
+    const rows=[['Placed','placed',`var(--green)`],['Interviewing','interviewing',`var(--orange)`],['Searching','searching',`var(--accent)`]];
+    chart.innerHTML=rows.map(([label,st,color])=>{
+      const cnt=(placs||[]).filter(p=>p.status===st).length;
+      const pct=total?Math.round(cnt/total*100):0;
+      return `<div class="bar-row">
+        <div class="bar-meta"><span style="color:var(--text2)">${label}</span><span style="color:${color};font-family:var(--font-mono)">${cnt} (${pct}%)</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      </div>`;
+    }).join('')+`<div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-top:8px;text-align:right">${total} registered</div>`;
+
+    // Recent activity
+    const acts=[];
+    (profiles||[]).forEach(p=>{
+      const pl=pm[p.id];
+      if(pl?.status==='placed'&&pl.offer_company) acts.push(`<div style="padding:9px;border-bottom:1px solid var(--border);font-size:13px">🎉 <strong>${p.name?.split(' ')[0]||'Someone'}</strong> placed at <strong style="color:var(--accent)">${pl.offer_company}</strong>${pl.ctc?` · ₹${pl.ctc} LPA`:''}</div>`);
+      else if(pl?.status==='interviewing') acts.push(`<div style="padding:9px;border-bottom:1px solid var(--border);font-size:13px">🎤 <strong>${p.name?.split(' ')[0]||'Someone'}</strong> is actively interviewing</div>`);
+    });
+    document.getElementById('dash-activity').innerHTML=acts.length?acts.slice(0,6).join(''):'<div style="color:var(--text3);font-size:13px;padding:10px">No activity yet — log your first interview!</div>';
+
+    // Admin
+    if(ADMIN_EMAILS.includes(CU?.email)){
+      document.getElementById('adm-total').textContent=total;
+      document.getElementById('adm-int').textContent=inting;
+      document.getElementById('adm-placed').textContent=placed;
+      document.getElementById('adm-ctc').textContent=ctcCnt?(ctcSum/ctcCnt).toFixed(1)+'':'—';
+      const pm2={};(placs||[]).forEach(p=>pm2[p.id]=p);
+      const tbody=document.getElementById('admTbody');
+      tbody.innerHTML=(profiles||[]).map(p=>{
+        const pl=pm2[p.id]||{};
+        return`<tr>
+          <td><strong>${p.name||'—'}</strong></td>
+          <td style="font-family:var(--font-mono);font-size:11px">${p.roll_no||'—'}</td>
+          <td style="font-size:11px;color:var(--text2)">${p.email||'—'}</td>
+          <td style="font-size:12px">${p.internship||'—'}</td>
+          <td style="font-size:12px">${(p.target_roles||[]).join(', ')||'—'}</td>
+          <td><span class="badge ${STATUS_BADGE[pl.status]||'b-bl'}">${STATUS_MAP[pl.status]||'—'}</span></td>
+          <td style="font-weight:600;color:var(--accent)">${pl.offer_company||'—'}</td>
+          <td style="font-family:var(--font-mono);color:var(--green)">${pl.ctc?`₹${pl.ctc}`:'—'}</td>
+        </tr>`;
+      }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">No students yet</td></tr>';
+      window._admData={profiles,placs};
+    }
+  } catch(e){console.error(e);}
+}
+
+// ── Status update ──
+window.setStatus = async (s, btn) => {
+  document.querySelectorAll('.stg').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('myStatusLabel').textContent=STATUS_MAP[s];
+  document.getElementById('offerForm').style.display=['offer_received','placed'].includes(s)?'block':'none';
+  const {error}=await sb.from('placements').update({status:s,updated_at:new Date().toISOString()}).eq('id',CU.id);
+  if(!error){CPlac={...CPlac,status:s};toast('Status updated','ok');}
+  else toast('Error: '+error.message,'err');
+};
+
+// ── Save offer ──
+window.saveOffer = async () => {
+  const co=document.getElementById('of_co').value.trim();
+  const ro=document.getElementById('of_ro').value.trim();
+  const ctc=parseFloat(document.getElementById('of_ctc').value)||null;
+  const jd=document.getElementById('of_date').value||null;
+  const {error}=await sb.from('placements').update({offer_company:co,offer_role:ro,ctc,joining_date:jd,updated_at:new Date().toISOString()}).eq('id',CU.id);
+  if(error){toast('Error: '+error.message,'err');return;}
+  CPlac={...CPlac,offer_company:co,offer_role:ro,ctc};
+  document.getElementById('offerBanner').style.display='flex';
+  document.getElementById('ob-co').textContent=co;
+  document.getElementById('ob-ro').textContent=ro;
+  document.getElementById('ob-ctc').textContent=ctc?`₹${ctc} LPA`:'Offer ✅';
+  toast('Offer saved 🎉','ok');
+};
+
+// ── Interview modal ──
+window.openIntModal = () => {
+  document.getElementById('intModal').classList.add('on');
+  document.getElementById('int_date').value=new Date().toISOString().split('T')[0];
+};
+window.closeModal = () => document.getElementById('intModal').classList.remove('on');
+
+window.saveInterview = async () => {
+  const co=document.getElementById('int_co').value.trim();
+  if(!co){toast('Enter company name','err');return;}
+  const entry={company:co,round:document.getElementById('int_round').value,date:document.getElementById('int_date').value,result:document.getElementById('int_result').value,notes:document.getElementById('int_notes').value.trim(),added:new Date().toISOString()};
+  const interviews=[...(CPlac?.interviews||[]),entry];
+  const {error}=await sb.from('placements').update({interviews,updated_at:new Date().toISOString()}).eq('id',CU.id);
+  if(error){toast('Error: '+error.message,'err');return;}
+  CPlac={...CPlac,interviews};
+  renderIntLog(interviews);
+  document.getElementById('tc').textContent=interviews.length;
+  document.getElementById('st-ints').textContent=interviews.length;
+  closeModal();
+  document.getElementById('int_co').value='';
+  document.getElementById('int_notes').value='';
+  toast('Interview logged ✅','ok');
+};
+
+// ── Export CSV ──
+window.exportCSV=()=>{
+  if(!window._admData){toast('No data','err');return;}
+  const {profiles,placs}=window._admData;
+  const pm={};(placs||[]).forEach(p=>pm[p.id]=p);
+  const rows=[['Name','Roll','Email','Internship','Target Roles','Target Companies','Status','Company','CTC']];
+  (profiles||[]).forEach(p=>{const pl=pm[p.id]||{};rows.push([p.name,p.roll_no,p.email,p.internship,(p.target_roles||[]).join('|'),(p.target_companies||[]).join('|'),pl.status,pl.offer_company||'',pl.ctc||'']);});
+  const csv=rows.map(r=>r.map(c=>`"${c||''}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`GIM_BDA_Placements_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  toast('CSV exported ✅','ok');
+};
+
+// ── Navigation ──
+window.go=(id)=>{
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nl').forEach(n=>n.classList.remove('on'));
+  const pg=document.getElementById('p-'+id);
+  if(pg)pg.classList.add('on');
+  document.querySelectorAll('.nl').forEach(n=>{if(n.getAttribute('onclick')?.includes(`'${id}'`))n.classList.add('on');});
+  if(id==='admin')loadBatchStats();
+};
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast ${type} show`;
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
