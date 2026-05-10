@@ -1,5 +1,5 @@
 import mammoth from 'mammoth';
-import { PDFParse } from 'pdf-parse';
+import pdfParse from 'pdf-parse/lib/pdf-parse.js';
 import { normalizeResumeText } from './resumeScoring.js';
 
 const MAX_UPLOAD_BYTES = 6 * 1024 * 1024;
@@ -51,13 +51,8 @@ export async function extractResumeTextFromUpload({ fileName, mimeType, dataBase
 }
 
 async function extractPdfText(buffer) {
-  const parser = new PDFParse({ data: buffer });
-  try {
-    const result = await parser.getText();
-    return result?.text || '';
-  } finally {
-    await parser.destroy();
-  }
+  const result = await pdfParse(buffer);
+  return result?.text || '';
 }
 
 async function extractDocxText(buffer) {
