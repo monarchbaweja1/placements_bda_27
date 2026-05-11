@@ -1,6 +1,6 @@
-# 📊 GIM BDA Placement Prep Hub — Batch 2025-27
+# 📊 BDA Placement Guide — Batch 2025-27
 
-> A free, open-source placement preparation resource for **PGDM Big Data Analytics students** at Goa Institute of Management.
+> A free, open-source, independent placement preparation resource for **PGDM Big Data Analytics students**.
 > Built by the batch, for the batch. 🎓
 
 ## 🔗 Live Site
@@ -12,7 +12,7 @@
 
 | Section | Details |
 |---------|---------|
-| 🏢 **63 Companies** | Every recruiter from GIM BDA audited reports 2020–24 |
+| 🏢 **63 Companies** | Every recruiter from BDA audited reports 2020–24 |
 | 🎯 **Role-wise Q&A** | 7 roles — Data Scientist, BA, Data Engineer, MT, PA, FA, Consultant |
 | 👤 **Resume Q&A Guide** | How to handle resume-based interview questions for BDA profiles |
 | 🗺️ **AI/ML Roadmap** | Foundation → ML → Deep Learning → Advanced AI with links |
@@ -20,7 +20,7 @@
 
 ---
 
-## 🏦 All 63 Companies (from Official GIM BDA Audited Reports)
+## 🏦 All 63 Companies (from Official BDA Audited Reports)
 
 **Consulting:** McKinsey · Bain · Deloitte · KPMG · EY · Accenture · PwC · Thoucentric
 
@@ -39,7 +39,7 @@
 ---
 
 ## 📈 Stats
-- ✅ **63 companies** sourced from GIM BDA audited placement reports (2020–24)
+- ✅ **63 companies** sourced from BDA audited placement reports (2020–24)
 - ✅ **600+ interview questions** with answer hints
 - ✅ **7 role-wise Q&A banks** covering all BDA job functions
 - ✅ **30+ AI/ML resources** (YouTube channels, courses, websites)
@@ -71,11 +71,11 @@ Then open `http://localhost:3000`.
 ---
 
 ## 📋 Sources
-All company lists sourced from official GIM audited placement reports:
+All company lists sourced from public audited placement reports:
 - PGDM-BDA Final Placement Report 2023-24 (Audited by B2K Analytics)
 - PGDM-BDA Final Placement Report 2021-23 (Audited by B2K Analytics)
 - PGDM-BDA Final Placement Report 2020-22 (Audited by Brickworks Analytics)
-- GIM official placements website
+- public placements website
 
 ---
 
@@ -84,4 +84,4 @@ Found a company missing? Want to add questions? Open a PR or raise an issue — 
 
 ---
 
-*Made with ❤️ for GIM BDA Batch 2025-27*
+*Made with ❤️ for BDA Batch 2025-27*

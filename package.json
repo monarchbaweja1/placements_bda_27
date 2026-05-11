@@ -1,9 +1,9 @@
 {
-  "name": "gim-placement-prep-hub",
+  "name": "placement-guide",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Static GIM Placement Prep Hub with modular AI backend APIs.",
+  "description": "Static Placement Guide with modular AI backend APIs.",
   "scripts": {
     "dev": "node dev-server.js",
     "start": "node dev-server.js",

@@ -10,7 +10,7 @@ const MAX_BODY_BYTES = 10 * 1024 * 1024;
 
 await loadEnvFile('.env.local');
 await loadEnvFile('.env');
-process.env.GIM_LOCAL_DEV = process.env.GIM_LOCAL_DEV || '1';
+process.env.PLACEMENT_LOCAL_DEV = process.env.PLACEMENT_LOCAL_DEV || '1';
 process.env.SUPABASE_URL = process.env.SUPABASE_URL || 'https://dsrwktqgpngrviavceal.supabase.co';
 process.env.SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_bLUTa913DWCoVFTt9r_vew_Wa_hjEbV';
 if (process.env.AI_ALLOWED_ORIGIN === undefined) {
@@ -47,7 +47,7 @@ createServer(async (req, res) => {
     });
   }
 }).listen(PORT, () => {
-  console.log(`GIM Placement Prep Hub running at http://localhost:${PORT}`);
+  console.log(`Placement Guide running at http://localhost:${PORT}`);
 });
 
 async function handleApi(req, nodeRes, routePath) {

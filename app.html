@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GIM BDA Placement Hub — Login & Tracker</title>
+<title>BDA Placement Guide — Login & Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -204,7 +204,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
 
 <!-- LOADER -->
 <div id="loader">
-  <div class="ld-logo">GIM BDA</div>
+  <div class="ld-logo">BDA</div>
   <div class="ld-bar"><div class="ld-fill"></div></div>
 </div>
 
@@ -213,14 +213,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
   <div class="login-wrap">
     <div class="login-card">
       <div class="lc-badge">PGDM BDA · BATCH 2025-27</div>
-      <div class="lc-title">GIM BDA<br><span>Placement Hub</span></div>
+      <div class="lc-title">BDA<br><span>Placement Hub</span></div>
       <div class="lc-sub">Your batch's complete placement tracker. Log interviews, track offers, see live batch stats.</div>
-      <input type="email" class="lc-input" id="loginEmail" placeholder="yourname@gim.ac.in" autocomplete="email">
+      <input type="email" class="lc-input" id="loginEmail" placeholder="yourname@email.com" autocomplete="email">
       <button class="lc-btn" id="loginBtn" onclick="sendMagicLink()">Send Login Link →</button>
       <div class="magic-sent" id="magicSent">
-        ✅ Magic link sent! Check your GIM email and click the link to sign in.
+        ✅ Magic link sent! Check your email and click the link to sign in.
       </div>
-      <div class="lc-note">Enter your GIM email → get a one-click login link.<br>No password needed. Free forever.</div>
+      <div class="lc-note">Enter your email → get a one-click login link.<br>No password needed. Free forever.</div>
       <div class="lc-stats">
         <div><div class="lcs-n">63</div><div class="lcs-l">Companies</div></div>
         <div><div class="lcs-n">600+</div><div class="lcs-l">Questions</div></div>
@@ -260,7 +260,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sb-top">
-      <div class="sb-logo">GIM BDA HUB</div>
+      <div class="sb-logo">BDA HUB</div>
       <div class="sb-sub">// batch.2025.27</div>
     </div>
     <div class="sb-user">
@@ -278,7 +278,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
     </div>
     <div class="nav-sec">
       <div class="nav-lbl">Prep</div>
-      <div class="nl" onclick="window.open('https://gimplacementsguide.netlify.app','_blank')"><span class="ic">🏢</span>Full Prep Hub ↗</div>
+      <div class="nl" onclick="window.open('https://placementsguide.netlify.app','_blank')"><span class="ic">🏢</span>Full Prep Hub ↗</div>
     </div>
     <div class="nav-sec" id="adminNav" style="display:none">
       <div class="nav-lbl">Admin</div>
@@ -292,7 +292,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
   <!-- Main -->
   <div class="main">
     <div class="topbar">
-      <div class="tb-title">GIM BDA <span>Hub</span></div>
+      <div class="tb-title">BDA <span>Hub</span></div>
       <div class="status-pill" onclick="go('tracker')">
         <div class="sdot"></div>
         <span id="myStatusLabel">Searching</span>
@@ -460,7 +460,7 @@ const SUPABASE_KEY = 'sb_publishable_bLUTa913DWCoVFTt9r_vew_Wa_hjEbV';
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const ADMIN_EMAILS = ['monarch.baweja25b@gim.ac.in'];
+const ADMIN_EMAILS = ['monarch.baweja25b@example.com'];
 
 const COMPANIES = [
   'McKinsey','Bain','Deloitte','KPMG','EY','Accenture','PwC','Thoucentric',
@@ -806,7 +806,7 @@ window.exportCSV=()=>{
   const csv=rows.map(r=>r.map(c=>`"${c||''}"`).join(',')).join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download=`GIM_BDA_Placements_${new Date().toISOString().split('T')[0]}.csv`;
+  a.download=`BDA_Placements_${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
   toast('CSV exported ✅','ok');
 };

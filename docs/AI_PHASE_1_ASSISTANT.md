@@ -7,10 +7,10 @@ This slice adds a programme-aware assistant without changing the existing placem
 Only three additive changes were made to `index.html`:
 
 - include `assets/ai/ai-assistant.css`
-- add `<div id="gim-ai-root"></div>`
+- add `<div id="pg-ai-root"></div>`
 - include `assets/ai/ai-assistant.js`
 
-The assistant uses only `.gim-ai-*` CSS classes and does not modify existing navbar, auth, ticker, programme selector, dashboard, company, role, roadmap, cheat sheet, or download behavior.
+The assistant uses only `.pg-ai-*` CSS classes and does not modify existing navbar, auth, ticker, programme selector, dashboard, company, role, roadmap, cheat sheet, or download behavior.
 
 ## Backend Flow
 

@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   sendJson(res, 200, {
     ok: true,
-    service: 'gim-placement-prep-hub-ai',
+    service: 'placement-guide-ai',
     phase: 'foundation',
     timestamp: new Date().toISOString()
   });

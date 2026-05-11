@@ -1,50 +1,50 @@
-(function initGimAiAssistant() {
-  const root = document.getElementById('gim-ai-root');
+(function initPlacementAiAssistant() {
+  const root = document.getElementById('pg-ai-root');
   if (!root || root.dataset.ready === '1') return;
   root.dataset.ready = '1';
-  root.className = 'gim-ai-root';
+  root.className = 'pg-ai-root';
 
-  let sessionId = sessionStorage.getItem('gimAiSessionId') || '';
+  let sessionId = sessionStorage.getItem('pgAiSessionId') || '';
   let isSending = false;
 
   root.innerHTML = `
-    <button class="gim-ai-launcher" type="button" aria-label="Open AI assistant">
+    <button class="pg-ai-launcher" type="button" aria-label="Open AI assistant">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M12 3.5l1.45 4.12L17.5 9l-4.05 1.38L12 14.5l-1.45-4.12L6.5 9l4.05-1.38L12 3.5z" fill="currentColor"/>
         <path d="M5.8 13.3l.72 2.04 2.02.66-2.02.68-.72 2.02-.72-2.02-2.02-.68 2.02-.66.72-2.04zM18.3 14.2l.58 1.64 1.62.54-1.62.54-.58 1.64-.58-1.64-1.62-.54 1.62-.54.58-1.64z" fill="currentColor" opacity=".88"/>
       </svg>
     </button>
-    <section class="gim-ai-panel" aria-label="GIM AI Placement Assistant">
-      <div class="gim-ai-head">
-        <div class="gim-ai-mark">AI</div>
-        <div class="gim-ai-title">
+    <section class="pg-ai-panel" aria-label="AI Placement Assistant">
+      <div class="pg-ai-head">
+        <div class="pg-ai-mark">AI</div>
+        <div class="pg-ai-title">
           <strong>Placement Assistant</strong>
-          <span id="gimAiScope">Programme-aware prep support</span>
+          <span id="pgAiScope">Programme-aware prep support</span>
         </div>
-        <button class="gim-ai-close" type="button" aria-label="Close AI assistant">×</button>
+        <button class="pg-ai-close" type="button" aria-label="Close AI assistant">×</button>
       </div>
-      <div class="gim-ai-messages" id="gimAiMessages">
-        <div class="gim-ai-empty">
-          Ask about company prep, resume strategy, interview questions, SQL/Python prep, or roadmap planning. Answers are scoped to your selected GIM programme.
+      <div class="pg-ai-messages" id="pgAiMessages">
+        <div class="pg-ai-empty">
+          Ask about company prep, resume strategy, interview questions, SQL/Python prep, or roadmap planning. Answers are scoped to your selected programme.
         </div>
       </div>
-      <div class="gim-ai-foot">
-        <form class="gim-ai-form" id="gimAiForm">
-          <textarea class="gim-ai-input" id="gimAiInput" rows="1" maxlength="4000" placeholder="Ask a placement prep question..."></textarea>
-          <button class="gim-ai-send" id="gimAiSend" type="submit" aria-label="Send message">➜</button>
+      <div class="pg-ai-foot">
+        <form class="pg-ai-form" id="pgAiForm">
+          <textarea class="pg-ai-input" id="pgAiInput" rows="1" maxlength="4000" placeholder="Ask a placement prep question..."></textarea>
+          <button class="pg-ai-send" id="pgAiSend" type="submit" aria-label="Send message">➜</button>
         </form>
-        <div class="gim-ai-note">AI can make mistakes. Verify important placement decisions with official sources.</div>
+        <div class="pg-ai-note">AI can make mistakes. Verify important placement decisions with official sources.</div>
       </div>
     </section>
   `;
 
-  const launcher = root.querySelector('.gim-ai-launcher');
-  const closeBtn = root.querySelector('.gim-ai-close');
-  const form = root.querySelector('#gimAiForm');
-  const input = root.querySelector('#gimAiInput');
-  const sendBtn = root.querySelector('#gimAiSend');
-  const messages = root.querySelector('#gimAiMessages');
-  const scope = root.querySelector('#gimAiScope');
+  const launcher = root.querySelector('.pg-ai-launcher');
+  const closeBtn = root.querySelector('.pg-ai-close');
+  const form = root.querySelector('#pgAiForm');
+  const input = root.querySelector('#pgAiInput');
+  const sendBtn = root.querySelector('#pgAiSend');
+  const messages = root.querySelector('#pgAiMessages');
+  const scope = root.querySelector('#pgAiScope');
 
   launcher.addEventListener('click', () => {
     if (!isProgrammeViewActive()) return;
@@ -104,7 +104,7 @@
       }
 
       sessionId = payload.sessionId;
-      sessionStorage.setItem('gimAiSessionId', sessionId);
+      sessionStorage.setItem('pgAiSessionId', sessionId);
       typing.remove();
       addMessage('assistant', payload.answer, payload.citations || []);
     } catch (error) {
@@ -116,7 +116,7 @@
     }
   });
 
-  document.addEventListener('gim:programme-change', updateScope);
+  document.addEventListener('placement:programme-change', updateScope);
   setInterval(updateScope, 800);
   updateScope();
 
@@ -129,8 +129,8 @@
   function addTyping() {
     clearEmpty();
     const wrapper = document.createElement('div');
-    wrapper.className = 'gim-ai-message assistant';
-    wrapper.innerHTML = '<div class="gim-ai-bubble"><span class="gim-ai-typing"><span></span><span></span><span></span></span></div>';
+    wrapper.className = 'pg-ai-message assistant';
+    wrapper.innerHTML = '<div class="pg-ai-bubble"><span class="pg-ai-typing"><span></span><span></span><span></span></span></div>';
     messages.appendChild(wrapper);
     scrollToBottom();
     return wrapper;
@@ -139,18 +139,18 @@
   function addMessage(role, content, citations) {
     clearEmpty();
     const wrapper = document.createElement('div');
-    wrapper.className = `gim-ai-message ${role}`;
+    wrapper.className = `pg-ai-message ${role}`;
     const bubble = document.createElement('div');
-    bubble.className = 'gim-ai-bubble';
+    bubble.className = 'pg-ai-bubble';
     bubble.innerHTML = role === 'assistant' ? renderMarkdown(content) : escapeHtml(content);
     wrapper.appendChild(bubble);
 
     if (role === 'assistant' && citations && citations.length) {
       const citeWrap = document.createElement('div');
-      citeWrap.className = 'gim-ai-citations';
+      citeWrap.className = 'pg-ai-citations';
       citations.slice(0, 4).forEach(citation => {
         const cite = document.createElement('span');
-        cite.className = 'gim-ai-cite';
+        cite.className = 'pg-ai-cite';
         cite.textContent = `[${citation.index}] ${citation.title || 'Source'}`;
         citeWrap.appendChild(cite);
       });
@@ -162,7 +162,7 @@
   }
 
   function clearEmpty() {
-    messages.querySelector('.gim-ai-empty')?.remove();
+    messages.querySelector('.pg-ai-empty')?.remove();
   }
 
   function scrollToBottom() {

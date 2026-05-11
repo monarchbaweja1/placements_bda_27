@@ -1,4 +1,4 @@
-(function initGimShortlistEstimator() {
+(function initPlacementShortlistEstimator() {
   // Programme-specific company suggestions shown in the form
   const SUGGESTIONS = {
     bda:  ['Deloitte', 'KPMG', 'EY', 'Fractal Analytics', 'Mu Sigma', 'Accenture', 'Kantar', 'JP Morgan', 'Amazon', 'Capgemini'],
@@ -10,101 +10,101 @@
 
   // ── Build DOM ────────────────────────────────────────────────────
   const wrap = document.createElement('div');
-  wrap.className = 'gim-sl-wrap';
+  wrap.className = 'pg-sl-wrap';
   wrap.innerHTML = `
-    <button class="gim-sl-trigger" type="button" aria-label="Open Shortlist Probability Estimator">%</button>
-    <span class="gim-sl-tip" aria-hidden="true">Shortlist Estimator</span>
+    <button class="pg-sl-trigger" type="button" aria-label="Open Shortlist Probability Estimator">%</button>
+    <span class="pg-sl-tip" aria-hidden="true">Shortlist Estimator</span>
   `;
 
   const overlay = document.createElement('div');
-  overlay.className = 'gim-sl-overlay';
+  overlay.className = 'pg-sl-overlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', 'GIM Shortlist Probability Estimator');
+  overlay.setAttribute('aria-label', 'Shortlist Probability Estimator');
   overlay.innerHTML = `
-    <div class="gim-sl-modal">
-      <div class="gim-sl-head">
-        <div class="gim-sl-head-icon">%</div>
-        <div class="gim-sl-head-text">
+    <div class="pg-sl-modal">
+      <div class="pg-sl-head">
+        <div class="pg-sl-head-icon">%</div>
+        <div class="pg-sl-head-text">
           <strong>Shortlist Probability Estimator</strong>
-          <span id="gimSlScope">AI-based estimate · Not a guarantee</span>
+          <span id="pgSlScope">AI-based estimate · Not a guarantee</span>
         </div>
-        <button class="gim-sl-close-btn" type="button" aria-label="Close">&#215;</button>
+        <button class="pg-sl-close-btn" type="button" aria-label="Close">&#215;</button>
       </div>
 
-      <div class="gim-sl-body" id="gimSlBody">
+      <div class="pg-sl-body" id="pgSlBody">
         <!-- Form -->
-        <div id="gimSlFormView">
-          <div class="gim-sl-upload-row">
+        <div id="pgSlFormView">
+          <div class="pg-sl-upload-row">
             <div>
-              <label class="gim-sl-field-label" for="gimSlFile">Upload CV</label>
-              <input class="gim-sl-file" id="gimSlFile" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+              <label class="pg-sl-field-label" for="pgSlFile">Upload CV</label>
+              <input class="pg-sl-file" id="pgSlFile" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
             </div>
-            <div class="gim-sl-upload-meta">
-              <strong id="gimSlFileName">PDF, DOCX, or TXT</strong>
-              <span id="gimSlUploadStatus">Upload a CV to auto-fill skills and project signals.</span>
+            <div class="pg-sl-upload-meta">
+              <strong id="pgSlFileName">PDF, DOCX, or TXT</strong>
+              <span id="pgSlUploadStatus">Upload a CV to auto-fill skills and project signals.</span>
             </div>
           </div>
 
-          <div class="gim-sl-grid-2">
+          <div class="pg-sl-grid-2">
             <div>
-              <label class="gim-sl-field-label" for="gimSlCgpa">Your CGPA</label>
-              <input class="gim-sl-input" id="gimSlCgpa" type="number" min="0" max="10" step="0.01"
+              <label class="pg-sl-field-label" for="pgSlCgpa">Your CGPA</label>
+              <input class="pg-sl-input" id="pgSlCgpa" type="number" min="0" max="10" step="0.01"
                 placeholder="e.g. 7.4">
             </div>
             <div>
               <!-- programme is read from page context; shown for reference -->
-              <label class="gim-sl-field-label">Programme</label>
-              <input class="gim-sl-input" id="gimSlProgDisplay" type="text" placeholder="Detected from page" readonly
+              <label class="pg-sl-field-label">Programme</label>
+              <input class="pg-sl-input" id="pgSlProgDisplay" type="text" placeholder="Detected from page" readonly
                 style="background:rgba(31,41,51,0.04);cursor:default;">
             </div>
           </div>
 
           <div style="margin-bottom:14px">
-            <label class="gim-sl-field-label" for="gimSlSkills">Your Skills &amp; Tools</label>
-            <textarea class="gim-sl-textarea" id="gimSlSkills" maxlength="4000"
+            <label class="pg-sl-field-label" for="pgSlSkills">Your Skills &amp; Tools</label>
+            <textarea class="pg-sl-textarea" id="pgSlSkills" maxlength="4000"
               placeholder="e.g. SQL, Python, Power BI, Machine Learning, Excel, Tableau, Statistics"></textarea>
           </div>
 
           <div style="margin-bottom:16px">
-            <label class="gim-sl-field-label" for="gimSlProjects">Projects &amp; Experience (brief)</label>
-            <textarea class="gim-sl-textarea" id="gimSlProjects" maxlength="4000"
+            <label class="pg-sl-field-label" for="pgSlProjects">Projects &amp; Experience (brief)</label>
+            <textarea class="pg-sl-textarea" id="pgSlProjects" maxlength="4000"
               placeholder="e.g. Built customer churn model in Python, SQL dashboard for sales team, credit risk internship at HDFC"></textarea>
           </div>
 
-          <div class="gim-sl-company-section">
-            <label class="gim-sl-field-label">Target Companies <span style="font-weight:400;text-transform:none;font-size:10px">(add up to 8)</span></label>
-            <div class="gim-sl-company-add">
-              <input class="gim-sl-input" id="gimSlCompanyInput" type="text"
+          <div class="pg-sl-company-section">
+            <label class="pg-sl-field-label">Target Companies <span style="font-weight:400;text-transform:none;font-size:10px">(add up to 8)</span></label>
+            <div class="pg-sl-company-add">
+              <input class="pg-sl-input" id="pgSlCompanyInput" type="text"
                 placeholder="Type a company name and press +" maxlength="80">
-              <button class="gim-sl-add-btn" id="gimSlAddBtn" type="button">+</button>
+              <button class="pg-sl-add-btn" id="pgSlAddBtn" type="button">+</button>
             </div>
-            <div class="gim-sl-company-chips" id="gimSlChips"></div>
-            <div class="gim-sl-suggestions" id="gimSlSuggestions"></div>
+            <div class="pg-sl-company-chips" id="pgSlChips"></div>
+            <div class="pg-sl-suggestions" id="pgSlSuggestions"></div>
           </div>
 
-          <div class="gim-sl-form-foot">
-            <span class="gim-sl-form-note">Probabilities are AI estimates only. Results depend on data<br>available in the system for your programme.</span>
-            <button class="gim-sl-btn-primary" id="gimSlSubmit" type="button" disabled>
+          <div class="pg-sl-form-foot">
+            <span class="pg-sl-form-note">Probabilities are AI estimates only. Results depend on data<br>available in the system for your programme.</span>
+            <button class="pg-sl-btn-primary" id="pgSlSubmit" type="button" disabled>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
               Estimate Probability
             </button>
           </div>
-          <div id="gimSlError" style="display:none"></div>
+          <div id="pgSlError" style="display:none"></div>
         </div>
 
         <!-- Loading -->
-        <div id="gimSlLoadingView" style="display:none">
-          <div class="gim-sl-loading">
-            <div class="gim-sl-spinner"></div>
+        <div id="pgSlLoadingView" style="display:none">
+          <div class="pg-sl-loading">
+            <div class="pg-sl-spinner"></div>
             <p>Calculating shortlist probability estimates&hellip;</p>
           </div>
         </div>
 
         <!-- Results -->
-        <div id="gimSlResultsView" style="display:none"></div>
+        <div id="pgSlResultsView" style="display:none"></div>
       </div>
     </div>
   `;
@@ -113,25 +113,25 @@
   document.body.appendChild(overlay);
 
   // ── Refs ─────────────────────────────────────────────────────────
-  const trigger      = wrap.querySelector('.gim-sl-trigger');
-  const closeBtn     = overlay.querySelector('.gim-sl-close-btn');
-  const fileInput    = overlay.querySelector('#gimSlFile');
-  const fileNameEl   = overlay.querySelector('#gimSlFileName');
-  const uploadStatusEl = overlay.querySelector('#gimSlUploadStatus');
-  const cgpaInput    = overlay.querySelector('#gimSlCgpa');
-  const progDisplay  = overlay.querySelector('#gimSlProgDisplay');
-  const skillsInput  = overlay.querySelector('#gimSlSkills');
-  const projInput    = overlay.querySelector('#gimSlProjects');
-  const compInput    = overlay.querySelector('#gimSlCompanyInput');
-  const addBtn       = overlay.querySelector('#gimSlAddBtn');
-  const chipsEl      = overlay.querySelector('#gimSlChips');
-  const suggestEl    = overlay.querySelector('#gimSlSuggestions');
-  const submitBtn    = overlay.querySelector('#gimSlSubmit');
-  const errorEl      = overlay.querySelector('#gimSlError');
-  const scopeEl      = overlay.querySelector('#gimSlScope');
-  const formView     = overlay.querySelector('#gimSlFormView');
-  const loadView     = overlay.querySelector('#gimSlLoadingView');
-  const resView      = overlay.querySelector('#gimSlResultsView');
+  const trigger      = wrap.querySelector('.pg-sl-trigger');
+  const closeBtn     = overlay.querySelector('.pg-sl-close-btn');
+  const fileInput    = overlay.querySelector('#pgSlFile');
+  const fileNameEl   = overlay.querySelector('#pgSlFileName');
+  const uploadStatusEl = overlay.querySelector('#pgSlUploadStatus');
+  const cgpaInput    = overlay.querySelector('#pgSlCgpa');
+  const progDisplay  = overlay.querySelector('#pgSlProgDisplay');
+  const skillsInput  = overlay.querySelector('#pgSlSkills');
+  const projInput    = overlay.querySelector('#pgSlProjects');
+  const compInput    = overlay.querySelector('#pgSlCompanyInput');
+  const addBtn       = overlay.querySelector('#pgSlAddBtn');
+  const chipsEl      = overlay.querySelector('#pgSlChips');
+  const suggestEl    = overlay.querySelector('#pgSlSuggestions');
+  const submitBtn    = overlay.querySelector('#pgSlSubmit');
+  const errorEl      = overlay.querySelector('#pgSlError');
+  const scopeEl      = overlay.querySelector('#pgSlScope');
+  const formView     = overlay.querySelector('#pgSlFormView');
+  const loadView     = overlay.querySelector('#pgSlLoadingView');
+  const resView      = overlay.querySelector('#pgSlResultsView');
 
   let companies = [];
   let extractedResumeText = '';
@@ -141,7 +141,7 @@
   closeBtn.addEventListener('click', close);
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) close(); });
-  document.addEventListener('gim:programme-change', updateScope);
+  document.addEventListener('placement:programme-change', updateScope);
   setInterval(updateScope, 800);
 
   cgpaInput.addEventListener('input', checkReady);
@@ -200,12 +200,12 @@
     try {
       const token = await getToken();
       if (!token) throw new Error('Please sign in before uploading a resume.');
-      const payload = await window.GimResumeUpload.extractResumeFile(file, token);
+      const payload = await window.PlacementResumeUpload.extractResumeFile(file, token);
       extractedResumeText = payload.text;
 
-      const derivedCgpa = window.GimResumeUpload.deriveCgpa(payload.text);
-      const derivedSkills = window.GimResumeUpload.deriveSkills(payload.text);
-      const derivedSummary = window.GimResumeUpload.deriveProfileSummary(payload.text);
+      const derivedCgpa = window.PlacementResumeUpload.deriveCgpa(payload.text);
+      const derivedSkills = window.PlacementResumeUpload.deriveSkills(payload.text);
+      const derivedSummary = window.PlacementResumeUpload.deriveProfileSummary(payload.text);
       if (derivedCgpa) cgpaInput.value = derivedCgpa;
       if (derivedSkills) skillsInput.value = derivedSkills;
       if (derivedSummary) projInput.value = derivedSummary.slice(0, 4000);
@@ -239,12 +239,12 @@
 
   function renderChips() {
     chipsEl.innerHTML = companies.map(c => `
-      <span class="gim-sl-chip">
+      <span class="pg-sl-chip">
         ${esc(c)}
-        <button class="gim-sl-chip-x" type="button" data-company="${esc(c)}" aria-label="Remove ${esc(c)}">&#215;</button>
+        <button class="pg-sl-chip-x" type="button" data-company="${esc(c)}" aria-label="Remove ${esc(c)}">&#215;</button>
       </span>
     `).join('');
-    chipsEl.querySelectorAll('.gim-sl-chip-x').forEach(btn => {
+    chipsEl.querySelectorAll('.pg-sl-chip-x').forEach(btn => {
       btn.addEventListener('click', () => removeCompany(btn.dataset.company));
     });
   }
@@ -252,8 +252,8 @@
   function renderSuggestions() {
     const code = getProgrammeCode();
     const list = (code && SUGGESTIONS[code]) ? SUGGESTIONS[code] : DEFAULT_SUGGESTIONS;
-    suggestEl.innerHTML = list.map(c => `<button class="gim-sl-suggestion" type="button">${esc(c)}</button>`).join('');
-    suggestEl.querySelectorAll('.gim-sl-suggestion').forEach(btn => {
+    suggestEl.innerHTML = list.map(c => `<button class="pg-sl-suggestion" type="button">${esc(c)}</button>`).join('');
+    suggestEl.querySelectorAll('.pg-sl-suggestion').forEach(btn => {
       btn.addEventListener('click', () => {
         if (!companies.includes(btn.textContent) && companies.length < 8) {
           companies.push(btn.textContent);
@@ -304,7 +304,7 @@
 
   function showError(msg) {
     errorEl.style.display = '';
-    errorEl.innerHTML = `<div class="gim-sl-error-box">${esc(msg)}</div>`;
+    errorEl.innerHTML = `<div class="pg-sl-error-box">${esc(msg)}</div>`;
   }
 
   // ── Results rendering ────────────────────────────────────────────
@@ -327,55 +327,55 @@
       const barsHtml = barDefs.map(({ name, val }) => {
         const cls = val >= 70 ? '' : val >= 45 ? ' amber' : ' red';
         return `
-          <div class="gim-sl-bar-row">
-            <span class="gim-sl-bar-name">${name}</span>
-            <div class="gim-sl-bar-track">
-              <div class="gim-sl-bar-fill${cls}" data-target="${val}" style="width:0%"></div>
+          <div class="pg-sl-bar-row">
+            <span class="pg-sl-bar-name">${name}</span>
+            <div class="pg-sl-bar-track">
+              <div class="pg-sl-bar-fill${cls}" data-target="${val}" style="width:0%"></div>
             </div>
-            <span class="gim-sl-bar-val">${val}</span>
+            <span class="pg-sl-bar-val">${val}</span>
           </div>`;
       }).join('');
 
       const reasonsHtml = (est.reasons || []).map(r =>
-        `<div class="gim-sl-reason"><span class="gim-sl-reason-dot">●</span>${esc(r)}</div>`
+        `<div class="pg-sl-reason"><span class="pg-sl-reason-dot">●</span>${esc(r)}</div>`
       ).join('');
 
       return `
-        <div class="gim-sl-card">
-          <div class="gim-sl-card-top">
-            <div class="gim-sl-prob-badge ${tier}">
-              <div class="gim-sl-prob-num">${p}</div>
-              <div class="gim-sl-prob-pct">%</div>
+        <div class="pg-sl-card">
+          <div class="pg-sl-card-top">
+            <div class="pg-sl-prob-badge ${tier}">
+              <div class="pg-sl-prob-num">${p}</div>
+              <div class="pg-sl-prob-pct">%</div>
             </div>
-            <div class="gim-sl-card-info">
-              <div class="gim-sl-card-name">${esc(est.company)}</div>
-              <div class="gim-sl-card-sector">${esc(est.sector || '')}</div>
+            <div class="pg-sl-card-info">
+              <div class="pg-sl-card-name">${esc(est.company)}</div>
+              <div class="pg-sl-card-sector">${esc(est.sector || '')}</div>
             </div>
           </div>
-          <div class="gim-sl-bars">${barsHtml}</div>
-          ${reasonsHtml ? `<div class="gim-sl-reasons">${reasonsHtml}</div>` : ''}
-          ${est.caveat ? `<div class="gim-sl-card-caveat">${esc(est.caveat)}</div>` : ''}
+          <div class="pg-sl-bars">${barsHtml}</div>
+          ${reasonsHtml ? `<div class="pg-sl-reasons">${reasonsHtml}</div>` : ''}
+          ${est.caveat ? `<div class="pg-sl-card-caveat">${esc(est.caveat)}</div>` : ''}
         </div>`;
     }).join('');
 
     resView.innerHTML = `
-      <div class="gim-sl-section">Shortlist Probability Estimates</div>
-      <div class="gim-sl-cards">${cardsHtml}</div>
-      <div class="gim-sl-disclaimer">
+      <div class="pg-sl-section">Shortlist Probability Estimates</div>
+      <div class="pg-sl-cards">${cardsHtml}</div>
+      <div class="pg-sl-disclaimer">
         ⚠ These are AI-based estimates derived from programme-level historical patterns.
         They are <strong>not predictions or guarantees</strong> of actual shortlisting.
         Use them for self-assessment and targeted preparation only.
       </div>
-      <div class="gim-sl-result-foot">
-        <button class="gim-sl-btn-secondary" id="gimSlReset">New Estimate</button>
+      <div class="pg-sl-result-foot">
+        <button class="pg-sl-btn-secondary" id="pgSlReset">New Estimate</button>
       </div>
     `;
 
-    resView.querySelector('#gimSlReset').addEventListener('click', resetForm);
+    resView.querySelector('#pgSlReset').addEventListener('click', resetForm);
 
     // Animate bars
     requestAnimationFrame(() => {
-      resView.querySelectorAll('.gim-sl-bar-fill').forEach(el => {
+      resView.querySelectorAll('.pg-sl-bar-fill').forEach(el => {
         el.style.width = el.dataset.target + '%';
       });
     });
@@ -383,9 +383,9 @@
 
   function unknownCard(est) {
     return `
-      <div class="gim-sl-card gim-sl-card-unknown">
-        <div class="gim-sl-card-name">${esc(est.company)}</div>
-        <div class="gim-sl-unknown-label">${esc(est.caveat || 'No historical data available for this company in your programme.')}</div>
+      <div class="pg-sl-card pg-sl-card-unknown">
+        <div class="pg-sl-card-name">${esc(est.company)}</div>
+        <div class="pg-sl-unknown-label">${esc(est.caveat || 'No historical data available for this company in your programme.')}</div>
       </div>`;
   }
 
@@ -445,7 +445,7 @@
   }
 
   function apiUrl(path) {
-    if (window.GIM_API_BASE) return `${String(window.GIM_API_BASE).replace(/\/$/, '')}${path}`;
+    if (window.PLACEMENT_API_BASE) return `${String(window.PLACEMENT_API_BASE).replace(/\/$/, '')}${path}`;
     if (window.location.protocol === 'file:') return `http://localhost:3000${path}`;
     return path;
   }

@@ -82,6 +82,40 @@ export default async function handler(req, res) {
       firstMessage: message
     });
 
+    if (isOwnershipQuestion(message)) {
+      const answer = [
+        'This website is an independent student-built placement preparation resource.',
+        '',
+        'It is not owned, managed, operated, endorsed, or officially maintained by any institute.'
+      ].join('\n');
+
+      await saveChatTurnSafe({
+        supabase,
+        sessionId: chatSession.id,
+        userMessage: message,
+        assistantMessage: answer,
+        citations: []
+      });
+
+      return sendJson(res, 200, {
+        ok: true,
+        sessionId: chatSession.id,
+        programme: access.programmeCode,
+        answer,
+        citations: [],
+        retrieval: {
+          chunks: 0,
+          hasContext: false
+        },
+        ai: {
+          provider: 'policy',
+          model: null,
+          fallback: false,
+          reason: 'ownership_question'
+        }
+      });
+    }
+
     const history = await loadChatHistorySafe(supabase, chatSession.id);
     const chunks = await retrieveChunksSafe({
       supabase,
@@ -371,12 +405,14 @@ async function generateAnswer({ message, pageContext, history, chunks, programme
     .slice(-6000);
 
   const systemInstruction = [
-    'You are the GIM Placement Prep Hub AI assistant.',
+    'You are the Placement Guide AI assistant for an independent student-built placement preparation resource.',
+    'The website is independent and is not owned, managed, operated, endorsed, or officially maintained by any institute.',
+    'Never state or imply that any institute owns, manages, operates, endorses, or officially maintains this website.',
     'Answer only for the authenticated programme scope.',
     `Current programme: ${programmeCode.toUpperCase()}.`,
     'Use retrieved context when available. If the retrieved context is insufficient, say what is missing and give a cautious general preparation framework.',
     'If the student asks for videos, courses, websites, books, tools, or other resources, include useful public resources with direct clickable URLs in Markdown link format.',
-    'Do not say links are unavailable just because they were not retrieved, unless the student asks for official GIM-only links. Clearly label general resources as general resources.',
+    'Do not say links are unavailable just because they were not retrieved. Clearly label general resources as general resources.',
     'Prefer reputable sources such as official docs, university/open course pages, known education platforms, and established YouTube educators.',
     'Never claim shortlist guarantees. Use "estimate" language for probabilities.',
     'Keep answers practical, concise, and student-facing.',
@@ -441,6 +477,13 @@ function sanitizePageContext(pageContext = {}) {
   };
 }
 
+function isOwnershipQuestion(message) {
+  const lower = String(message || '').toLowerCase();
+  return /\b(who|what|which|tell|is|are)\b/.test(lower)
+    && /\b(owner|owns|owned|manage|managed|operated|operator|official|affiliated|affiliation|endorsed|maintained|belongs)\b/.test(lower)
+    && /\b(website|site|portal|hub|assistant|you|this)\b/.test(lower);
+}
+
 function buildFallbackAnswer({ message, pageContext, programmeCode, reason = 'fallback' }) {
   const code = String(programmeCode || 'bda').toUpperCase();
   const cleanedMessage = normalizeUserMessage(message);
@@ -455,7 +498,7 @@ function buildFallbackAnswer({ message, pageContext, programmeCode, reason = 'fa
 
   if (/\b(youtube|video|videos|course|courses|resource|resources|link|links|website|websites|prep material|study material)\b/.test(lower)) {
     return [
-      `${intro} Here are reliable general resources you can use right away. These are not official GIM resources, but they are useful for placement prep.`,
+      `${intro} Here are reliable general resources you can use right away. These are not official institute resources, but they are useful for placement prep.`,
       '',
       '1. [Victor Cheng - Case Interview resources](https://www.youtube.com/results?search_query=victor+cheng+case+interview)',
       '2. [CaseInterview.com](https://www.caseinterview.com/)',

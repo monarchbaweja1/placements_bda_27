@@ -1,4 +1,4 @@
-(function initGimResumeUploadUtils() {
+(function initPlacementResumeUploadUtils() {
   const MAX_FILE_BYTES = 6 * 1024 * 1024;
   const SKILL_TERMS = [
     'SQL', 'Python', 'R', 'Excel', 'Power BI', 'Tableau', 'Machine Learning', 'Statistics',
@@ -20,7 +20,7 @@
     'Advanced Excel': ['advanced excel', 'pivot table', 'vlookup', 'xlookup']
   };
 
-  window.GimResumeUpload = {
+  window.PlacementResumeUpload = {
     extractResumeFile,
     deriveCgpa,
     deriveSkills,
@@ -198,7 +198,7 @@
   }
 
   function apiUrl(path) {
-    if (window.GIM_API_BASE) return `${String(window.GIM_API_BASE).replace(/\/$/, '')}${path}`;
+    if (window.PLACEMENT_API_BASE) return `${String(window.PLACEMENT_API_BASE).replace(/\/$/, '')}${path}`;
     if (window.location.protocol === 'file:') return `http://localhost:3000${path}`;
     return path;
   }

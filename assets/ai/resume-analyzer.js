@@ -1,11 +1,11 @@
-(function initGimResumeAnalyzer() {
+(function initPlacementResumeAnalyzer() {
   const CIRCUMFERENCE = 2 * Math.PI * 44;
 
   // ── Build DOM ──────────────────────────────────────────────────
   const wrap = document.createElement('div');
-  wrap.className = 'gim-ra-wrap';
+  wrap.className = 'pg-ra-wrap';
   wrap.innerHTML = `
-    <button class="gim-ra-trigger" type="button" aria-label="Open Resume Analyzer">
+    <button class="pg-ra-trigger" type="button" aria-label="Open Resume Analyzer">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
           stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -13,18 +13,18 @@
           stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
-    <span class="gim-ra-tip" aria-hidden="true">Resume Analyzer</span>
+    <span class="pg-ra-tip" aria-hidden="true">Resume Analyzer</span>
   `;
 
   const overlay = document.createElement('div');
-  overlay.className = 'gim-ra-overlay';
+  overlay.className = 'pg-ra-overlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', 'GIM Resume Analyzer');
+  overlay.setAttribute('aria-label', 'Resume Analyzer');
   overlay.innerHTML = `
-    <div class="gim-ra-modal">
-      <div class="gim-ra-head">
-        <div class="gim-ra-head-icon">
+    <div class="pg-ra-modal">
+      <div class="pg-ra-head">
+        <div class="pg-ra-head-icon">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -32,65 +32,65 @@
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
-        <div class="gim-ra-head-text">
+        <div class="pg-ra-head-text">
           <strong>Resume Analyzer</strong>
-          <span id="gimRaScope">Programme-aware ATS scoring &amp; recommendations</span>
+          <span id="pgRaScope">Programme-aware ATS scoring &amp; recommendations</span>
         </div>
-        <button class="gim-ra-close-btn" type="button" aria-label="Close">&#215;</button>
+        <button class="pg-ra-close-btn" type="button" aria-label="Close">&#215;</button>
       </div>
 
-      <div class="gim-ra-body" id="gimRaBody">
+      <div class="pg-ra-body" id="pgRaBody">
         <!-- Form view -->
-        <div id="gimRaFormView">
-          <div class="gim-ra-upload-row">
+        <div id="pgRaFormView">
+          <div class="pg-ra-upload-row">
             <div>
-              <label class="gim-ra-field-label" for="gimRaFile">Upload CV</label>
-              <input class="gim-ra-file" id="gimRaFile" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+              <label class="pg-ra-field-label" for="pgRaFile">Upload CV</label>
+              <input class="pg-ra-file" id="pgRaFile" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
             </div>
-            <div class="gim-ra-upload-meta">
-              <strong id="gimRaFileName">PDF, DOCX, or TXT</strong>
-              <span id="gimRaUploadStatus">Upload a CV or paste text below.</span>
+            <div class="pg-ra-upload-meta">
+              <strong id="pgRaFileName">PDF, DOCX, or TXT</strong>
+              <span id="pgRaUploadStatus">Upload a CV or paste text below.</span>
             </div>
           </div>
 
-          <label class="gim-ra-field-label" for="gimRaText">Paste or extracted resume text</label>
-          <textarea class="gim-ra-textarea" id="gimRaText" maxlength="80000"
+          <label class="pg-ra-field-label" for="pgRaText">Paste or extracted resume text</label>
+          <textarea class="pg-ra-textarea" id="pgRaText" maxlength="80000"
             placeholder="Upload a PDF/DOCX CV to extract text automatically, or paste your resume text here."></textarea>
-          <div class="gim-ra-charcount"><span id="gimRaChars">0</span>&nbsp;/ 80,000 characters</div>
+          <div class="pg-ra-charcount"><span id="pgRaChars">0</span>&nbsp;/ 80,000 characters</div>
 
-          <div class="gim-ra-grid">
+          <div class="pg-ra-grid">
             <div>
-              <label class="gim-ra-field-label" for="gimRaRole">Target Role <span style="font-weight:400;text-transform:none;font-size:10px">(optional)</span></label>
-              <input class="gim-ra-input" id="gimRaRole" type="text" placeholder="e.g. Data Analyst" maxlength="120">
+              <label class="pg-ra-field-label" for="pgRaRole">Target Role <span style="font-weight:400;text-transform:none;font-size:10px">(optional)</span></label>
+              <input class="pg-ra-input" id="pgRaRole" type="text" placeholder="e.g. Data Analyst" maxlength="120">
             </div>
             <div>
-              <label class="gim-ra-field-label" for="gimRaCompany">Target Company <span style="font-weight:400;text-transform:none;font-size:10px">(optional)</span></label>
-              <input class="gim-ra-input" id="gimRaCompany" type="text" placeholder="e.g. Deloitte" maxlength="120">
+              <label class="pg-ra-field-label" for="pgRaCompany">Target Company <span style="font-weight:400;text-transform:none;font-size:10px">(optional)</span></label>
+              <input class="pg-ra-input" id="pgRaCompany" type="text" placeholder="e.g. Deloitte" maxlength="120">
             </div>
           </div>
 
-          <div class="gim-ra-form-foot">
-            <span class="gim-ra-form-note">Minimum 500 characters required for analysis</span>
-            <button class="gim-ra-btn-primary" id="gimRaSubmit" type="button" disabled>
+          <div class="pg-ra-form-foot">
+            <span class="pg-ra-form-note">Minimum 500 characters required for analysis</span>
+            <button class="pg-ra-btn-primary" id="pgRaSubmit" type="button" disabled>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
               Analyze Resume
             </button>
           </div>
-          <div id="gimRaError" style="display:none"></div>
+          <div id="pgRaError" style="display:none"></div>
         </div>
 
         <!-- Loading view -->
-        <div id="gimRaLoadingView" style="display:none">
-          <div class="gim-ra-loading">
-            <div class="gim-ra-spinner"></div>
+        <div id="pgRaLoadingView" style="display:none">
+          <div class="pg-ra-loading">
+            <div class="pg-ra-spinner"></div>
             <p>Analyzing your resume against programme requirements&hellip;<br>This takes a few seconds.</p>
           </div>
         </div>
 
         <!-- Results view -->
-        <div id="gimRaResultsView" style="display:none"></div>
+        <div id="pgRaResultsView" style="display:none"></div>
       </div>
     </div>
   `;
@@ -99,28 +99,28 @@
   document.body.appendChild(overlay);
 
   // ── Element refs ───────────────────────────────────────────────
-  const trigger   = wrap.querySelector('.gim-ra-trigger');
-  const closeBtn  = overlay.querySelector('.gim-ra-close-btn');
-  const fileInput = overlay.querySelector('#gimRaFile');
-  const fileNameEl = overlay.querySelector('#gimRaFileName');
-  const uploadStatusEl = overlay.querySelector('#gimRaUploadStatus');
-  const textarea  = overlay.querySelector('#gimRaText');
-  const charEl    = overlay.querySelector('#gimRaChars');
-  const roleInput = overlay.querySelector('#gimRaRole');
-  const compInput = overlay.querySelector('#gimRaCompany');
-  const submitBtn = overlay.querySelector('#gimRaSubmit');
-  const errorEl   = overlay.querySelector('#gimRaError');
-  const scopeEl   = overlay.querySelector('#gimRaScope');
-  const formView  = overlay.querySelector('#gimRaFormView');
-  const loadView  = overlay.querySelector('#gimRaLoadingView');
-  const resView   = overlay.querySelector('#gimRaResultsView');
+  const trigger   = wrap.querySelector('.pg-ra-trigger');
+  const closeBtn  = overlay.querySelector('.pg-ra-close-btn');
+  const fileInput = overlay.querySelector('#pgRaFile');
+  const fileNameEl = overlay.querySelector('#pgRaFileName');
+  const uploadStatusEl = overlay.querySelector('#pgRaUploadStatus');
+  const textarea  = overlay.querySelector('#pgRaText');
+  const charEl    = overlay.querySelector('#pgRaChars');
+  const roleInput = overlay.querySelector('#pgRaRole');
+  const compInput = overlay.querySelector('#pgRaCompany');
+  const submitBtn = overlay.querySelector('#pgRaSubmit');
+  const errorEl   = overlay.querySelector('#pgRaError');
+  const scopeEl   = overlay.querySelector('#pgRaScope');
+  const formView  = overlay.querySelector('#pgRaFormView');
+  const loadView  = overlay.querySelector('#pgRaLoadingView');
+  const resView   = overlay.querySelector('#pgRaResultsView');
 
   // ── Interaction ────────────────────────────────────────────────
   trigger.addEventListener('click', open);
   closeBtn.addEventListener('click', close);
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) close(); });
-  document.addEventListener('gim:programme-change', updateScope);
+  document.addEventListener('placement:programme-change', updateScope);
   setInterval(updateScope, 800);
 
   textarea.addEventListener('input', () => {
@@ -158,7 +158,7 @@
     try {
       const token = await getToken();
       if (!token) throw new Error('Please sign in before uploading a resume.');
-      const payload = await window.GimResumeUpload.extractResumeFile(file, token);
+      const payload = await window.PlacementResumeUpload.extractResumeFile(file, token);
       textarea.value = payload.text;
       updateTextState();
       uploadStatusEl.textContent = `Extracted ${payload.characters.toLocaleString()} characters. Review before analyzing.`;
@@ -224,7 +224,7 @@
 
   function showError(msg) {
     errorEl.style.display = '';
-    errorEl.innerHTML = `<div class="gim-ra-error-box">${esc(msg)}</div>`;
+    errorEl.innerHTML = `<div class="pg-ra-error-box">${esc(msg)}</div>`;
   }
 
   // ── Results rendering ──────────────────────────────────────────
@@ -252,32 +252,32 @@
       const v = scores[key] ?? 0;
       const cls = v >= 70 ? '' : v >= 45 ? ' amber' : ' red';
       return `
-        <div class="gim-ra-bar-row">
-          <span class="gim-ra-bar-name">${name}</span>
-          <div class="gim-ra-bar-track">
-            <div class="gim-ra-bar-fill${cls}" data-target="${v}" style="width:0%"></div>
+        <div class="pg-ra-bar-row">
+          <span class="pg-ra-bar-name">${name}</span>
+          <div class="pg-ra-bar-track">
+            <div class="pg-ra-bar-fill${cls}" data-target="${v}" style="width:0%"></div>
           </div>
-          <span class="gim-ra-bar-val">${v}</span>
+          <span class="pg-ra-bar-val">${v}</span>
         </div>`;
     }).join('');
 
     const foundTags = (analysis.extracted?.skills || []).slice(0, 10)
-      .map(s => `<span class="gim-ra-tag found">${esc(s)}</span>`).join('');
+      .map(s => `<span class="pg-ra-tag found">${esc(s)}</span>`).join('');
 
     const missTags = [
       ...(analysis.missing?.prioritySkills || []),
       ...(analysis.missing?.tools || [])
-    ].slice(0, 10).map(s => `<span class="gim-ra-tag miss">${esc(s)}</span>`).join('');
+    ].slice(0, 10).map(s => `<span class="pg-ra-tag miss">${esc(s)}</span>`).join('');
 
     const recsHtml = (analysis.recommendations || []).map(r =>
-      `<div class="gim-ra-rec"><span class="gim-ra-rec-arrow">→</span>${esc(r)}</div>`
+      `<div class="pg-ra-rec"><span class="pg-ra-rec-arrow">→</span>${esc(r)}</div>`
     ).join('');
 
     const explainHtml = (analysis.explanation || []).map(l => `<p>${esc(l)}</p>`).join('');
 
     resView.innerHTML = `
-      <div class="gim-ra-hero">
-        <div class="gim-ra-gauge">
+      <div class="pg-ra-hero">
+        <div class="pg-ra-gauge">
           <svg width="112" height="112" viewBox="0 0 110 110" aria-hidden="true">
             <circle cx="55" cy="55" r="44" fill="none" stroke="rgba(31,41,51,0.08)" stroke-width="10"/>
             <circle cx="55" cy="55" r="44" fill="none" stroke="${color}" stroke-width="10"
@@ -289,34 +289,34 @@
               font-family="inherit">/100</text>
           </svg>
         </div>
-        <div class="gim-ra-score-block">
-          <div class="gim-ra-score-num" style="color:${color}">${score}<span style="font-size:16px;font-weight:500;color:#7b8794">/100</span></div>
-          <div class="gim-ra-score-sub">Overall ATS + Placement Score</div>
-          <div class="gim-ra-verdict">
+        <div class="pg-ra-score-block">
+          <div class="pg-ra-score-num" style="color:${color}">${score}<span style="font-size:16px;font-weight:500;color:#7b8794">/100</span></div>
+          <div class="pg-ra-score-sub">Overall ATS + Placement Score</div>
+          <div class="pg-ra-verdict">
             Analyzed for <strong>${esc(targetLabel)}</strong>.<br>
             ${verdict(score)}
           </div>
         </div>
       </div>
 
-      <div class="gim-ra-section">Score Breakdown</div>
-      <div class="gim-ra-bars">${barsHtml}</div>
+      <div class="pg-ra-section">Score Breakdown</div>
+      <div class="pg-ra-bars">${barsHtml}</div>
 
-      ${foundTags ? `<div class="gim-ra-section">Detected Skills</div><div class="gim-ra-tags">${foundTags}</div>` : ''}
-      ${missTags  ? `<div class="gim-ra-section">Missing / Not Detected</div><div class="gim-ra-tags">${missTags}</div>` : ''}
-      ${recsHtml  ? `<div class="gim-ra-section">Recommendations</div><div class="gim-ra-recs">${recsHtml}</div>` : ''}
-      ${explainHtml ? `<div class="gim-ra-section">How This Score Was Calculated</div><div class="gim-ra-explain">${explainHtml}</div>` : ''}
+      ${foundTags ? `<div class="pg-ra-section">Detected Skills</div><div class="pg-ra-tags">${foundTags}</div>` : ''}
+      ${missTags  ? `<div class="pg-ra-section">Missing / Not Detected</div><div class="pg-ra-tags">${missTags}</div>` : ''}
+      ${recsHtml  ? `<div class="pg-ra-section">Recommendations</div><div class="pg-ra-recs">${recsHtml}</div>` : ''}
+      ${explainHtml ? `<div class="pg-ra-section">How This Score Was Calculated</div><div class="pg-ra-explain">${explainHtml}</div>` : ''}
 
-      <div class="gim-ra-result-foot">
-        <button class="gim-ra-btn-secondary" id="gimRaReset">Analyze Another Resume</button>
+      <div class="pg-ra-result-foot">
+        <button class="pg-ra-btn-secondary" id="pgRaReset">Analyze Another Resume</button>
       </div>
     `;
 
-    resView.querySelector('#gimRaReset').addEventListener('click', resetForm);
+    resView.querySelector('#pgRaReset').addEventListener('click', resetForm);
 
     // Animate bars after DOM paint
     requestAnimationFrame(() => {
-      resView.querySelectorAll('.gim-ra-bar-fill').forEach(el => {
+      resView.querySelectorAll('.pg-ra-bar-fill').forEach(el => {
         el.style.width = el.dataset.target + '%';
       });
     });

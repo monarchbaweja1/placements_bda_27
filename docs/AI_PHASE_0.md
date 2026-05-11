@@ -40,7 +40,7 @@ Every AI endpoint should call `assertProgrammeAccess()` before retrieving data. 
 Phase 1 should add the AI assistant behind an isolated mount point and namespaced CSS/JS only:
 
 ```html
-<div id="gim-ai-root"></div>
+<div id="pg-ai-root"></div>
 ```
 
 No existing selectors or layout classes should be modified for the assistant.
