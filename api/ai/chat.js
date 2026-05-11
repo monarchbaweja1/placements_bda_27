@@ -1,11 +1,12 @@
+import { randomUUID } from 'node:crypto';
 import { requireUser } from '../shared/auth.js';
 import { applyCors, methodNotAllowed, sendJson } from '../shared/http.js';
 import { logError, logInfo, logWarn } from '../shared/logger.js';
 import { getAiModels, getOpenAIClient } from '../shared/openai.js';
-import { assertProgrammeAccess } from '../shared/programmeGuard.js';
+import { assertProgrammeAccess, normalizeProgrammeCode } from '../shared/programmeGuard.js';
 import { embedText, retrieveProgrammeChunks } from '../shared/rag.js';
 import { checkRateLimit } from '../shared/rateLimit.js';
-import { getSupabaseAdmin } from '../shared/supabaseAdmin.js';
+import { getSupabaseAdmin, hasSupabaseServiceRole } from '../shared/supabaseAdmin.js';
 
 const MAX_MESSAGE_LENGTH = 4000;
 const MAX_HISTORY_MESSAGES = 8;
@@ -58,15 +59,11 @@ export default async function handler(req, res) {
       });
     }
 
-    const supabase = getSupabaseAdmin();
-    const access = await assertProgrammeAccess({
-      supabase,
+    const { supabase, access } = await resolveChatAccess({
       userId: auth.user.id,
-      requestedProgramme: selectedProgramme,
-      requireAssignedProgramme: true
+      requestedProgramme: selectedProgramme
     });
 
-    if (!access.ok) return sendJson(res, access.status, { ok: false, error: access.error });
     if (!access.programmeCode) {
       return sendJson(res, 409, {
         ok: false,
@@ -77,7 +74,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const chatSession = await ensureChatSession({
+    const chatSession = await ensureChatSessionSafe({
       supabase,
       sessionId,
       userId: auth.user.id,
@@ -85,16 +82,17 @@ export default async function handler(req, res) {
       firstMessage: message
     });
 
-    const history = await loadChatHistory(supabase, chatSession.id);
-    const queryEmbedding = await embedText(buildRetrievalQuery(message, pageContext, history));
-    const chunks = await retrieveProgrammeChunks({
+    const history = await loadChatHistorySafe(supabase, chatSession.id);
+    const chunks = await retrieveChunksSafe({
       supabase,
-      queryEmbedding,
+      message,
+      pageContext,
+      history,
       programmeCode: access.programmeCode,
       matchCount: 8
     });
 
-    const answer = await generateAnswer({
+    const answer = await generateAnswerSafe({
       message,
       pageContext,
       history,
@@ -110,7 +108,7 @@ export default async function handler(req, res) {
       similarity: Number(chunk.similarity || 0)
     }));
 
-    await saveChatTurn({
+    await saveChatTurnSafe({
       supabase,
       sessionId: chatSession.id,
       userMessage: message,
@@ -144,6 +142,138 @@ export default async function handler(req, res) {
         code: 'ai_chat_failed',
         message: 'Unable to generate an AI response right now.'
       }
+    });
+  }
+}
+
+async function resolveChatAccess({ userId, requestedProgramme }) {
+  const fallbackProgramme = normalizeProgrammeCode(requestedProgramme) || 'bda';
+  const fallbackAccess = {
+    ok: true,
+    programmeCode: fallbackProgramme,
+    userContext: { programme: null }
+  };
+
+  if (!hasSupabaseServiceRole()) {
+    return { supabase: null, access: fallbackAccess };
+  }
+
+  try {
+    const supabase = getSupabaseAdmin();
+    const access = await assertProgrammeAccess({
+      supabase,
+      userId,
+      requestedProgramme,
+      requireAssignedProgramme: false
+    });
+
+    if (!access.ok) {
+      logWarn('chat_programme_access_fallback', {
+        userId,
+        code: access.error?.code,
+        requestedProgramme: fallbackProgramme
+      });
+      return { supabase, access: fallbackAccess };
+    }
+
+    return {
+      supabase,
+      access: {
+        ...access,
+        programmeCode: access.programmeCode || fallbackProgramme
+      }
+    };
+  } catch (error) {
+    logWarn('chat_programme_lookup_failed', {
+      userId,
+      message: error?.message || String(error),
+      requestedProgramme: fallbackProgramme
+    });
+    return { supabase: null, access: fallbackAccess };
+  }
+}
+
+async function ensureChatSessionSafe({ supabase, sessionId, userId, programmeId, firstMessage }) {
+  if (!supabase) {
+    return {
+      id: sessionId || randomUUID(),
+      user_id: userId,
+      programme_id: programmeId || null
+    };
+  }
+
+  try {
+    return await ensureChatSession({ supabase, sessionId, userId, programmeId, firstMessage });
+  } catch (error) {
+    logWarn('chat_session_fallback', {
+      userId,
+      message: error?.message || String(error)
+    });
+    return {
+      id: sessionId || randomUUID(),
+      user_id: userId,
+      programme_id: programmeId || null
+    };
+  }
+}
+
+async function loadChatHistorySafe(supabase, sessionId) {
+  if (!supabase || !sessionId) return [];
+  try {
+    return await loadChatHistory(supabase, sessionId);
+  } catch (error) {
+    logWarn('chat_history_load_failed', {
+      sessionId,
+      message: error?.message || String(error)
+    });
+    return [];
+  }
+}
+
+async function retrieveChunksSafe({ supabase, message, pageContext, history, programmeCode, matchCount }) {
+  if (!supabase || !process.env.OPENAI_API_KEY) return [];
+
+  try {
+    const queryEmbedding = await embedText(buildRetrievalQuery(message, pageContext, history));
+    return await retrieveProgrammeChunks({
+      supabase,
+      queryEmbedding,
+      programmeCode,
+      matchCount
+    });
+  } catch (error) {
+    logWarn('chat_retrieval_failed', {
+      programmeCode,
+      message: error?.message || String(error)
+    });
+    return [];
+  }
+}
+
+async function generateAnswerSafe({ message, pageContext, history, chunks, programmeCode }) {
+  if (!process.env.OPENAI_API_KEY) {
+    return buildFallbackAnswer({ message, pageContext, programmeCode });
+  }
+
+  try {
+    return await generateAnswer({ message, pageContext, history, chunks, programmeCode });
+  } catch (error) {
+    logWarn('chat_openai_failed', {
+      programmeCode,
+      message: error?.message || String(error)
+    });
+    return buildFallbackAnswer({ message, pageContext, programmeCode });
+  }
+}
+
+async function saveChatTurnSafe({ supabase, sessionId, userMessage, assistantMessage, citations }) {
+  if (!supabase || !sessionId) return;
+  try {
+    await saveChatTurn({ supabase, sessionId, userMessage, assistantMessage, citations });
+  } catch (error) {
+    logWarn('chat_turn_save_failed', {
+      sessionId,
+      message: error?.message || String(error)
     });
   }
 }
@@ -287,4 +417,66 @@ function sanitizePageContext(pageContext = {}) {
     company: String(pageContext.company || '').slice(0, 120),
     role: String(pageContext.role || '').slice(0, 120)
   };
+}
+
+function buildFallbackAnswer({ message, pageContext, programmeCode }) {
+  const code = String(programmeCode || 'bda').toUpperCase();
+  const lower = String(message || '').toLowerCase();
+  const contextParts = [pageContext?.company, pageContext?.role, pageContext?.section].filter(Boolean);
+  const contextLine = contextParts.length
+    ? `I am using your current page context: ${contextParts.join(' / ')}.`
+    : 'I do not have a specific company card open, so this is a general preparation answer.';
+
+  if (/\b(resume|cv|ats)\b/.test(lower)) {
+    return [
+      `For ${code}, focus your resume on role-fit evidence, not just responsibilities.`,
+      contextLine,
+      '',
+      '1. Put your strongest 3-5 technical or domain skills near the top.',
+      '2. Rewrite project bullets with action, tool, method, and measurable result.',
+      '3. Add keywords from target roles, such as analytics, dashboarding, modelling, consulting, sales, finance, or operations depending on the programme.',
+      '4. Keep each bullet interview-defensible: be ready to explain the data, method, trade-offs, and business impact.',
+      '5. Remove generic claims unless they are backed by a project, internship, certification, or metric.'
+    ].join('\n');
+  }
+
+  if (/\b(interview|question|prep|prepare)\b/.test(lower)) {
+    return [
+      `For ${code} interview prep, use a three-layer plan.`,
+      contextLine,
+      '',
+      '1. Company layer: know the business model, customers, major products, and why the role exists.',
+      '2. Role layer: prepare 2-3 projects that prove the skills the role needs.',
+      '3. Story layer: keep STAR answers ready for teamwork, conflict, failure, leadership, and pressure.',
+      '',
+      'For every project, prepare: problem statement, data/source, approach, tools used, result, and what you would improve.'
+    ].join('\n');
+  }
+
+  if (/\b(sql|python|power bi|tableau|excel|machine learning|ml)\b/.test(lower)) {
+    return [
+      `For ${code} technical preparation, prioritize practical fluency.`,
+      contextLine,
+      '',
+      '1. SQL: joins, grouping, window functions, CTEs, date logic, and business case queries.',
+      '2. Python/Excel: cleaning, aggregation, charts, basic modelling, and explaining outputs clearly.',
+      '3. BI tools: dashboard layout, KPI choice, drill-down logic, and stakeholder storytelling.',
+      '4. ML, if relevant: regression/classification basics, evaluation metrics, leakage, overfitting, and business interpretation.',
+      '',
+      'A good answer should explain both the method and the business decision it supports.'
+    ].join('\n');
+  }
+
+  return [
+    `Here is a practical ${code} placement-prep way to approach this.`,
+    contextLine,
+    '',
+    '1. Clarify the target role and what the recruiter is likely testing.',
+    '2. Match your resume evidence to that role using projects, internships, tools, and measurable outcomes.',
+    '3. Prepare one technical story, one business story, and one teamwork/leadership story.',
+    '4. For company-specific prep, connect your answer to the company sector, customers, and likely use cases.',
+    '5. End answers with a crisp impact statement: what changed because of your work.',
+    '',
+    'The live AI context service was unavailable, so this response is a safe fallback rather than a retrieved-context answer.'
+  ].join('\n');
 }
