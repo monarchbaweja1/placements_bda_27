@@ -375,6 +375,9 @@ async function generateAnswer({ message, pageContext, history, chunks, programme
     'Answer only for the authenticated programme scope.',
     `Current programme: ${programmeCode.toUpperCase()}.`,
     'Use retrieved context when available. If the retrieved context is insufficient, say what is missing and give a cautious general preparation framework.',
+    'If the student asks for videos, courses, websites, books, tools, or other resources, include useful public resources with direct clickable URLs in Markdown link format.',
+    'Do not say links are unavailable just because they were not retrieved, unless the student asks for official GIM-only links. Clearly label general resources as general resources.',
+    'Prefer reputable sources such as official docs, university/open course pages, known education platforms, and established YouTube educators.',
     'Never claim shortlist guarantees. Use "estimate" language for probabilities.',
     'Keep answers practical, concise, and student-facing.',
     'For programme-specific questions, do not mix data from other programmes.',
@@ -449,6 +452,20 @@ function buildFallbackAnswer({ message, pageContext, programmeCode, reason = 'fa
   const company = extractCompanyName(cleanedMessage, pageContext);
   const role = extractRoleName(cleanedMessage, pageContext);
   const intro = fallbackIntro(code, contextLine);
+
+  if (/\b(youtube|video|videos|course|courses|resource|resources|link|links|website|websites|prep material|study material)\b/.test(lower)) {
+    return [
+      `${intro} Here are reliable general resources you can use right away. These are not official GIM resources, but they are useful for placement prep.`,
+      '',
+      '1. [Victor Cheng - Case Interview resources](https://www.youtube.com/results?search_query=victor+cheng+case+interview)',
+      '2. [CaseInterview.com](https://www.caseinterview.com/)',
+      '3. [PrepLounge - Management consulting cases](https://www.preplounge.com/en/management-consulting-cases)',
+      '4. [HBS Online - Business essentials](https://online.hbs.edu/courses/)',
+      '5. [Khan Academy - Finance and accounting](https://www.khanacademy.org/economics-finance-domain)',
+      '',
+      'Use these with a simple routine: learn one framework, solve one case aloud, write a 5-line summary, then repeat with a timer.'
+    ].join('\n');
+  }
 
   if (/\b(placement|placements|placed|campus|job|jobs|recruiter|recruiters|career)\b/.test(lower)) {
     return [
