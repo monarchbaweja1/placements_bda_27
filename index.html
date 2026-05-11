@@ -435,6 +435,98 @@ h2.section-h2 {
 .auth-stat-n { font-size: 24px; font-weight: 900; color: var(--green); font-family: var(--mono); }
 .auth-stat-l { font-size: 10px; color: var(--text3); margin-top: 2px; letter-spacing: 1px; text-transform: uppercase; }
 
+/* Access + feature panel */
+.auth-access-row {
+  max-width: 960px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+.core-feature-mini {
+  width: 100%;
+  min-height: 100%;
+  padding: 28px;
+  text-align: left;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 24px 70px rgba(15,23,42,0.1);
+}
+.core-feature-mini-kicker {
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.core-feature-mini h2 {
+  color: var(--text);
+  font-size: 26px;
+  font-weight: 820;
+  line-height: 1.12;
+  letter-spacing: -0.4px;
+  margin-bottom: 8px;
+}
+.core-feature-mini h2 span {
+  color: var(--green);
+  font-weight: 900;
+}
+.core-feature-mini p {
+  max-width: 360px;
+  margin: 0 0 16px;
+  color: var(--text3);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.core-feature-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+}
+.core-feature-mini-item {
+  min-height: 82px;
+  padding: 12px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(31,41,51,0.08);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.82), rgba(255,255,255,0.58)),
+    rgba(255,255,255,0.64);
+}
+.core-feature-mini-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(5,150,105,0.1);
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 900;
+  font-family: var(--mono);
+}
+.core-feature-mini-label {
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.6px;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.core-feature-mini-desc {
+  color: var(--text3);
+  font-size: 10px;
+  line-height: 1.35;
+  margin-top: 4px;
+}
+
 /* Form card */
 .auth-form-card {
   max-width: 600px; width: 100%;
@@ -928,6 +1020,8 @@ h2.section-h2 {
   .session-actions { left: 50%; right: auto; transform: translateX(-50%); top: 16px; }
   .auth-visual { display: none; }
   h1.hero-h1, .auth-headline h1, .prog-sel-hero h1 { font-size: 40px; }
+  .auth-access-row { max-width: 600px; grid-template-columns: 1fr; }
+  .core-feature-mini { padding: 24px; }
 }
 @media(max-width:600px) {
   .bento { grid-template-columns: 1fr; }
@@ -937,6 +1031,9 @@ h2.section-h2 {
   .otp-boxes { gap: 4px; }
   .otp-box { width: 34px; height: 44px; font-size: 18px; border-radius: 8px; }
   .auth-form-card { padding: 20px; }
+  .core-feature-mini h2 { font-size: 21px; }
+  .core-feature-mini { padding: 20px; }
+  .core-feature-mini-grid { grid-template-columns: 1fr; }
   .prog-sel-inner { padding: 90px 16px 60px; }
 }
 </style>
@@ -1108,8 +1205,9 @@ h2.section-h2 {
       <div class="auth-stat-item"><div class="auth-stat-n">Free</div><div class="auth-stat-l">Forever</div></div>
     </div>
 
-    <!-- Form -->
-    <div class="auth-form-card reveal reveal-delay-2">
+    <!-- Access + compact feature grid -->
+    <div class="auth-access-row reveal reveal-delay-2">
+      <div class="auth-form-card">
       <div class="auth-form-title">Get instant access</div>
       <div class="auth-form-sub">Enter your email — we'll send an 8-digit code. No password needed.</div>
       <div class="auth-input-row">
@@ -1121,6 +1219,42 @@ h2.section-h2 {
         <div class="auth-trust-item">No password</div>
         <div class="auth-trust-item">Any email</div>
         <div class="auth-trust-item">Free forever</div>
+      </div>
+    </div>
+      <div class="core-feature-mini">
+        <div class="core-feature-mini-kicker">Core tools</div>
+        <h2>Everything you need to <span>prepare faster</span></h2>
+        <p>Programme-scoped placement tools, notes, and AI guidance in one student-friendly workspace.</p>
+        <div class="core-feature-mini-grid" aria-label="Core website features">
+          <div class="core-feature-mini-item">
+            <div class="core-feature-mini-icon">Co</div>
+            <div>
+              <div class="core-feature-mini-label">Company Intel</div>
+              <div class="core-feature-mini-desc">Recruiter and role notes</div>
+            </div>
+          </div>
+          <div class="core-feature-mini-item">
+            <div class="core-feature-mini-icon">CV</div>
+            <div>
+              <div class="core-feature-mini-label">Resume Analyzer</div>
+              <div class="core-feature-mini-desc">Profile improvement hints</div>
+            </div>
+          </div>
+          <div class="core-feature-mini-item">
+            <div class="core-feature-mini-icon">Mt</div>
+            <div>
+              <div class="core-feature-mini-label">CV Matcher</div>
+              <div class="core-feature-mini-desc">Role-fit readiness check</div>
+            </div>
+          </div>
+          <div class="core-feature-mini-item">
+            <div class="core-feature-mini-icon">AI</div>
+            <div>
+              <div class="core-feature-mini-label">AI Assistant</div>
+              <div class="core-feature-mini-desc">Programme-scoped prep help</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
