@@ -641,6 +641,135 @@ h2.section-h2 {
 }
 .prog-sel-hero .sub { font-size: 16px; color: var(--text2); line-height: 1.7; }
 
+.prog-side-panel {
+  position: fixed;
+  right: clamp(42px, 6vw, 112px);
+  top: 170px;
+  width: min(340px, 24vw);
+  z-index: 1;
+  padding: 26px;
+  border: 1px solid rgba(5,150,105,0.14);
+  border-radius: 22px;
+  background:
+    linear-gradient(155deg, rgba(255,255,255,0.72), rgba(236,253,245,0.52)),
+    rgba(255,255,255,0.5);
+  box-shadow: 0 24px 80px rgba(15,23,42,0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+.prog-side-panel::before {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.7);
+  pointer-events: none;
+}
+.prog-side-kicker {
+  position: relative;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.prog-side-title {
+  position: relative;
+  color: var(--text);
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.6px;
+  line-height: 1.08;
+  margin-bottom: 12px;
+}
+.prog-side-copy {
+  position: relative;
+  color: var(--text2);
+  font-size: 13px;
+  line-height: 1.65;
+  margin-bottom: 22px;
+}
+.prog-side-metrics {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(31,41,51,0.08);
+}
+.prog-side-metric {
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-radius: 15px;
+  background: rgba(255,255,255,0.56);
+  border: 1px solid rgba(31,41,51,0.06);
+  text-align: center;
+}
+.prog-side-metric strong {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 18px;
+  line-height: 1;
+}
+.prog-side-metric span {
+  color: var(--text3);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-top: 7px;
+  text-transform: uppercase;
+}
+.prog-side-flow {
+  position: relative;
+  display: grid;
+  gap: 16px;
+  margin-top: 22px;
+}
+.prog-side-step {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+.prog-side-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(5,150,105,0.1);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 900;
+}
+.prog-side-step strong {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.25;
+}
+.prog-side-step span {
+  display: block;
+  color: var(--text3);
+  font-size: 11px;
+  line-height: 1.45;
+  margin-top: 3px;
+}
+.prog-side-note {
+  position: relative;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(31,41,51,0.08);
+  color: var(--text3);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
 /* Stats strip */
 .prog-stats-strip {
   display: flex; gap: 0; margin-bottom: 48px;
@@ -1137,6 +1266,7 @@ h2.section-h2 {
 /* ── RESPONSIVE ── */
 @media(max-width:900px) {
   .prog-grid { grid-template-columns: 1fr; max-width: 480px; }
+  .prog-side-panel { display: none; }
   .bento { grid-template-columns: repeat(2,1fr); }
   .b-3,.b-4,.b-6,.b-8,.b-12 { grid-column: span 2; }
   .rm-cards-grid { margin-left: 0; grid-template-columns: 1fr; }
@@ -1155,6 +1285,9 @@ h2.section-h2 {
   h1.hero-h1, .auth-headline h1, .prog-sel-hero h1 { font-size: 40px; }
   .auth-access-row { max-width: 600px; grid-template-columns: 1fr; }
   .core-feature-mini { padding: 24px; }
+}
+@media(max-width:1500px) {
+  .prog-side-panel { display: none; }
 }
 @media(max-width:600px) {
   .bento { grid-template-columns: 1fr; }
@@ -1461,6 +1594,35 @@ h2.section-h2 {
       <div class="prog-stats-strip-item"><div class="prog-stats-strip-n">800+</div><div class="prog-stats-strip-l">Questions</div></div>
       <div class="prog-stats-strip-item"><div class="prog-stats-strip-n">Free</div><div class="prog-stats-strip-l">Forever</div></div>
     </div>
+
+    <aside class="prog-side-panel reveal reveal-delay-2" aria-label="Preparation snapshot">
+      <div class="prog-side-kicker">Prep Snapshot</div>
+      <div class="prog-side-title">Choose a track, then work the rounds.</div>
+      <div class="prog-side-copy">Each programme opens into company intel, interview banks, roadmaps, tools, and role-wise prep material.</div>
+
+      <div class="prog-side-metrics">
+        <div class="prog-side-metric"><strong>04</strong><span>Tracks</span></div>
+        <div class="prog-side-metric"><strong>130+</strong><span>Firms</span></div>
+        <div class="prog-side-metric"><strong>800+</strong><span>Qs</span></div>
+      </div>
+
+      <div class="prog-side-flow">
+        <div class="prog-side-step">
+          <div class="prog-side-step-num">01</div>
+          <div><strong>Select programme</strong><span>Scope the dashboard to your placement path.</span></div>
+        </div>
+        <div class="prog-side-step">
+          <div class="prog-side-step-num">02</div>
+          <div><strong>Shortlist targets</strong><span>Use company and role banks to focus prep.</span></div>
+        </div>
+        <div class="prog-side-step">
+          <div class="prog-side-step-num">03</div>
+          <div><strong>Practise daily</strong><span>Roadmaps, cheatsheets, cases, and Q&A.</span></div>
+        </div>
+      </div>
+
+      <div class="prog-side-note">Independent student-built guide. Verify final decisions with official communications.</div>
+    </aside>
 
     <div class="prog-grid reveal reveal-delay-2">
 
