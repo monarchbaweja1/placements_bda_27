@@ -426,11 +426,30 @@ function buildFallbackAnswer({ message, pageContext, programmeCode }) {
   const contextLine = contextParts.length
     ? `I am using your current page context: ${contextParts.join(' / ')}.`
     : 'I do not have a specific company card open, so this is a general preparation answer.';
+  const company = extractCompanyName(message, pageContext);
+  const role = extractRoleName(message, pageContext);
+  const intro = fallbackIntro(code, contextLine);
+
+  if (/\b(placement|placements|placed|campus|job|jobs|recruiter|recruiters|career)\b/.test(lower)) {
+    return [
+      `${intro} For your placement prep, use this as a 10-day sprint.`,
+      '',
+      'Day 1: choose 2 target role families and map the skills each needs.',
+      'Day 2: fix your resume headline, project bullets, and keywords for those roles.',
+      'Day 3: prepare SQL/Excel/Python or domain basics based on the role.',
+      'Day 4: write 5 STAR stories: leadership, conflict, failure, pressure, and ownership.',
+      'Day 5: pick 8 target companies and make one-page prep notes for each.',
+      'Days 6-7: practise technical and HR questions aloud, not just by reading.',
+      'Days 8-9: solve company cases or role tasks and time yourself.',
+      'Day 10: mock interview, refine weak answers, and prepare questions to ask recruiters.',
+      '',
+      `Start with this today: send me your target role or one company name, and I can make a focused ${code} prep plan.`
+    ].join('\n');
+  }
 
   if (/\b(resume|cv|ats)\b/.test(lower)) {
     return [
-      `For ${code}, focus your resume on role-fit evidence, not just responsibilities.`,
-      contextLine,
+      `${intro} For your resume, focus on role-fit evidence, not just responsibilities.`,
       '',
       '1. Put your strongest 3-5 technical or domain skills near the top.',
       '2. Rewrite project bullets with action, tool, method, and measurable result.',
@@ -440,10 +459,38 @@ function buildFallbackAnswer({ message, pageContext, programmeCode }) {
     ].join('\n');
   }
 
-  if (/\b(interview|question|prep|prepare)\b/.test(lower)) {
+  if (/\b(shortlist|probability|chance|chances|eligible|eligibility)\b/.test(lower)) {
     return [
-      `For ${code} interview prep, use a three-layer plan.`,
-      contextLine,
+      `${intro} For shortlist improvement, work on the signals recruiters can verify quickly.`,
+      '',
+      '1. CGPA: if it is fixed, do not over-explain it; compensate with projects and certifications.',
+      '2. Skills: show evidence for tools in bullets, not only in a skills list.',
+      '3. Projects: add problem, data, method, tool, metric, and business impact.',
+      '4. Company fit: match your examples to the sector: consulting, analytics, BFSI, FMCG, healthcare, or operations.',
+      '5. Interview readiness: one strong project explanation can lift your perceived fit more than adding 10 weak tools.',
+      '',
+      'If you give me your CGPA, skills, and 3 companies, I can suggest what to improve first.'
+    ].join('\n');
+  }
+
+  if (/\b(company|companies|target|deloitte|kpmg|ey|accenture|fractal|mu sigma|amazon|jpmorgan|jp morgan|kantar|hul|asian paints)\b/.test(lower) || company) {
+    const label = company || 'the company';
+    return [
+      `${intro} For ${label} prep, build a tight company-fit sheet.`,
+      '',
+      '1. Business: what the company sells, who its clients/customers are, and where analytics or management work fits.',
+      '2. Role fit: list 4 skills the role likely tests and match each to one project or internship example.',
+      '3. Sector cases: prepare one case relevant to the sector, such as churn, pricing, dashboarding, risk, sales planning, or customer segmentation.',
+      '4. Resume hooks: mark 3 bullets you want the interviewer to ask about.',
+      '5. Questions to ask: prepare 2 thoughtful questions about the team, role expectations, or business problem.',
+      '',
+      `For ${label}, your best answer structure is: context -> your approach -> measurable result -> why it matters to the role.`
+    ].join('\n');
+  }
+
+  if (/\b(interview|question|questions|hr|tell me about yourself|introduce|prep|prepare)\b/.test(lower)) {
+    return [
+      `${intro} For interview prep, use a three-layer plan.`,
       '',
       '1. Company layer: know the business model, customers, major products, and why the role exists.',
       '2. Role layer: prepare 2-3 projects that prove the skills the role needs.',
@@ -453,10 +500,9 @@ function buildFallbackAnswer({ message, pageContext, programmeCode }) {
     ].join('\n');
   }
 
-  if (/\b(sql|python|power bi|tableau|excel|machine learning|ml)\b/.test(lower)) {
+  if (/\b(sql|python|power bi|tableau|excel|machine learning|ml|statistics|dashboard|analytics|model|data)\b/.test(lower)) {
     return [
-      `For ${code} technical preparation, prioritize practical fluency.`,
-      contextLine,
+      `${intro} For technical preparation, prioritize practical fluency.`,
       '',
       '1. SQL: joins, grouping, window functions, CTEs, date logic, and business case queries.',
       '2. Python/Excel: cleaning, aggregation, charts, basic modelling, and explaining outputs clearly.',
@@ -467,16 +513,79 @@ function buildFallbackAnswer({ message, pageContext, programmeCode }) {
     ].join('\n');
   }
 
+  if (/\b(gd|group discussion|case|case study|aptitude|test|assessment)\b/.test(lower)) {
+    return [
+      `${intro} For GD/case/assessment rounds, prepare for speed plus structure.`,
+      '',
+      '1. Aptitude: practise percentages, ratios, averages, probability basics, and data interpretation daily.',
+      '2. Case study: start with objective, constraints, data needed, approach, recommendation, and risks.',
+      '3. GD: enter early with a useful frame, add examples, summarize others, and avoid repeating points.',
+      '4. Written answers: use headings, bullets, assumptions, and a clear final recommendation.',
+      '5. Analytics cases: define KPI, segment data, diagnose drivers, propose experiment, and measure impact.'
+    ].join('\n');
+  }
+
+  if (/\b(internship|experience|project|projects|certification|certificate)\b/.test(lower)) {
+    return [
+      `${intro} To strengthen projects and experience, make every example recruiter-readable.`,
+      '',
+      '1. Convert each project into: problem, dataset/process, tools, method, result, and business use.',
+      '2. Add numbers where possible: accuracy, time saved, revenue, cost, users, records, or turnaround time.',
+      '3. Keep only tools you can explain under questioning.',
+      '4. For certifications, mention them only when connected to a project or skill proof.',
+      '5. Prepare a 60-second explanation and a 3-minute deep dive for your best project.'
+    ].join('\n');
+  }
+
+  if (role) {
+    return [
+      `${intro} For a ${role} role, align your prep to the job evidence recruiters expect.`,
+      '',
+      '1. Identify the top 5 role skills from job descriptions.',
+      '2. Map each skill to one resume bullet or project example.',
+      '3. Prepare one technical answer, one business impact answer, and one teamwork answer.',
+      '4. Practise explaining your strongest project without reading from your resume.',
+      '5. End every answer by connecting your work to business value.'
+    ].join('\n');
+  }
+
   return [
-    `Here is a practical ${code} placement-prep way to approach this.`,
-    contextLine,
+    `${intro} Here is a focused way to approach your question.`,
     '',
-    '1. Clarify the target role and what the recruiter is likely testing.',
-    '2. Match your resume evidence to that role using projects, internships, tools, and measurable outcomes.',
-    '3. Prepare one technical story, one business story, and one teamwork/leadership story.',
-    '4. For company-specific prep, connect your answer to the company sector, customers, and likely use cases.',
-    '5. End answers with a crisp impact statement: what changed because of your work.',
+    '1. Tell me the target company, role, or round if you want a sharper answer.',
+    '2. Meanwhile, frame your prep around skills, resume proof, interview stories, and company fit.',
+    '3. For any answer, use: situation -> action -> result -> learning.',
+    '4. For technical topics, explain the business problem before the tool or formula.',
+    '5. For HR answers, keep them honest, specific, and example-backed.',
     '',
-    'The live AI context service was unavailable, so this response is a safe fallback rather than a retrieved-context answer.'
+    'The live AI context service is unavailable right now, so I am using the built-in placement assistant logic.'
   ].join('\n');
+}
+
+function fallbackIntro(code, contextLine) {
+  return `${code} scoped answer. ${contextLine}`;
+}
+
+function extractCompanyName(message, pageContext) {
+  if (pageContext?.company) return pageContext.company;
+
+  const known = [
+    'Deloitte', 'KPMG', 'EY', 'Accenture', 'Fractal Analytics', 'Mu Sigma', 'Amazon',
+    'JP Morgan', 'JPMorgan', 'Kantar', 'Hindustan Unilever', 'HUL', 'Asian Paints',
+    'HDFC Bank', 'ICICI Bank', 'Axis Bank', 'Capgemini', 'PwC', 'TCS', 'Infosys'
+  ];
+  const lower = String(message || '').toLowerCase();
+  return known.find(name => lower.includes(name.toLowerCase())) || '';
+}
+
+function extractRoleName(message, pageContext) {
+  if (pageContext?.role) return pageContext.role;
+
+  const lower = String(message || '').toLowerCase();
+  const roles = [
+    'data analyst', 'business analyst', 'data scientist', 'analytics consultant',
+    'consultant', 'management trainee', 'product analyst', 'risk analyst',
+    'financial analyst', 'sales manager', 'operations manager'
+  ];
+  return roles.find(role => lower.includes(role)) || '';
 }
