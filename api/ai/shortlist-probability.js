@@ -1,6 +1,6 @@
 import { requireUser } from '../shared/auth.js';
 import { applyCors, methodNotAllowed, sendJson } from '../shared/http.js';
-import { logError, logInfo } from '../shared/logger.js';
+import { logError, logInfo, logWarn } from '../shared/logger.js';
 import { assertProgrammeAccess, normalizeProgrammeCode } from '../shared/programmeGuard.js';
 import { checkRateLimit } from '../shared/rateLimit.js';
 import { estimateShortlistProbabilities } from '../shared/shortlistScoring.js';
@@ -28,28 +28,10 @@ export default async function handler(req, res) {
     }
 
     const body = req.body || {};
-    let supabase = null;
-    let access;
-
-    if (hasSupabaseServiceRole()) {
-      supabase = getSupabaseAdmin();
-      access = await assertProgrammeAccess({
-        supabase,
-        userId: auth.user.id,
-        requestedProgramme: body.programme,
-        requireAssignedProgramme: true
-      });
-
-      if (!access.ok) return sendJson(res, access.status, { ok: false, error: access.error });
-    } else if (process.env.GIM_LOCAL_DEV === '1') {
-      access = {
-        ok: true,
-        programmeCode: normalizeProgrammeCode(body.programme) || 'bda',
-        userContext: { programme: null }
-      };
-    } else {
-      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.');
-    }
+    const { supabase, access } = await resolveShortlistAccess({
+      userId: auth.user.id,
+      requestedProgramme: body.programme
+    });
 
     const cgpa = parseFloat(body.cgpa);
 
@@ -123,5 +105,52 @@ export default async function handler(req, res) {
       ok: false,
       error: { code: 'estimation_failed', message: 'Unable to estimate shortlist probability right now.' }
     });
+  }
+}
+
+async function resolveShortlistAccess({ userId, requestedProgramme }) {
+  const fallbackProgramme = normalizeProgrammeCode(requestedProgramme) || 'bda';
+  const fallbackAccess = {
+    ok: true,
+    programmeCode: fallbackProgramme,
+    userContext: { programme: null }
+  };
+
+  if (!hasSupabaseServiceRole()) {
+    return { supabase: null, access: fallbackAccess };
+  }
+
+  try {
+    const supabase = getSupabaseAdmin();
+    const access = await assertProgrammeAccess({
+      supabase,
+      userId,
+      requestedProgramme,
+      requireAssignedProgramme: false
+    });
+
+    if (!access.ok) {
+      logWarn('shortlist_programme_access_fallback', {
+        userId,
+        code: access.error?.code,
+        requestedProgramme: fallbackProgramme
+      });
+      return { supabase, access: fallbackAccess };
+    }
+
+    return {
+      supabase,
+      access: {
+        ...access,
+        programmeCode: access.programmeCode || fallbackProgramme
+      }
+    };
+  } catch (error) {
+    logWarn('shortlist_programme_lookup_failed', {
+      userId,
+      message: error?.message || String(error),
+      requestedProgramme: fallbackProgramme
+    });
+    return { supabase: null, access: fallbackAccess };
   }
 }
