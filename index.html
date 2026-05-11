@@ -933,6 +933,126 @@ h2.section-h2 {
 .rm-link-type.course { background:rgba(5,150,105,.1); color:#047857; }
 .rm-link-type.web    { background:rgba(156,163,175,.12); color:#9ca3af; }
 
+/* Focused roadmap selector */
+.roadmap-phases { width: 100%; }
+.rm-phase-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+.rm-step-card {
+  width: 100%;
+  min-height: 148px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 22px;
+  text-align: left;
+  cursor: pointer;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,255,255,0.68)),
+    var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 18px 46px rgba(15,23,42,0.08);
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+  font-family: var(--font);
+}
+.rm-step-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-green);
+  box-shadow: 0 22px 56px rgba(5,150,105,0.12);
+}
+.rm-step-num {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: var(--green);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+  box-shadow: 0 0 0 8px rgba(5,150,105,0.1);
+}
+.rm-step-title {
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.12;
+  letter-spacing: -0.2px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.rm-step-sub { color: var(--text2); font-size: 13px; line-height: 1.55; }
+.rm-step-meta {
+  margin-top: 14px;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.rm-detail-shell {
+  background:
+    radial-gradient(circle at 0 0, rgba(5,150,105,0.09), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.66));
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 26px;
+  box-shadow: 0 24px 70px rgba(15,23,42,0.09);
+}
+.rm-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+.rm-detail-num {
+  width: 68px;
+  height: 68px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+  box-shadow: 0 0 0 10px rgba(5,150,105,0.1);
+}
+.rm-detail-title { color: var(--text); font-size: 28px; font-weight: 900; line-height: 1.1; letter-spacing: -0.4px; text-transform: uppercase; }
+.rm-detail-sub { color: var(--text2); font-size: 14px; line-height: 1.6; margin-top: 6px; }
+.rm-back-btn {
+  margin-left: auto;
+  flex: 0 0 auto;
+  border: 1px solid var(--border-green);
+  background: rgba(5,150,105,0.08);
+  color: var(--green);
+  border-radius: 100px;
+  padding: 9px 15px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: var(--font);
+}
+.rm-back-btn:hover { background: rgba(5,150,105,0.13); }
+.rm-detail-shell .rm-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
+  gap: 14px;
+  margin-left: 0;
+}
+.rm-detail-shell .rm-card {
+  background: rgba(255,255,255,0.74);
+  border: 1px solid rgba(31,41,51,0.08);
+  border-radius: 14px;
+  padding: 18px;
+}
+.rm-detail-shell .rm-card-title { font-size: 15px; font-weight: 850; color: var(--text); }
+
 /* ── CHEATSHEETS ── */
 .cheat-tabs-wrap {
   display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 24px;
@@ -1047,6 +1167,13 @@ h2.section-h2 {
   .core-feature-mini h2 { font-size: 21px; }
   .core-feature-mini { padding: 20px; }
   .core-feature-mini-grid { grid-template-columns: 1fr; }
+  .rm-step-card { min-height: 124px; padding: 18px; }
+  .rm-step-num { width: 48px; height: 48px; border-radius: 14px; font-size: 17px; }
+  .rm-detail-shell { padding: 18px; }
+  .rm-detail-head { align-items: flex-start; flex-wrap: wrap; }
+  .rm-detail-num { width: 54px; height: 54px; font-size: 18px; }
+  .rm-detail-title { font-size: 22px; }
+  .rm-back-btn { margin-left: 0; }
   .prog-sel-inner { padding: 90px 16px 60px; }
 }
 </style>
@@ -5997,6 +6124,88 @@ window.toggleRole = function(id) {
   if(!isOpen) card.classList.add('open');
 };
 
+function getActiveRoadmapPhases() {
+  const prog = window.selectedProg || selectedProg || 'bda';
+  return prog === 'bda' ? roadmapPhases : (progRoadmapData[prog] || roadmapPhases);
+}
+
+function renderFocusedRoadmap(phases, selectedIndex = null) {
+  const container = document.getElementById('roadmapContent');
+  if (!container || !Array.isArray(phases)) return;
+
+  if (selectedIndex === null || selectedIndex === undefined) {
+    container.innerHTML = `
+      <div class="rm-phase-picker">
+        ${phases.map((phase, index) => `
+          <button class="rm-step-card reveal" type="button" onclick="openRoadmapPhase(${index})">
+            <div class="rm-step-num">${rmEscape(phase.phase || String(index + 1).padStart(2, '0'))}</div>
+            <div>
+              <div class="rm-step-title">${rmEscape(phase.title || `Phase ${index + 1}`)}</div>
+              <div class="rm-step-sub">${rmEscape(phase.sub || '')}</div>
+              <div class="rm-step-meta">${(phase.cards || []).length} focus areas</div>
+            </div>
+          </button>
+        `).join('')}
+      </div>`;
+    observeReveal();
+    return;
+  }
+
+  const phase = phases[selectedIndex];
+  if (!phase) return renderFocusedRoadmap(phases);
+
+  container.innerHTML = `
+    <div class="rm-detail-shell reveal">
+      <div class="rm-detail-head">
+        <div class="rm-detail-num">${rmEscape(phase.phase || String(selectedIndex + 1).padStart(2, '0'))}</div>
+        <div>
+          <div class="rm-detail-title">${rmEscape(phase.title || `Phase ${selectedIndex + 1}`)}</div>
+          <div class="rm-detail-sub">${rmEscape(phase.sub || '')}</div>
+        </div>
+        <button class="rm-back-btn" type="button" onclick="closeRoadmapPhase()">Back to roadmap</button>
+      </div>
+      <div class="rm-cards-grid">
+        ${(phase.cards || []).map(card => `
+          <div class="rm-card">
+            <div class="rm-card-title">${rmEscape(card.emoji || '')} ${rmEscape(card.title || '')}</div>
+            <div class="rm-card-desc">${rmEscape(card.desc || '')}</div>
+            <div class="rm-links">
+              ${(card.links || []).map(link => `
+                <a href="${rmAttr(link.url || '#')}" target="_blank" rel="noopener noreferrer" class="rm-link">
+                  ${rmEscape(link.text || 'Open resource')}
+                  <span class="rm-link-type ${rmAttr(link.type || 'web')}">${rmEscape(String(link.type || 'web').toUpperCase())}</span>
+                </a>`).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  observeReveal();
+}
+
+window.openRoadmapPhase = function(index) {
+  renderFocusedRoadmap(getActiveRoadmapPhases(), Number(index));
+  document.getElementById('roadmap')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.closeRoadmapPhase = function() {
+  renderFocusedRoadmap(getActiveRoadmapPhases());
+  document.getElementById('roadmap')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+function rmEscape(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function rmAttr(value) {
+  return rmEscape(value).replace(/`/g, '&#96;');
+}
+
 // showQTab
 window.showQTab = function(companyId, tabName, btn) {
   const card = document.getElementById('co-'+companyId);
@@ -6072,34 +6281,7 @@ window.rebuildForProg = function(prog) {
   const phases = progRoadmapData[prog];
   const roadmapContainer = document.getElementById('roadmapContent');
   if(phases && roadmapContainer) {
-    roadmapContainer.innerHTML = '';
-    phases.forEach((phase,pi) => {
-      const div = document.createElement('div');
-      div.className = 'rm-phase reveal';
-      const cardsHTML = phase.cards.map(card => `
-        <div class="rm-card">
-          <div class="rm-card-title">${card.emoji} ${card.title}</div>
-          <div class="rm-card-desc">${card.desc}</div>
-          <div class="rm-links">
-            ${card.links.map(link => `
-              <a href="${link.url}" target="_blank" class="rm-link">
-                ${link.text}
-                <span class="rm-link-type ${link.type}">${link.type.toUpperCase()}</span>
-              </a>`).join('')}
-          </div>
-        </div>`).join('');
-      div.innerHTML = `
-        <div class="rm-phase-head">
-          <div class="rm-phase-num">${phase.phase}</div>
-          <div>
-            <div class="rm-phase-title">${phase.title}</div>
-            <div class="rm-phase-sub">${phase.sub}</div>
-          </div>
-        </div>
-        <div class="rm-cards-grid">${cardsHTML}</div>`;
-      roadmapContainer.appendChild(div);
-    });
-    observeReveal();
+    renderFocusedRoadmap(phases);
   }
 
   // Cheatsheets
@@ -6202,33 +6384,7 @@ window.buildRoadmap = function() {
   if(typeof roadmapPhases === 'undefined') return;
   const container = document.getElementById('roadmapContent');
   if(!container) return;
-  container.innerHTML = '';
-  roadmapPhases.forEach((phase, pi) => {
-    const div = document.createElement('div');
-    div.className = 'rm-phase reveal';
-    const cardsHTML = phase.cards.map(card => `
-      <div class="rm-card">
-        <div class="rm-card-title">${card.emoji||''} ${card.title}</div>
-        <div class="rm-card-desc">${card.desc}</div>
-        <div class="rm-links">
-          ${(card.links||[]).map(link => `
-            <a href="${link.url}" target="_blank" class="rm-link">
-              ${link.text}<span class="rm-link-type ${link.type}">${link.type.toUpperCase()}</span>
-            </a>`).join('')}
-        </div>
-      </div>`).join('');
-    div.innerHTML = `
-      <div class="rm-phase-head">
-        <div class="rm-phase-num">${phase.phase||pi+1}</div>
-        <div>
-          <div class="rm-phase-title">${phase.title}</div>
-          <div class="rm-phase-sub">${phase.sub||''}</div>
-        </div>
-      </div>
-      <div class="rm-cards-grid">${cardsHTML}</div>`;
-    container.appendChild(div);
-  });
-  observeReveal();
+  renderFocusedRoadmap(roadmapPhases);
 };
 
 // Final section controller: one top-nav section visible at a time.
