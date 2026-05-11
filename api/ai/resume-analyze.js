@@ -1,10 +1,10 @@
 import { requireUser } from '../shared/auth.js';
 import { applyCors, methodNotAllowed, sendJson } from '../shared/http.js';
-import { logError, logInfo } from '../shared/logger.js';
-import { assertProgrammeAccess } from '../shared/programmeGuard.js';
+import { logError, logInfo, logWarn } from '../shared/logger.js';
+import { assertProgrammeAccess, normalizeProgrammeCode } from '../shared/programmeGuard.js';
 import { checkRateLimit } from '../shared/rateLimit.js';
 import { analyzeResumeText, normalizeResumeText } from '../shared/resumeScoring.js';
-import { getSupabaseAdmin } from '../shared/supabaseAdmin.js';
+import { getSupabaseAdmin, hasSupabaseServiceRole } from '../shared/supabaseAdmin.js';
 
 const MIN_RESUME_CHARS = 500;
 const MAX_RESUME_CHARS = 80_000;
@@ -52,15 +52,10 @@ export default async function handler(req, res) {
       });
     }
 
-    const supabase = getSupabaseAdmin();
-    const access = await assertProgrammeAccess({
-      supabase,
+    const { supabase, access } = await resolveResumeAnalysisAccess({
       userId: auth.user.id,
-      requestedProgramme: req.body?.programme,
-      requireAssignedProgramme: true
+      requestedProgramme: req.body?.programme
     });
-
-    if (!access.ok) return sendJson(res, access.status, { ok: false, error: access.error });
 
     const analysis = analyzeResumeText({
       resumeText,
@@ -69,11 +64,94 @@ export default async function handler(req, res) {
       targetCompany: req.body?.targetCompany
     });
 
+    const saved = await saveResumeAnalysis({
+      supabase,
+      userId: auth.user.id,
+      programmeId: access.userContext.programme?.id,
+      analysis
+    });
+
+    logInfo('resume_analysis_completed', {
+      userId: auth.user.id,
+      programmeCode: access.programmeCode,
+      analysisId: saved?.id || null,
+      overallScore: analysis.overallScore
+    });
+
+    return sendJson(res, 200, {
+      ok: true,
+      analysisId: saved?.id || null,
+      createdAt: saved?.created_at || null,
+      analysis
+    });
+  } catch (error) {
+    logError('resume_analysis_failed', error);
+    return sendJson(res, 500, {
+      ok: false,
+      error: {
+        code: 'resume_analysis_failed',
+        message: 'Unable to analyze resume right now.'
+      }
+    });
+  }
+}
+
+async function resolveResumeAnalysisAccess({ userId, requestedProgramme }) {
+  const fallbackProgramme = normalizeProgrammeCode(requestedProgramme) || 'bda';
+  const fallbackAccess = {
+    ok: true,
+    programmeCode: fallbackProgramme,
+    userContext: { programme: null }
+  };
+
+  if (!hasSupabaseServiceRole()) {
+    return { supabase: null, access: fallbackAccess };
+  }
+
+  try {
+    const supabase = getSupabaseAdmin();
+    const access = await assertProgrammeAccess({
+      supabase,
+      userId,
+      requestedProgramme,
+      requireAssignedProgramme: false
+    });
+
+    if (!access.ok) {
+      logWarn('resume_programme_access_fallback', {
+        userId,
+        code: access.error?.code,
+        requestedProgramme: fallbackProgramme
+      });
+      return { supabase, access: fallbackAccess };
+    }
+
+    return {
+      supabase,
+      access: {
+        ...access,
+        programmeCode: access.programmeCode || fallbackProgramme
+      }
+    };
+  } catch (error) {
+    logWarn('resume_programme_lookup_failed', {
+      userId,
+      message: error?.message || String(error),
+      requestedProgramme: fallbackProgramme
+    });
+    return { supabase: null, access: fallbackAccess };
+  }
+}
+
+async function saveResumeAnalysis({ supabase, userId, programmeId, analysis }) {
+  if (!supabase) return null;
+
+  try {
     const { data, error } = await supabase
       .from('resume_analyses')
       .insert({
-        user_id: auth.user.id,
-        programme_id: access.userContext.programme.id,
+        user_id: userId,
+        programme_id: programmeId || null,
         parsed_profile: analysis.extracted,
         scores: {
           overall: analysis.overallScore,
@@ -91,28 +169,12 @@ export default async function handler(req, res) {
       .single();
 
     if (error) throw error;
-
-    logInfo('resume_analysis_completed', {
-      userId: auth.user.id,
-      programmeCode: access.programmeCode,
-      analysisId: data.id,
-      overallScore: analysis.overallScore
-    });
-
-    return sendJson(res, 200, {
-      ok: true,
-      analysisId: data.id,
-      createdAt: data.created_at,
-      analysis
-    });
+    return data;
   } catch (error) {
-    logError('resume_analysis_failed', error);
-    return sendJson(res, 500, {
-      ok: false,
-      error: {
-        code: 'resume_analysis_failed',
-        message: 'Unable to analyze resume right now.'
-      }
+    logWarn('resume_analysis_save_failed', {
+      userId,
+      message: error?.message || String(error)
     });
+    return null;
   }
 }
