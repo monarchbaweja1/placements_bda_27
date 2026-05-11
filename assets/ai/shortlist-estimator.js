@@ -203,8 +203,10 @@
       const payload = await window.GimResumeUpload.extractResumeFile(file, token);
       extractedResumeText = payload.text;
 
+      const derivedCgpa = window.GimResumeUpload.deriveCgpa(payload.text);
       const derivedSkills = window.GimResumeUpload.deriveSkills(payload.text);
       const derivedSummary = window.GimResumeUpload.deriveProfileSummary(payload.text);
+      if (derivedCgpa) cgpaInput.value = derivedCgpa;
       if (derivedSkills) skillsInput.value = derivedSkills;
       if (derivedSummary) projInput.value = derivedSummary.slice(0, 4000);
 
@@ -279,12 +281,17 @@
     showView('loading');
 
     try {
-      const res = await fetch('/api/ai/shortlist-probability', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ programme, cgpa, skills, projects, resumeText: extractedResumeText, targetCompanies: companies })
-      });
-      const payload = await res.json();
+      let res;
+      try {
+        res = await fetchWithLocalFallback('/api/ai/shortlist-probability', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ programme, cgpa, skills, projects, resumeText: extractedResumeText, targetCompanies: companies })
+        });
+      } catch {
+        throw new Error('Could not reach the shortlist estimator API. Start the app with npm run dev and open http://localhost:3000, then try again.');
+      }
+      const payload = await readJson(res);
       if (!res.ok || !payload.ok) throw new Error(payload?.error?.message || 'Estimation failed.');
 
       renderResults(payload);
@@ -423,6 +430,42 @@
     return String(v)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;')
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  async function readJson(res) {
+    const text = await res.text();
+    if (!text) return {};
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(res.ok
+        ? 'Estimator returned an invalid response.'
+        : `Estimator request failed (${res.status}). Please refresh and try again.`);
+    }
+  }
+
+  function apiUrl(path) {
+    if (window.GIM_API_BASE) return `${String(window.GIM_API_BASE).replace(/\/$/, '')}${path}`;
+    if (window.location.protocol === 'file:') return `http://localhost:3000${path}`;
+    return path;
+  }
+
+  async function fetchWithLocalFallback(path, options) {
+    if (window.location.protocol !== 'file:') return fetch(apiUrl(path), options);
+
+    const urls = [
+      apiUrl(path),
+      `http://localhost:3001${path}`
+    ];
+    let lastError;
+    for (const url of urls) {
+      try {
+        return await fetch(url, options);
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    throw lastError || new Error('Local API unavailable.');
   }
 
   updateScope();

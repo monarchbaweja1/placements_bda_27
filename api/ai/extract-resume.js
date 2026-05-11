@@ -4,6 +4,14 @@ import { logError, logInfo } from '../shared/logger.js';
 import { checkRateLimit } from '../shared/rateLimit.js';
 import { extractResumeTextFromUpload } from '../shared/resumeTextExtraction.js';
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb'
+    }
+  }
+};
+
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;
   if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);

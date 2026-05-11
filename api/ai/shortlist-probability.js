@@ -1,10 +1,10 @@
 import { requireUser } from '../shared/auth.js';
 import { applyCors, methodNotAllowed, sendJson } from '../shared/http.js';
 import { logError, logInfo } from '../shared/logger.js';
-import { assertProgrammeAccess } from '../shared/programmeGuard.js';
+import { assertProgrammeAccess, normalizeProgrammeCode } from '../shared/programmeGuard.js';
 import { checkRateLimit } from '../shared/rateLimit.js';
 import { estimateShortlistProbabilities } from '../shared/shortlistScoring.js';
-import { getSupabaseAdmin } from '../shared/supabaseAdmin.js';
+import { getSupabaseAdmin, hasSupabaseServiceRole } from '../shared/supabaseAdmin.js';
 
 const MAX_COMPANIES = 8;
 
@@ -27,17 +27,30 @@ export default async function handler(req, res) {
       });
     }
 
-    const supabase = getSupabaseAdmin();
-    const access = await assertProgrammeAccess({
-      supabase,
-      userId: auth.user.id,
-      requestedProgramme: req.body?.programme,
-      requireAssignedProgramme: true
-    });
-
-    if (!access.ok) return sendJson(res, access.status, { ok: false, error: access.error });
-
     const body = req.body || {};
+    let supabase = null;
+    let access;
+
+    if (hasSupabaseServiceRole()) {
+      supabase = getSupabaseAdmin();
+      access = await assertProgrammeAccess({
+        supabase,
+        userId: auth.user.id,
+        requestedProgramme: body.programme,
+        requireAssignedProgramme: true
+      });
+
+      if (!access.ok) return sendJson(res, access.status, { ok: false, error: access.error });
+    } else if (process.env.GIM_LOCAL_DEV === '1') {
+      access = {
+        ok: true,
+        programmeCode: normalizeProgrammeCode(body.programme) || 'bda',
+        userContext: { programme: null }
+      };
+    } else {
+      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.');
+    }
+
     const cgpa = parseFloat(body.cgpa);
 
     if (isNaN(cgpa) || cgpa < 0 || cgpa > 10) {
@@ -75,6 +88,7 @@ export default async function handler(req, res) {
 
     // Persist estimates for known companies (fire-and-forget)
     for (const est of estimates) {
+      if (!supabase) continue;
       if (!est.known || est.probability == null) continue;
       supabase
         .from('shortlist_estimates')

@@ -1,5 +1,5 @@
 import { getBearerToken } from './http.js';
-import { getSupabaseAdmin } from './supabaseAdmin.js';
+import { getSupabaseAuthConfig } from './supabaseAdmin.js';
 
 export async function requireUser(req) {
   const token = getBearerToken(req);
@@ -15,10 +15,16 @@ export async function requireUser(req) {
     };
   }
 
-  const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase.auth.getUser(token);
+  const { supabaseUrl, anonKey } = getSupabaseAuthConfig();
+  const response = await fetch(`${supabaseUrl.replace(/\/$/, '')}/auth/v1/user`, {
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${token}`
+    }
+  });
+  const data = response.ok ? await response.json() : null;
 
-  if (error || !data?.user) {
+  if (!response.ok || !data?.id) {
     return {
       ok: false,
       status: 401,
@@ -31,7 +37,7 @@ export async function requireUser(req) {
 
   return {
     ok: true,
-    user: data.user,
+    user: data,
     token
   };
 }

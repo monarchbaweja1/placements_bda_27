@@ -57,6 +57,17 @@
 5. Use **⬇ Download as PDF** buttons to save question sets offline
 6. **Cheatsheets** tab has quick reference for Python, SQL, ML, Statistics, DL, Power BI
 
+### Local AI features
+
+The AI resume upload and shortlist estimator need the `/api` backend. Do not open `index.html` directly for those features.
+
+```bash
+npm install
+npm run dev
+```
+
+Then open `http://localhost:3000`.
+
 ---
 
 ## 📋 Sources

@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Static GIM Placement Prep Hub with modular AI backend APIs.",
   "scripts": {
-    "check:api": "node --check api/health.js && node --check api/ai/context-test.js && node --check api/ai/chat.js && node --check api/ai/extract-resume.js && node --check api/ai/resume-analyze.js && node --check api/ai/shortlist-probability.js && node --check api/admin/upload-document.js && node --check api/admin/ingest-document.js && node --check assets/ai/ai-assistant.js && node --check assets/ai/resume-upload.js && node --check assets/ai/resume-analyzer.js && node --check assets/ai/shortlist-estimator.js"
+    "dev": "node dev-server.js",
+    "start": "node dev-server.js",
+    "check:api": "node --check dev-server.js && node --check api/health.js && node --check api/ai/context-test.js && node --check api/ai/chat.js && node --check api/ai/extract-resume.js && node --check api/ai/resume-analyze.js && node --check api/ai/shortlist-probability.js && node --check api/admin/upload-document.js && node --check api/admin/ingest-document.js && node --check assets/ai/ai-assistant.js && node --check assets/ai/resume-upload.js && node --check assets/ai/resume-analyzer.js && node --check assets/ai/shortlist-estimator.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
