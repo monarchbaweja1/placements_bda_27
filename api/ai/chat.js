@@ -92,13 +92,14 @@ export default async function handler(req, res) {
       matchCount: 8
     });
 
-    const answer = await generateAnswerSafe({
+    const generation = await generateAnswerSafe({
       message,
       pageContext,
       history,
       chunks,
       programmeCode: access.programmeCode
     });
+    const answer = generation.answer;
 
     const citations = chunks.map((chunk, index) => ({
       index: index + 1,
@@ -132,6 +133,12 @@ export default async function handler(req, res) {
       retrieval: {
         chunks: chunks.length,
         hasContext: chunks.length > 0
+      },
+      ai: {
+        provider: generation.provider,
+        model: generation.model || null,
+        fallback: generation.provider !== 'openai',
+        reason: generation.reason || null
       }
     });
   } catch (error) {
@@ -252,17 +259,31 @@ async function retrieveChunksSafe({ supabase, message, pageContext, history, pro
 
 async function generateAnswerSafe({ message, pageContext, history, chunks, programmeCode }) {
   if (!process.env.OPENAI_API_KEY) {
-    return buildFallbackAnswer({ message, pageContext, programmeCode });
+    return {
+      answer: buildFallbackAnswer({ message, pageContext, programmeCode, reason: 'missing_openai_key' }),
+      provider: 'fallback',
+      reason: 'missing_openai_key'
+    };
   }
 
   try {
-    return await generateAnswer({ message, pageContext, history, chunks, programmeCode });
+    const generated = await generateAnswer({ message, pageContext, history, chunks, programmeCode });
+    return {
+      answer: generated.answer,
+      provider: 'openai',
+      model: generated.model,
+      reason: null
+    };
   } catch (error) {
     logWarn('chat_openai_failed', {
       programmeCode,
       message: error?.message || String(error)
     });
-    return buildFallbackAnswer({ message, pageContext, programmeCode });
+    return {
+      answer: buildFallbackAnswer({ message, pageContext, programmeCode, reason: 'openai_request_failed' }),
+      provider: 'fallback',
+      reason: 'openai_request_failed'
+    };
   }
 }
 
@@ -349,9 +370,7 @@ async function generateAnswer({ message, pageContext, history, chunks, programme
     .join('\n\n')
     .slice(-6000);
 
-  const response = await openai.responses.create({
-    model: chatModel,
-    input: [
+  const input = [
       {
         role: 'system',
         content: [
@@ -384,10 +403,27 @@ async function generateAnswer({ message, pageContext, history, chunks, programme
           }
         ]
       }
-    ]
-  });
+    ];
+  const models = uniqueModels([chatModel, 'gpt-4.1-mini', 'gpt-4.1-nano']);
+  let lastError;
 
-  return response.output_text || 'I could not generate a response. Please try again.';
+  for (const model of models) {
+    try {
+      const response = await openai.responses.create({ model, input });
+      return {
+        answer: response.output_text || 'I could not generate a response. Please try again.',
+        model
+      };
+    } catch (error) {
+      lastError = error;
+      logWarn('chat_model_failed', {
+        model,
+        message: error?.message || String(error)
+      });
+    }
+  }
+
+  throw lastError || new Error('No OpenAI model response generated.');
 }
 
 function buildContextBlock(chunks) {
@@ -411,6 +447,10 @@ function buildRetrievalQuery(message, pageContext, history) {
     .join('\n');
 }
 
+function uniqueModels(models) {
+  return [...new Set(models.filter(Boolean).map(model => String(model).trim()).filter(Boolean))];
+}
+
 function sanitizePageContext(pageContext = {}) {
   return {
     section: String(pageContext.section || '').slice(0, 80),
@@ -419,15 +459,16 @@ function sanitizePageContext(pageContext = {}) {
   };
 }
 
-function buildFallbackAnswer({ message, pageContext, programmeCode }) {
+function buildFallbackAnswer({ message, pageContext, programmeCode, reason = 'fallback' }) {
   const code = String(programmeCode || 'bda').toUpperCase();
-  const lower = String(message || '').toLowerCase();
+  const cleanedMessage = normalizeUserMessage(message);
+  const lower = cleanedMessage.toLowerCase();
   const contextParts = [pageContext?.company, pageContext?.role, pageContext?.section].filter(Boolean);
   const contextLine = contextParts.length
     ? `I am using your current page context: ${contextParts.join(' / ')}.`
     : 'I do not have a specific company card open, so this is a general preparation answer.';
-  const company = extractCompanyName(message, pageContext);
-  const role = extractRoleName(message, pageContext);
+  const company = extractCompanyName(cleanedMessage, pageContext);
+  const role = extractRoleName(cleanedMessage, pageContext);
   const intro = fallbackIntro(code, contextLine);
 
   if (/\b(placement|placements|placed|campus|job|jobs|recruiter|recruiters|career)\b/.test(lower)) {
@@ -501,6 +542,20 @@ function buildFallbackAnswer({ message, pageContext, programmeCode }) {
   }
 
   if (/\b(sql|python|power bi|tableau|excel|machine learning|ml|statistics|dashboard|analytics|model|data)\b/.test(lower)) {
+    if (/\bpython\b/.test(lower)) {
+      return [
+        `${intro} For Python placement prep, study the parts interviewers can test through examples.`,
+        '',
+        '1. Core syntax: lists, dictionaries, sets, tuples, loops, functions, comprehensions, and error handling.',
+        '2. Data handling: pandas DataFrame operations, filtering, groupby, merge/join, missing values, sorting, and date handling.',
+        '3. Analytics logic: descriptive stats, correlation, basic probability, train/test split, and evaluation metrics.',
+        '4. SQL + Python flow: read data, clean it, aggregate it, visualize it, and explain the business finding.',
+        '5. Interview coding: string/list problems, frequency counts, top-N logic, duplicates, and simple case-based data tasks.',
+        '',
+        'Practice task for today: take any CSV, clean 3 columns, make 3 KPIs, and explain the insight in 60 seconds.'
+      ].join('\n');
+    }
+
     return [
       `${intro} For technical preparation, prioritize practical fluency.`,
       '',
@@ -558,7 +613,9 @@ function buildFallbackAnswer({ message, pageContext, programmeCode }) {
     '4. For technical topics, explain the business problem before the tool or formula.',
     '5. For HR answers, keep them honest, specific, and example-backed.',
     '',
-    'The live AI context service is unavailable right now, so I am using the built-in placement assistant logic.'
+    reason === 'missing_openai_key'
+      ? 'Admin note: live LLM mode needs OPENAI_API_KEY set in Vercel Environment Variables.'
+      : 'Admin note: live LLM mode was attempted but failed, so this is the built-in backup answer.'
   ].join('\n');
 }
 
@@ -588,4 +645,15 @@ function extractRoleName(message, pageContext) {
     'financial analyst', 'sales manager', 'operations manager'
   ];
   return roles.find(role => lower.includes(role)) || '';
+}
+
+function normalizeUserMessage(message) {
+  return String(message || '')
+    .replace(/\bpythpn\b/gi, 'python')
+    .replace(/\bpyhton\b/gi, 'python')
+    .replace(/\bpyton\b/gi, 'python')
+    .replace(/\bplacemnts?\b/gi, 'placements')
+    .replace(/\bintervew\b/gi, 'interview')
+    .replace(/\bresum\b/gi, 'resume')
+    .trim();
 }

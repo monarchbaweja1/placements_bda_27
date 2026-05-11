@@ -20,6 +20,7 @@ if (process.env.AI_ALLOWED_ORIGIN === undefined) {
 const apiRoutes = new Map([
   ['/api/health', 'api/health.js'],
   ['/api/ai/context-test', 'api/ai/context-test.js'],
+  ['/api/ai/status', 'api/ai/status.js'],
   ['/api/ai/chat', 'api/ai/chat.js'],
   ['/api/ai/extract-resume', 'api/ai/extract-resume.js'],
   ['/api/ai/resume-analyze', 'api/ai/resume-analyze.js'],
