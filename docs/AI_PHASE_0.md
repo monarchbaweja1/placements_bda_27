@@ -9,7 +9,7 @@ This phase adds backend scaffolding only. It intentionally does not change the e
 - `api/ai/context-test.js`
   - Protected Supabase-auth endpoint that verifies the current user and programme access.
 - `api/shared/*`
-  - Small reusable helpers for HTTP responses, Supabase admin access, OpenAI access, programme guards, rate limiting, logging, and future RAG utilities.
+  - Small reusable helpers for HTTP responses, Supabase admin access, Gemini access, programme guards, rate limiting, logging, and future RAG utilities.
 - `supabase/migrations/001_ai_foundation.sql`
   - Programme-aware schema for RAG documents, chunks, company data, chat memory, resume analyses, and shortlist estimates.
   - `pgvector` extension and `match_document_chunks` RPC.
@@ -22,13 +22,14 @@ This phase adds backend scaffolding only. It intentionally does not change the e
 ```text
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
-OPENAI_API_KEY=
-AI_EMBEDDING_MODEL=text-embedding-3-small
-AI_CHAT_MODEL=gpt-4.1-mini
+GEMINI_API_KEY=
+AI_EMBEDDING_MODEL=gemini-embedding-001
+AI_EMBEDDING_DIMENSIONS=1536
+AI_CHAT_MODEL=gemini-2.5-flash
 AI_ALLOWED_ORIGIN=
 ```
 
-Never expose `SUPABASE_SERVICE_ROLE_KEY` or `OPENAI_API_KEY` in `index.html`.
+Never expose `SUPABASE_SERVICE_ROLE_KEY` or `GEMINI_API_KEY` in `index.html`.
 
 ## Programme Safety Rule
 

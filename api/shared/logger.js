@@ -16,7 +16,7 @@ export function logError(event, error, details = {}) {
 }
 
 function safeDetails(details) {
-  const blocked = new Set(['authorization', 'token', 'password', 'SUPABASE_SERVICE_ROLE_KEY', 'OPENAI_API_KEY']);
+  const blocked = new Set(['authorization', 'token', 'password', 'SUPABASE_SERVICE_ROLE_KEY', 'GEMINI_API_KEY']);
   return Object.fromEntries(
     Object.entries(details).filter(([key]) => !blocked.has(key))
   );

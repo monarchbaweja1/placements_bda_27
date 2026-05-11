@@ -1,15 +1,7 @@
-import { getAiModels, getOpenAIClient } from './openai.js';
+import { embedTextWithProvider } from './aiProvider.js';
 
 export async function embedText(text) {
-  const { embeddingModel } = getAiModels();
-  const openai = getOpenAIClient();
-
-  const response = await openai.embeddings.create({
-    model: embeddingModel,
-    input: text
-  });
-
-  return response.data[0].embedding;
+  return embedTextWithProvider(text);
 }
 
 export async function retrieveProgrammeChunks({ supabase, queryEmbedding, programmeCode, matchCount = 8 }) {

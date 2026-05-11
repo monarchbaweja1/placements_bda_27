@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { requireUser } from '../shared/auth.js';
+import { generateChatCompletion, getAiModels, isAiConfigured } from '../shared/aiProvider.js';
 import { applyCors, methodNotAllowed, sendJson } from '../shared/http.js';
 import { logError, logInfo, logWarn } from '../shared/logger.js';
-import { getAiModels, getOpenAIClient } from '../shared/openai.js';
 import { assertProgrammeAccess, normalizeProgrammeCode } from '../shared/programmeGuard.js';
 import { embedText, retrieveProgrammeChunks } from '../shared/rag.js';
 import { checkRateLimit } from '../shared/rateLimit.js';
@@ -137,7 +137,7 @@ export default async function handler(req, res) {
       ai: {
         provider: generation.provider,
         model: generation.model || null,
-        fallback: generation.provider !== 'openai',
+        fallback: generation.provider === 'fallback',
         reason: generation.reason || null
       }
     });
@@ -238,7 +238,7 @@ async function loadChatHistorySafe(supabase, sessionId) {
 }
 
 async function retrieveChunksSafe({ supabase, message, pageContext, history, programmeCode, matchCount }) {
-  if (!supabase || !process.env.OPENAI_API_KEY) return [];
+  if (!supabase || !isAiConfigured()) return [];
 
   try {
     const queryEmbedding = await embedText(buildRetrievalQuery(message, pageContext, history));
@@ -258,11 +258,11 @@ async function retrieveChunksSafe({ supabase, message, pageContext, history, pro
 }
 
 async function generateAnswerSafe({ message, pageContext, history, chunks, programmeCode }) {
-  if (!process.env.OPENAI_API_KEY) {
+  if (!isAiConfigured()) {
     return {
-      answer: buildFallbackAnswer({ message, pageContext, programmeCode, reason: 'missing_openai_key' }),
+      answer: buildFallbackAnswer({ message, pageContext, programmeCode, reason: 'missing_gemini_key' }),
       provider: 'fallback',
-      reason: 'missing_openai_key'
+      reason: 'missing_gemini_key'
     };
   }
 
@@ -270,19 +270,20 @@ async function generateAnswerSafe({ message, pageContext, history, chunks, progr
     const generated = await generateAnswer({ message, pageContext, history, chunks, programmeCode });
     return {
       answer: generated.answer,
-      provider: 'openai',
+      provider: 'gemini',
       model: generated.model,
       reason: null
     };
   } catch (error) {
-    logWarn('chat_openai_failed', {
+    logWarn('chat_gemini_failed', {
       programmeCode,
+      status: error?.status || null,
       message: error?.message || String(error)
     });
     return {
-      answer: buildFallbackAnswer({ message, pageContext, programmeCode, reason: 'openai_request_failed' }),
+      answer: buildFallbackAnswer({ message, pageContext, programmeCode, reason: 'gemini_request_failed' }),
       provider: 'fallback',
-      reason: 'openai_request_failed'
+      reason: 'gemini_request_failed'
     };
   }
 }
@@ -363,67 +364,45 @@ async function saveChatTurn({ supabase, sessionId, userMessage, assistantMessage
 
 async function generateAnswer({ message, pageContext, history, chunks, programmeCode }) {
   const { chatModel } = getAiModels();
-  const openai = getOpenAIClient();
   const contextBlock = buildContextBlock(chunks);
   const historyBlock = history
     .map(item => `${item.role.toUpperCase()}: ${item.content}`)
     .join('\n\n')
     .slice(-6000);
 
-  const input = [
-      {
-        role: 'system',
-        content: [
-          {
-            type: 'input_text',
-            text: [
-              'You are the GIM Placement Prep Hub AI assistant.',
-              'Answer only for the authenticated programme scope.',
-              `Current programme: ${programmeCode.toUpperCase()}.`,
-              'Use retrieved context when available. If the retrieved context is insufficient, say what is missing and give a cautious general preparation framework.',
-              'Never claim shortlist guarantees. Use "estimate" language for probabilities.',
-              'Keep answers practical, concise, and student-facing.',
-              'For programme-specific questions, do not mix data from other programmes.',
-              'When using retrieved context, cite sources as [1], [2], etc.'
-            ].join('\n')
-          }
-        ]
-      },
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'input_text',
-            text: [
-              `Page context: ${JSON.stringify(pageContext)}`,
-              historyBlock ? `Recent conversation:\n${historyBlock}` : 'Recent conversation: none',
-              contextBlock,
-              `Student question:\n${message}`
-            ].join('\n\n')
-          }
-        ]
-      }
-    ];
-  const models = uniqueModels([chatModel, 'gpt-4.1-mini', 'gpt-4.1-nano']);
+  const systemInstruction = [
+    'You are the GIM Placement Prep Hub AI assistant.',
+    'Answer only for the authenticated programme scope.',
+    `Current programme: ${programmeCode.toUpperCase()}.`,
+    'Use retrieved context when available. If the retrieved context is insufficient, say what is missing and give a cautious general preparation framework.',
+    'Never claim shortlist guarantees. Use "estimate" language for probabilities.',
+    'Keep answers practical, concise, and student-facing.',
+    'For programme-specific questions, do not mix data from other programmes.',
+    'When using retrieved context, cite sources as [1], [2], etc.'
+  ].join('\n');
+  const prompt = [
+    `Page context: ${JSON.stringify(pageContext)}`,
+    historyBlock ? `Recent conversation:\n${historyBlock}` : 'Recent conversation: none',
+    contextBlock,
+    `Student question:\n${message}`
+  ].join('\n\n');
+  const models = uniqueModels([chatModel, 'gemini-2.5-flash']);
   let lastError;
 
   for (const model of models) {
     try {
-      const response = await openai.responses.create({ model, input });
-      return {
-        answer: response.output_text || 'I could not generate a response. Please try again.',
-        model
-      };
+      return await generateChatCompletion({ model, systemInstruction, prompt });
     } catch (error) {
       lastError = error;
-      logWarn('chat_model_failed', {
+      logWarn('chat_gemini_model_failed', {
         model,
+        status: error?.status || null,
         message: error?.message || String(error)
       });
     }
   }
 
-  throw lastError || new Error('No OpenAI model response generated.');
+  throw lastError || new Error('No Gemini model response generated.');
 }
 
 function buildContextBlock(chunks) {
@@ -613,8 +592,8 @@ function buildFallbackAnswer({ message, pageContext, programmeCode, reason = 'fa
     '4. For technical topics, explain the business problem before the tool or formula.',
     '5. For HR answers, keep them honest, specific, and example-backed.',
     '',
-    reason === 'missing_openai_key'
-      ? 'Admin note: live LLM mode needs OPENAI_API_KEY set in Vercel Environment Variables.'
+    reason === 'missing_gemini_key'
+      ? 'Admin note: live LLM mode needs GEMINI_API_KEY set in Vercel Environment Variables.'
       : 'Admin note: live LLM mode was attempted but failed, so this is the built-in backup answer.'
   ].join('\n');
 }

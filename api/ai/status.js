@@ -1,6 +1,6 @@
 import { requireUser } from '../shared/auth.js';
 import { applyCors, methodNotAllowed, sendJson } from '../shared/http.js';
-import { getAiModels } from '../shared/openai.js';
+import { getAiModels, isAiConfigured } from '../shared/aiProvider.js';
 import { hasSupabaseServiceRole } from '../shared/supabaseAdmin.js';
 
 export default async function handler(req, res) {
@@ -10,12 +10,14 @@ export default async function handler(req, res) {
   const auth = await requireUser(req);
   if (!auth.ok) return sendJson(res, auth.status, { ok: false, error: auth.error });
 
-  const { chatModel, embeddingModel } = getAiModels();
+  const { provider, chatModel, embeddingModel } = getAiModels();
 
   return sendJson(res, 200, {
     ok: true,
     ai: {
-      openaiConfigured: Boolean(process.env.OPENAI_API_KEY),
+      provider,
+      configured: isAiConfigured(),
+      geminiConfigured: isAiConfigured(),
       chatModel,
       embeddingModel
     },
