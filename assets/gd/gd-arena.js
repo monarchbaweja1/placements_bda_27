@@ -943,7 +943,7 @@
     const historySection = document.getElementById('pgGdScoreHistory');
     if (!historySection) return;
     try {
-      const data = await apiGet('/api/gd/scores');
+      const data = await apiGet('/api/gd/sessions?type=scores');
       if (data.scores && data.scores.length > 0) {
         historySection.style.display = '';
         renderHistory(data.scores);
@@ -1261,7 +1261,8 @@
       }
 
       // Save score to Supabase (best-effort, don't block UI)
-      apiPost('/api/gd/scores', {
+      apiPost('/api/gd/sessions', {
+        action:             'save-score',
         sessionId:          savedSessionId,
         programme:          state.currentProgramme,
         confidenceScore:    confScore,

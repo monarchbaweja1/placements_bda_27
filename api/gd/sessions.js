@@ -26,14 +26,16 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     if (req.query?.type === 'participants') return listParticipants(req, res);
+    if (req.query?.type === 'scores')       return getScoreHistory(req, res);
     return listSessions(req, res);
   }
   if (req.method === 'POST') {
     const action = req.body?.action;
-    if (action === 'book')   return bookSession(req, res);
-    if (action === 'join')   return bookSession(req, res); // alias
-    if (action === 'leave')  return leaveSession(req, res);
-    if (action === 'delete') return deleteSession(req, res);
+    if (action === 'book')       return bookSession(req, res);
+    if (action === 'join')       return bookSession(req, res); // alias
+    if (action === 'leave')      return leaveSession(req, res);
+    if (action === 'delete')     return deleteSession(req, res);
+    if (action === 'save-score') return saveScore(req, res);
     return createSession(req, res);
   }
   return methodNotAllowed(res, ['GET', 'POST']);
@@ -238,6 +240,66 @@ async function deleteSession(req, res) {
   } catch (error) {
     logError('gd_delete_session_failed', { message: error?.message || String(error) });
     return sendJson(res, 500, { ok: false, error: { code: 'delete_failed', message: 'Unable to delete session.' } });
+  }
+}
+
+// ── SAVE SCORE ────────────────────────────────────────────────
+async function saveScore(req, res) {
+  try {
+    const auth = await requireUser(req);
+    if (!auth.ok) return sendJson(res, auth.status, { ok: false, error: auth.error });
+
+    const body      = req.body || {};
+    const programme = normalizeProgrammeCode(body.programme) || 'bda';
+    const token     = getBearerToken(req);
+    const supabase  = getSupabaseForUser(token);
+    if (!supabase) return sendJson(res, 503, { ok: false, error: { code: 'db_not_configured' } });
+
+    const fin = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
+
+    const { data, error } = await supabase.from('gd_session_scores').insert({
+      user_id:             auth.user.id,
+      session_id:          body.sessionId          || null,
+      programme,
+      confidence_score:    fin(body.confidenceScore),
+      wpm:                 fin(body.wpm),
+      participation_pct:   fin(body.participationPct),
+      speaking_turns:      fin(body.speakingTurns),
+      vocabulary_richness: fin(body.vocabularyRichness),
+      interruptions:       fin(body.interruptions) ?? 0,
+      elapsed_ms:          fin(body.elapsedMs),
+    }).select('id').single();
+
+    if (error) throw error;
+    return sendJson(res, 201, { ok: true, id: data.id });
+  } catch (error) {
+    logError('gd_save_score_failed', { message: error?.message || String(error) });
+    return sendJson(res, 500, { ok: false, error: { code: 'save_failed', message: 'Could not save score.' } });
+  }
+}
+
+// ── GET SCORE HISTORY ─────────────────────────────────────────
+async function getScoreHistory(req, res) {
+  try {
+    const auth = await requireUser(req);
+    if (!auth.ok) return sendJson(res, auth.status, { ok: false, error: auth.error });
+
+    const token    = getBearerToken(req);
+    const supabase = getSupabaseForUser(token);
+    if (!supabase) return sendJson(res, 200, { ok: true, scores: [] });
+
+    const { data, error } = await supabase
+      .from('gd_session_scores')
+      .select('*')
+      .eq('user_id', auth.user.id)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (error) throw error;
+    return sendJson(res, 200, { ok: true, scores: data || [] });
+  } catch (error) {
+    logError('gd_get_history_failed', { message: error?.message || String(error) });
+    return sendJson(res, 500, { ok: false, error: { code: 'history_failed', message: 'Could not load history.' } });
   }
 }
 
