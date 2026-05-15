@@ -448,7 +448,7 @@
 /* Breakdown bars (compact) */
 .pg-sl-bars { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
 .pg-sl-bar-row { display: flex; align-items: center; gap: 8px; }
-.pg-sl-bar-name { flex: 0 0 96px; font-size: 11px; font-weight: 600; color: #7b8794; }
+.pg-sl-bar-name { flex: 0 0 96px; font-size: 11px; font-weight: 600; color: #7b8794; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pg-sl-bar-track { flex: 1; height: 5px; border-radius: 999px; background: rgba(31,41,51,0.07); overflow: hidden; }
 .pg-sl-bar-fill {
   height: 100%;
@@ -459,7 +459,7 @@
 }
 .pg-sl-bar-fill.amber { background: linear-gradient(90deg, #d97706, #f59e0b); }
 .pg-sl-bar-fill.red   { background: linear-gradient(90deg, #dc2626, #f87171); }
-.pg-sl-bar-val { flex: 0 0 26px; font-size: 11px; font-weight: 700; color: #7b8794; text-align: right; }
+.pg-sl-bar-val { flex: 0 0 32px; font-size: 11px; font-weight: 700; color: #7b8794; text-align: right; }
 
 /* Reasons list */
 .pg-sl-reasons { display: flex; flex-direction: column; gap: 5px; }

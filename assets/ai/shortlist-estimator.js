@@ -49,8 +49,8 @@
           <div class="pg-sl-grid-2">
             <div>
               <label class="pg-sl-field-label" for="pgSlCgpa">Your CGPA</label>
-              <input class="pg-sl-input" id="pgSlCgpa" type="number" min="0" max="10" step="0.01"
-                placeholder="e.g. 7.4">
+              <input class="pg-sl-input" id="pgSlCgpa" type="number" min="0" max="8" step="0.01"
+                placeholder="e.g. 7.2 (out of 8)">
             </div>
             <div>
               <!-- programme is read from page context; shown for reference -->
@@ -185,7 +185,7 @@
 
   function checkReady() {
     const cgpa = parseFloat(cgpaInput.value);
-    submitBtn.disabled = !(companies.length > 0 && !isNaN(cgpa) && cgpa >= 0 && cgpa <= 10);
+    submitBtn.disabled = !(companies.length > 0 && !isNaN(cgpa) && cgpa >= 0 && cgpa <= 8);
   }
 
   async function handleFileUpload() {

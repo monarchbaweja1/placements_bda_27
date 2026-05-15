@@ -285,12 +285,16 @@ function tokenize(text) {
     .filter(t => t.length >= 2);
 }
 
-function buildReasons({ profile, cgpa, cgpaScore, skillScore, roleScore, projectScore, tokens }) {
+function buildReasons({ profile, cgpa, cgpa10, cgpaScore, skillScore, roleScore, projectScore, tokens }) {
   const reasons = [];
 
-  if (cgpaScore >= 85) reasons.push(`CGPA of ${cgpa} is above the strong threshold (${profile.strongCgpa}+), boosting your score.`);
-  else if (cgpaScore >= 50) reasons.push(`CGPA of ${cgpa} meets the minimum requirement (${profile.minCgpa}+) but is below the strong threshold (${profile.strongCgpa}+).`);
-  else reasons.push(`CGPA of ${cgpa} is below ${profile.name}'s minimum threshold (${profile.minCgpa}+), which significantly reduces probability.`);
+  // Thresholds displayed in /8 scale (college scale) for clarity
+  const min8    = +(profile.minCgpa    * 0.8).toFixed(1);
+  const strong8 = +(profile.strongCgpa * 0.8).toFixed(1);
+
+  if (cgpa10 >= profile.strongCgpa)  reasons.push(`CGPA of ${cgpa}/8 is above the strong threshold (${strong8}+/8), boosting your score.`);
+  else if (cgpa10 >= profile.minCgpa) reasons.push(`CGPA of ${cgpa}/8 meets the minimum requirement (${min8}+/8) but is below the strong threshold (${strong8}+/8).`);
+  else reasons.push(`CGPA of ${cgpa}/8 is below ${profile.name}'s minimum threshold (${min8}+/8), which significantly reduces probability.`);
 
   const missingRequired = profile.requiredSkills.filter(s => !tokens.some(t => t.includes(s) || s.includes(t)));
   if (missingRequired.length === 0) reasons.push(`All required skills detected: ${profile.requiredSkills.join(', ')}.`);
@@ -310,6 +314,8 @@ export function estimateShortlistProbabilities({ programme, cgpa, skills, projec
   const profiles = COMPANY_PROFILES[code] || COMPANY_PROFILES.bda;
   const tokens  = tokenize(`${skills} ${projects} ${resumeText}`);
   const cgpaNum = parseFloat(cgpa) || 0;
+  // College uses /8 scale; company thresholds are expressed on /10 scale — convert for fair comparison
+  const cgpa10  = Math.min(10, (cgpaNum / 8) * 10);
 
   return targetCompanies.map(companyName => {
     const profile = profiles.find(p =>
@@ -329,7 +335,7 @@ export function estimateShortlistProbabilities({ programme, cgpa, skills, projec
       };
     }
 
-    const cgpaScore    = scoreCgpa(cgpaNum, profile.minCgpa, profile.strongCgpa);
+    const cgpaScore    = scoreCgpa(cgpa10, profile.minCgpa, profile.strongCgpa);
     const skillScore   = scoreSkillCoverage(tokens, profile.requiredSkills, profile.preferredSkills);
     const roleScore    = scoreRoleAlignment(tokens, profile.roleKeywords);
     const projectScore = scoreProjects(tokens, profile.requiredSkills);
@@ -342,7 +348,7 @@ export function estimateShortlistProbabilities({ programme, cgpa, skills, projec
     );
 
     const probability = Math.max(5, Math.min(92, weighted));
-    const reasons = buildReasons({ profile, cgpa: cgpaNum, cgpaScore, skillScore, roleScore, projectScore, tokens });
+    const reasons = buildReasons({ profile, cgpa: cgpaNum, cgpa10, cgpaScore, skillScore, roleScore, projectScore, tokens });
 
     return {
       company: profile.name,

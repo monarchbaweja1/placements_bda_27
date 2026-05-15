@@ -60,27 +60,36 @@
 
   function deriveCgpa(text) {
     const normalized = normalizeText(text);
-    const patterns = [
-      /\b(?:cgpa|cpi|gpa|grade\s+point\s+average)\b[^0-9]{0,40}([0-9](?:\.\d{1,2})?|10(?:\.0{1,2})?)\s*(?:\/|\bout\s+of\b)?\s*10\b/i,
-      /\b([0-9](?:\.\d{1,2})?|10(?:\.0{1,2})?)\s*\/\s*10\b[^A-Za-z0-9]{0,30}\b(?:cgpa|cpi|gpa)\b/i,
-      /\b(?:cgpa|cpi|gpa)\b[^0-9]{0,20}([0-9](?:\.\d{1,2})?|10(?:\.0{1,2})?)\b/i
-    ];
 
-    for (const pattern of patterns) {
+    // 1. Explicit /8 patterns (college grading scale)
+    const patterns8 = [
+      /\b(?:cgpa|cpi|gpa|grade\s+point\s+average)\b[^0-9]{0,40}([0-9](?:\.\d{1,2})?|8(?:\.0{1,2})?)\s*\/\s*8\b/i,
+      /\b([0-9](?:\.\d{1,2})?|8(?:\.0{1,2})?)\s*\/\s*8\b[^A-Za-z0-9]{0,30}\b(?:cgpa|cpi|gpa)\b/i,
+    ];
+    for (const pattern of patterns8) {
       const match = normalized.match(pattern);
       if (!match) continue;
       const value = parseFloat(match[1]);
-      if (Number.isFinite(value) && value >= 0 && value <= 10) return formatCgpa(value);
+      if (Number.isFinite(value) && value >= 0 && value <= 8) return formatCgpa(value);
     }
 
+    // 2. Keyword + decimal number with no explicit scale (e.g. "CGPA: 7.2")
+    const patternNoScale = /\b(?:cgpa|cpi|gpa|grade\s+point\s+average)\b[^0-9]{0,20}([1-9]\.\d{1,2})\b/i;
+    const matchNoScale = normalized.match(patternNoScale);
+    if (matchNoScale) {
+      const value = parseFloat(matchNoScale[1]);
+      if (Number.isFinite(value) && value >= 0 && value <= 8) return formatCgpa(value);
+    }
+
+    // 3. Education section — look for explicit /8
     const education = extractSection(normalized, ['education', 'academic background', 'academics'], [
       'experience', 'internship', 'projects', 'skills', 'certifications', 'positions', 'achievements'
     ]);
     if (education) {
-      const match = education.match(/\b([0-9](?:\.\d{1,2})?|10(?:\.0{1,2})?)\s*(?:\/|\bout\s+of\b)?\s*10\b/i);
+      const match = education.match(/\b([0-9](?:\.\d{1,2})?)\s*\/\s*8\b/i);
       if (match) {
         const value = parseFloat(match[1]);
-        if (Number.isFinite(value) && value >= 0 && value <= 10) return formatCgpa(value);
+        if (Number.isFinite(value) && value >= 0 && value <= 8) return formatCgpa(value);
       }
     }
 

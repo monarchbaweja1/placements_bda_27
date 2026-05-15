@@ -27,6 +27,241 @@ const PROGRAMME_TAXONOMY = {
   }
 };
 
+// Role clusters: each entry has trigger keywords and the relevant skill set for that role family.
+// Keywords are matched against the user's target role string (case-insensitive, partial match).
+const ROLE_CLUSTERS = {
+  bda: [
+    {
+      triggers: ['data scientist', 'ml engineer', 'machine learning', 'ai engineer', 'deep learning', 'nlp engineer', 'computer vision', 'research scientist', 'applied scientist', 'modeling'],
+      skills: ['python', 'machine learning', 'statistics', 'sql', 'predictive modeling', 'analytics', 'data visualization']
+    },
+    {
+      triggers: ['data analyst', 'analytics analyst', 'bi analyst', 'business intelligence', 'reporting analyst', 'insights analyst', 'bi developer', 'tableau developer', 'power bi'],
+      skills: ['sql', 'excel', 'analytics', 'power bi', 'tableau', 'data visualization', 'statistics', 'python']
+    },
+    {
+      triggers: ['business analyst', 'product analyst', 'product manager', 'systems analyst', 'requirements analyst'],
+      skills: ['sql', 'excel', 'analytics', 'power bi', 'statistics', 'data visualization', 'python']
+    },
+    {
+      triggers: ['risk analyst', 'credit analyst', 'fraud analyst', 'risk modeling', 'quantitative analyst', 'quant', 'risk modeler'],
+      skills: ['sql', 'python', 'statistics', 'analytics', 'excel', 'predictive modeling', 'machine learning']
+    },
+    {
+      triggers: ['data engineer', 'etl', 'pipeline', 'spark engineer', 'cloud data', 'bigquery', 'warehouse'],
+      skills: ['sql', 'python', 'analytics', 'statistics', 'excel', 'data visualization']
+    }
+  ],
+
+  bifs: [
+    {
+      triggers: ['credit analyst', 'credit officer', 'loan analyst', 'underwriting', 'underwriter', 'lending', 'credit risk', 'credit manager', 'credit appraisal', 'npa', 'delinquency'],
+      skills: ['credit risk', 'financial analysis', 'excel', 'banking', 'risk management', 'valuation', 'sql']
+    },
+    {
+      triggers: ['investment banking', 'ib analyst', 'mergers', 'acquisitions', 'ma', 'm&a', 'equity research', 'research analyst', 'valuation analyst', 'deal', 'transaction'],
+      skills: ['valuation', 'financial analysis', 'capital markets', 'excel', 'bloomberg', 'portfolio', 'risk management']
+    },
+    {
+      triggers: ['wealth', 'portfolio manager', 'asset management', 'fund manager', 'mutual fund', 'pms', 'investment advisor', 'private banking', 'hni'],
+      skills: ['portfolio', 'capital markets', 'financial analysis', 'excel', 'valuation', 'risk management', 'bloomberg']
+    },
+    {
+      triggers: ['risk manager', 'risk analyst', 'market risk', 'operational risk', 'compliance', 'regulatory', 'enterprise risk', 'model risk', 'stress testing'],
+      skills: ['risk management', 'credit risk', 'financial analysis', 'excel', 'sql', 'capital markets']
+    },
+    {
+      triggers: ['relationship manager', 'rm', 'retail banking', 'branch manager', 'sme banking', 'corporate banking', 'client relationship', 'key account'],
+      skills: ['banking', 'financial analysis', 'excel', 'portfolio', 'capital markets', 'credit risk', 'risk management']
+    },
+    {
+      triggers: ['treasury', 'forex', 'fx trader', 'derivatives', 'fixed income', 'dealing', 'money market', 'liquidity'],
+      skills: ['capital markets', 'financial analysis', 'excel', 'bloomberg', 'banking', 'portfolio', 'risk management']
+    },
+    {
+      triggers: ['insurance', 'actuary', 'actuarial', 'claims', 'underwriting (insurance)', 'reinsurance', 'health insurance'],
+      skills: ['insurance', 'financial analysis', 'excel', 'risk management', 'statistics', 'banking']
+    }
+  ],
+
+  hcm: [
+    {
+      triggers: ['medical representative', 'mr', 'territory manager', 'territory sales', 'field sales', 'key account manager', 'area sales', 'area manager', 'zonal manager', 'regional manager', 'detailing'],
+      skills: ['sales', 'healthcare', 'pharma', 'medical devices', 'crm', 'strategy', 'analytics']
+    },
+    {
+      triggers: ['hospital operations', 'hospital administrator', 'hospital management', 'healthcare operations', 'clinic operations', 'facility manager', 'quality', 'patient experience', 'ops'],
+      skills: ['hospital operations', 'healthcare', 'analytics', 'strategy', 'excel', 'health insurance']
+    },
+    {
+      triggers: ['pharma marketing', 'brand manager (pharma)', 'medical affairs', 'market access', 'regulatory affairs', 'product manager (pharma)', 'kol', 'launch'],
+      skills: ['pharma', 'market access', 'healthcare', 'sales', 'analytics', 'strategy', 'excel']
+    },
+    {
+      triggers: ['healthcare consultant', 'health consultant', 'hospital consultant', 'healthcare strategy', 'health tech', 'digital health', 'health analytics', 'policy'],
+      skills: ['healthcare', 'strategy', 'analytics', 'hospital operations', 'excel', 'health insurance']
+    },
+    {
+      triggers: ['medical device', 'device sales', 'surgical sales', 'diagnostic sales', 'capital equipment'],
+      skills: ['medical devices', 'sales', 'healthcare', 'crm', 'strategy', 'analytics', 'excel']
+    },
+    {
+      triggers: ['insurance (health)', 'tpa', 'claims management', 'third party administrator'],
+      skills: ['health insurance', 'healthcare', 'analytics', 'excel', 'strategy']
+    }
+  ],
+
+  core: [
+    {
+      triggers: ['supply chain', 'scm', 'logistics', 'procurement', 'sourcing', 'inventory', 'warehouse', 'distribution', 'demand planning', 'purchase', 'vendor', 'fleet', 'last mile', 'fulfillment'],
+      skills: ['supply chain', 'operations', 'excel', 'analytics', 'strategy', 'sap']
+    },
+    {
+      triggers: ['operations', 'ops manager', 'plant manager', 'process improvement', 'lean', 'six sigma', 'manufacturing', 'quality assurance', 'production', 'project manager'],
+      skills: ['operations', 'supply chain', 'excel', 'analytics', 'strategy', 'finance']
+    },
+    {
+      triggers: ['marketing', 'digital marketing', 'content marketing', 'growth', 'performance marketing', 'seo', 'sem', 'social media', 'brand', 'campaign', 'gtm', 'product marketing', 'advertising'],
+      skills: ['marketing', 'analytics', 'excel', 'strategy', 'business development', 'sales']
+    },
+    {
+      triggers: ['brand manager', 'brand', 'brand marketing', 'brand strategy', 'consumer', 'fmcg brand'],
+      skills: ['marketing', 'analytics', 'excel', 'strategy', 'sales', 'business development']
+    },
+    {
+      triggers: ['sales', 'business development', 'bd', 'account manager', 'account executive', 'revenue', 'client', 'customer success', 'inside sales', 'field sales', 'b2b sales', 'b2c sales', 'zonal sales'],
+      skills: ['sales', 'business development', 'excel', 'analytics', 'strategy', 'crm']
+    },
+    {
+      triggers: ['management consultant', 'consultant', 'strategy consultant', 'advisory', 'transformation', 'corporate strategy', 'business strategy', 'strategy analyst'],
+      skills: ['strategy', 'analytics', 'excel', 'consulting', 'operations', 'finance']
+    },
+    {
+      triggers: ['finance manager', 'financial analyst', 'fp&a', 'financial planning', 'treasury', 'accounts', 'cfo', 'finance business partner', 'controllership', 'budgeting'],
+      skills: ['finance', 'excel', 'analytics', 'strategy', 'consulting', 'operations']
+    },
+    {
+      triggers: ['product manager', 'product management', 'pm', 'product owner', 'product strategy'],
+      skills: ['strategy', 'analytics', 'excel', 'marketing', 'operations', 'finance']
+    },
+    {
+      triggers: ['management trainee', 'mt', 'general management', 'leadership program', 'pgp', 'graduate trainee', 'business management'],
+      skills: ['marketing', 'sales', 'operations', 'strategy', 'finance', 'analytics', 'excel']
+    },
+    {
+      triggers: ['human resources', 'hr', 'talent acquisition', 'talent management', 'learning development', 'hrbp'],
+      skills: ['strategy', 'analytics', 'excel', 'consulting', 'operations', 'business development']
+    }
+  ]
+};
+
+// Universal domain-keyword inference — handles future/novel role titles.
+// Maps stable role archetypes (analyst, engineer, manager…) to programme-specific skills.
+// These archetypes are stable even when specific role names are new.
+const UNIVERSAL_DOMAIN_SIGNALS = {
+  bda: [
+    { words: ['scientist', 'machine', 'learning', 'deep', 'neural', 'nlp', 'computer', 'vision', 'genai', 'llm', 'diffusion', 'generative'],
+      skills: ['python', 'machine learning', 'statistics', 'sql', 'predictive modeling', 'analytics'] },
+    { words: ['analyst', 'analytics', 'analysis', 'intelligence', 'reporting', 'insights', 'visualiz', 'dashboard', 'bi'],
+      skills: ['sql', 'excel', 'analytics', 'power bi', 'tableau', 'data visualization', 'statistics'] },
+    { words: ['engineer', 'developer', 'architect', 'pipeline', 'infra', 'platform', 'etl', 'warehouse'],
+      skills: ['sql', 'python', 'analytics', 'statistics', 'excel', 'data visualization'] },
+    { words: ['risk', 'fraud', 'compliance', 'audit', 'governance', 'credit', 'quant'],
+      skills: ['sql', 'python', 'statistics', 'analytics', 'excel', 'predictive modeling'] },
+    { words: ['product', 'growth', 'strategy', 'business', 'market', 'consumer'],
+      skills: ['sql', 'excel', 'analytics', 'power bi', 'statistics', 'data visualization'] },
+  ],
+  bifs: [
+    { words: ['credit', 'loan', 'lending', 'underwriting', 'npa', 'delinquency', 'collection'],
+      skills: ['credit risk', 'financial analysis', 'excel', 'banking', 'risk management', 'valuation'] },
+    { words: ['investment', 'equity', 'fund', 'portfolio', 'asset', 'wealth', 'hni', 'pms', 'amc'],
+      skills: ['valuation', 'financial analysis', 'capital markets', 'excel', 'bloomberg', 'portfolio'] },
+    { words: ['risk', 'compliance', 'regulatory', 'governance', 'audit', 'stress', 'model'],
+      skills: ['risk management', 'credit risk', 'financial analysis', 'excel', 'sql', 'capital markets'] },
+    { words: ['treasury', 'forex', 'derivatives', 'fixed', 'bond', 'dealing', 'market', 'liquidity', 'alm'],
+      skills: ['capital markets', 'financial analysis', 'excel', 'bloomberg', 'banking', 'portfolio'] },
+    { words: ['banker', 'banking', 'branch', 'relationship', 'retail', 'corporate', 'sme', 'msme', 'trade'],
+      skills: ['banking', 'financial analysis', 'excel', 'portfolio', 'capital markets', 'credit risk'] },
+    { words: ['insurance', 'actuar', 'claim', 'reinsur', 'underwriting'],
+      skills: ['insurance', 'financial analysis', 'excel', 'risk management', 'capital markets'] },
+    { words: ['analyst', 'research', 'financial', 'finance', 'valuation', 'advisor'],
+      skills: ['financial analysis', 'excel', 'valuation', 'capital markets', 'sql', 'risk management'] },
+  ],
+  hcm: [
+    { words: ['sales', 'territory', 'field', 'representative', 'detailing', 'zonal', 'regional', 'kam', 'key account'],
+      skills: ['sales', 'healthcare', 'pharma', 'medical devices', 'crm', 'strategy'] },
+    { words: ['hospital', 'operations', 'administrator', 'facility', 'quality', 'patient', 'clinic', 'diagnostic'],
+      skills: ['hospital operations', 'healthcare', 'analytics', 'strategy', 'excel', 'health insurance'] },
+    { words: ['pharma', 'drug', 'clinical', 'regulatory', 'medical', 'device', 'therapy', 'kol', 'launch', 'market access'],
+      skills: ['pharma', 'market access', 'healthcare', 'sales', 'analytics', 'strategy'] },
+    { words: ['consultant', 'consulting', 'strategy', 'advisory', 'policy', 'health', 'digital health', 'healthtech'],
+      skills: ['healthcare', 'strategy', 'analytics', 'hospital operations', 'excel', 'health insurance'] },
+    { words: ['insurance', 'tpa', 'claims', 'actuar'],
+      skills: ['health insurance', 'healthcare', 'analytics', 'excel', 'strategy', 'hospital operations'] },
+  ],
+  core: [
+    { words: ['supply', 'logistics', 'procurement', 'sourcing', 'inventory', 'warehouse', 'fleet', 'fulfillment', 'scm', 'demand'],
+      skills: ['supply chain', 'operations', 'excel', 'analytics', 'strategy', 'sap'] },
+    { words: ['operations', 'ops', 'lean', 'six sigma', 'manufacturing', 'quality', 'process', 'production', 'plant'],
+      skills: ['operations', 'supply chain', 'excel', 'analytics', 'strategy', 'finance'] },
+    { words: ['marketing', 'brand', 'content', 'digital', 'campaign', 'growth', 'seo', 'media', 'advertising', 'gtm', 'consumer', 'pr'],
+      skills: ['marketing', 'analytics', 'excel', 'strategy', 'business development', 'sales'] },
+    { words: ['sales', 'revenue', 'account', 'business development', 'client', 'customer', 'success', 'bd', 'inside', 'zonal', 'b2b', 'b2c'],
+      skills: ['sales', 'business development', 'excel', 'analytics', 'strategy', 'crm'] },
+    { words: ['consultant', 'consulting', 'strategy', 'advisory', 'transformation', 'corporate', 'management consultant'],
+      skills: ['strategy', 'analytics', 'excel', 'consulting', 'operations', 'finance'] },
+    { words: ['finance', 'financial', 'treasury', 'accounting', 'accounts', 'budget', 'controlling', 'fp&a', 'cfo', 'audit'],
+      skills: ['finance', 'excel', 'analytics', 'strategy', 'consulting', 'operations'] },
+    { words: ['product', 'product manager', 'pm', 'product owner', 'product strategy'],
+      skills: ['strategy', 'analytics', 'excel', 'marketing', 'operations', 'finance'] },
+    { words: ['hr', 'human', 'talent', 'recruitment', 'learning', 'hrbp', 'people'],
+      skills: ['strategy', 'analytics', 'excel', 'consulting', 'operations', 'business development'] },
+    // Generic managerial/leadership archetypes — final safety net for CORE
+    { words: ['manager', 'director', 'head', 'lead', 'chief', 'president', 'officer', 'trainee', 'associate', 'executive'],
+      skills: ['strategy', 'analytics', 'excel', 'operations', 'finance', 'marketing'] },
+  ]
+};
+
+const STOP_WORDS = new Set(['and', 'the', 'for', 'with', 'that', 'this', 'from', 'are', 'was', 'has', 'have', 'will', 'can', 'its', 'senior', 'junior', 'lead', 'associate', 'deputy', 'vice', 'assistant']);
+
+function getRoleSpecificSkills(programmeCode, targetRole, taxonomy) {
+  if (!targetRole) return taxonomy.coreSkills;
+
+  const roleLower = String(targetRole).toLowerCase().trim();
+  const clusters  = ROLE_CLUSTERS[programmeCode] || [];
+
+  // Pass 1 — phrase match against known cluster triggers
+  for (const cluster of clusters) {
+    if (cluster.triggers.some(t => roleLower.includes(t) || t.includes(roleLower))) {
+      return cluster.skills;
+    }
+  }
+
+  // Pass 2 — word-level match against cluster trigger words
+  const roleWords = roleLower.split(/[\s\-\/,]+/).filter(w => w.length >= 3 && !STOP_WORDS.has(w));
+  for (const cluster of clusters) {
+    const triggerWords = cluster.triggers.join(' ').split(/[\s\-\/,]+/).filter(w => w.length >= 3);
+    if (roleWords.some(rw => triggerWords.some(tw => tw.includes(rw) || rw.includes(tw)))) {
+      return cluster.skills;
+    }
+  }
+
+  // Pass 3 — universal domain inference for novel/future roles
+  // Scores each domain by how many of its signal words appear in the role title,
+  // then returns the skills for the highest-scoring domain.
+  const domains = UNIVERSAL_DOMAIN_SIGNALS[programmeCode] || [];
+  let bestSkills = null;
+  let bestScore  = 0;
+  for (const domain of domains) {
+    const score = domain.words.reduce((n, w) => n + (roleLower.includes(w) ? 1 : 0), 0);
+    if (score > bestScore) { bestScore = score; bestSkills = domain.skills; }
+  }
+  if (bestScore > 0 && bestSkills) return bestSkills;
+
+  // Pass 4 — no match at all: return coreSkills so at least something relevant is shown
+  return taxonomy.coreSkills;
+}
+
 const ATS_SECTIONS = ['education', 'experience', 'projects', 'skills', 'certifications', 'internship', 'achievements'];
 const IMPACT_PATTERNS = [
   /\b\d+(\.\d+)?\s?%/g,
@@ -40,7 +275,11 @@ export function analyzeResumeText({ resumeText, programme, targetRole = '', targ
   const text = normalizeResumeText(resumeText);
   const lower = text.toLowerCase();
 
-  const skillMatches = findMatches(lower, taxonomy.coreSkills);
+  // Use role-specific skill subset when a target role is specified so recommendations are relevant
+  const roleSkills   = getRoleSpecificSkills(programmeCode, targetRole, taxonomy);
+  const allSkillMatches  = findMatches(lower, taxonomy.coreSkills); // for extraction/display
+  const roleSkillMatches = findMatches(lower, roleSkills);           // for scoring
+
   const toolMatches = findMatches(lower, taxonomy.tools);
   const roleMatches = findMatches(lower, taxonomy.roleKeywords.concat(splitWords(targetRole)));
   const projectMatches = findMatches(lower, taxonomy.projectSignals);
@@ -51,7 +290,7 @@ export function analyzeResumeText({ resumeText, programme, targetRole = '', targ
 
   const scores = {
     ats: scoreAts({ sectionMatches, contactSignals, lengthScore }),
-    skills: ratioScore(skillMatches.length, taxonomy.coreSkills.length),
+    skills: ratioScore(roleSkillMatches.length, roleSkills.length),
     tools: ratioScore(toolMatches.length, Math.min(taxonomy.tools.length, 8)),
     roleAlignment: scoreRoleAlignment({ roleMatches, projectMatches, targetRole, targetCompany, lower }),
     impact: Math.min(100, impactMatches * 12),
@@ -67,6 +306,8 @@ export function analyzeResumeText({ resumeText, programme, targetRole = '', targ
     scores.projects * 0.12
   );
 
+  const missingRoleSkills = missingTop(roleSkills, roleSkillMatches, 5);
+
   return {
     programme: programmeCode,
     targetRole: targetRole || null,
@@ -74,7 +315,7 @@ export function analyzeResumeText({ resumeText, programme, targetRole = '', targ
     overallScore: weightedOverall,
     scores,
     extracted: {
-      skills: skillMatches,
+      skills: allSkillMatches,
       tools: toolMatches,
       roleSignals: roleMatches,
       projectSignals: projectMatches,
@@ -83,14 +324,15 @@ export function analyzeResumeText({ resumeText, programme, targetRole = '', targ
       contactSignals
     },
     missing: {
-      prioritySkills: missingTop(taxonomy.coreSkills, skillMatches, 5),
+      prioritySkills: missingRoleSkills,
       tools: missingTop(taxonomy.tools, toolMatches, 5),
       projectSignals: missingTop(taxonomy.projectSignals, projectMatches, 5)
     },
     recommendations: buildRecommendations({
       programmeCode,
+      targetRole,
       scores,
-      missingSkills: missingTop(taxonomy.coreSkills, skillMatches, 5),
+      missingSkills: missingRoleSkills,
       missingTools: missingTop(taxonomy.tools, toolMatches, 5),
       impactMatches,
       sectionMatches
@@ -170,15 +412,16 @@ function missingTop(source, matches, count) {
   return source.filter(item => !found.has(item)).slice(0, count);
 }
 
-function buildRecommendations({ programmeCode, scores, missingSkills, missingTools, impactMatches, sectionMatches }) {
+function buildRecommendations({ programmeCode, targetRole, scores, missingSkills, missingTools, impactMatches, sectionMatches }) {
   const recs = [];
+  const roleLabel = targetRole ? `${targetRole} role` : `${programmeCode.toUpperCase()} programme`;
 
   if (scores.ats < 75) {
     recs.push('Improve ATS structure: use clear headings for Education, Experience, Projects, Skills, and Certifications.');
   }
 
   if (missingSkills.length) {
-    recs.push(`Add evidence for programme-critical skills: ${missingSkills.join(', ')}.`);
+    recs.push(`Add evidence for ${roleLabel}-critical skills: ${missingSkills.join(', ')}.`);
   }
 
   if (missingTools.length) {

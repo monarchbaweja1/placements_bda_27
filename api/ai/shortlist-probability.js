@@ -35,10 +35,10 @@ export default async function handler(req, res) {
 
     const cgpa = parseFloat(body.cgpa);
 
-    if (isNaN(cgpa) || cgpa < 0 || cgpa > 10) {
+    if (isNaN(cgpa) || cgpa < 0 || cgpa > 8) {
       return sendJson(res, 400, {
         ok: false,
-        error: { code: 'invalid_cgpa', message: 'CGPA must be a number between 0 and 10.' }
+        error: { code: 'invalid_cgpa', message: 'CGPA must be a number between 0 and 8 (your college grading scale).' }
       });
     }
 
