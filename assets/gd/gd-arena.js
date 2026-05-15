@@ -41,8 +41,17 @@
     timerInterval: null,
     pollInterval: null,
     countdownInterval: null,
-    participantsCache: {}
+    participantsCache: {},
+    jitsiApi: null,
+    recognition: null,
+    speakingData: {},
+    dominantId: null,
+    localJitsiId: null
   };
+
+  let totalWords = 0;
+  let fillerCount = 0;
+  const FILLERS = ['um','uh','like','you know','basically','actually','literally','so','right','okay','kind of','sort of','i mean','you see'];
 
   function getToken() {
     try {
@@ -305,49 +314,48 @@
 
         <!-- ── Session View ── -->
         <div id="pgGdSessionView" style="display:none">
+          <div class="pg-gd-session-view">
 
-          <div class="pg-gd-sv-header">
-            <div>
-              <div class="pg-gd-session-slot" id="pgGdSessionSlot"></div>
-              <div class="pg-gd-session-topic-text" id="pgGdSessionTopic">—</div>
-            </div>
-            <div class="pg-gd-timer">
-              <div class="pg-gd-timer-display" id="pgGdTimerDisplay">00:00</div>
-              <div class="pg-gd-timer-label">duration</div>
-            </div>
-          </div>
-
-          <div class="pg-gd-sv-call-card" id="pgGdCallCard">
-            <div class="pg-gd-sv-call-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-                <rect x="2" y="7" width="15" height="10" rx="2"/><path d="M17 9l5-2v10l-5-2"/>
-              </svg>
-            </div>
-            <div class="pg-gd-sv-call-text">
-              <strong>Your GD video room is ready</strong>
-              <p>Click the button below to open the video call in a new tab. Share the same link with all participants.</p>
-            </div>
-            <a class="pg-gd-sv-join-btn" id="pgGdJoinCallBtn" href="#" target="_blank" rel="noopener">
-              Join Video Call ↗
-            </a>
-            <div class="pg-gd-sv-room-label">
-              Room link: <span class="pg-gd-sv-room-url" id="pgGdRoomUrl"></span>
-            </div>
-          </div>
-
-          <div class="pg-gd-sv-bottom">
-            <div class="pg-gd-participants-panel">
-              <div class="pg-gd-participants-label">
-                Participants
-                <span class="pg-gd-participants-count" id="pgGdParticipantCount">0/11</span>
+            <div class="pg-gd-video-pane">
+              <div id="pgGdJitsiContainer"></div>
+              <div class="pg-gd-video-notice">
+                💡 If asked to log in, tap <strong>Log-in with Google</strong> once — this unlocks the room for everyone else instantly.
               </div>
-              <div class="pg-gd-participant-list" id="pgGdParticipantList"></div>
             </div>
-            <div class="pg-gd-session-actions">
-              <button class="pg-gd-leave-btn" id="pgGdLeaveBtn">← Leave Session</button>
-            </div>
-          </div>
 
+            <div class="pg-gd-session-sidebar">
+              <div class="pg-gd-session-info">
+                <div class="pg-gd-session-slot" id="pgGdSessionSlot"></div>
+                <div class="pg-gd-session-topic-label">Topic</div>
+                <div class="pg-gd-session-topic-text" id="pgGdSessionTopic">—</div>
+                <div class="pg-gd-timer">
+                  <div>
+                    <div class="pg-gd-timer-display" id="pgGdTimerDisplay">00:00</div>
+                    <div class="pg-gd-timer-label">Session duration</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pg-gd-participants-panel">
+                <div class="pg-gd-participants-label">
+                  Speaking Time
+                  <span class="pg-gd-participants-count" id="pgGdParticipantCount">0/11</span>
+                </div>
+                <div class="pg-gd-participant-list" id="pgGdParticipantList"></div>
+              </div>
+
+              <div class="pg-gd-confidence-mini" id="pgGdConfidenceMini" style="display:none">
+                <div class="pg-gd-confidence-label">Your Confidence</div>
+                <div class="pg-gd-confidence-value" id="pgGdConfidenceValue">—</div>
+                <div class="pg-gd-confidence-sub">Filler words &amp; pace</div>
+              </div>
+
+              <div class="pg-gd-session-actions">
+                <button class="pg-gd-leave-btn" id="pgGdLeaveBtn">← Leave Session</button>
+              </div>
+            </div>
+
+          </div>
           <div class="pg-gd-status" id="pgGdSessionStatus" style="margin-top:12px"></div>
         </div>
 
@@ -366,8 +374,8 @@
             <div class="pg-gd-feedback-grid">
               <div class="pg-gd-feedback-card">
                 <div class="pg-gd-feedback-card-label">Confidence Score</div>
-                <div class="pg-gd-feedback-score">—</div>
-                <div class="pg-gd-feedback-score-label"><span class="pg-gd-feedback-coming">Coming Soon</span></div>
+                <div class="pg-gd-feedback-score" id="pgGdFeedbackConfidence">—</div>
+                <div class="pg-gd-feedback-score-label" id="pgGdFeedbackConfidenceLabel">Filler words &amp; pace</div>
               </div>
               <div class="pg-gd-feedback-card">
                 <div class="pg-gd-feedback-card-label">Speaking Time</div>
@@ -376,8 +384,8 @@
               </div>
               <div class="pg-gd-feedback-card">
                 <div class="pg-gd-feedback-card-label">Participation</div>
-                <div class="pg-gd-feedback-score">—</div>
-                <div class="pg-gd-feedback-score-label"><span class="pg-gd-feedback-coming">Coming Soon</span></div>
+                <div class="pg-gd-feedback-score" id="pgGdFeedbackParticipation">—</div>
+                <div class="pg-gd-feedback-score-label" id="pgGdFeedbackParticipationLabel">Share of speaking time</div>
               </div>
             </div>
 
@@ -428,12 +436,14 @@
   const sessionSlotEl    = document.getElementById('pgGdSessionSlot');
   const timerDisplay     = document.getElementById('pgGdTimerDisplay');
   const participantCount = document.getElementById('pgGdParticipantCount');
-  const participantList  = document.getElementById('pgGdParticipantList');
-  const joinCallBtn      = document.getElementById('pgGdJoinCallBtn');
-  const roomUrlEl        = document.getElementById('pgGdRoomUrl');
-  const leaveBtn         = document.getElementById('pgGdLeaveBtn');
-  const backToLobbyBtn   = document.getElementById('pgGdBackToLobbyBtn');
-  const feedbackDuration = document.getElementById('pgGdFeedbackDuration');
+  const participantList        = document.getElementById('pgGdParticipantList');
+  const leaveBtn               = document.getElementById('pgGdLeaveBtn');
+  const backToLobbyBtn         = document.getElementById('pgGdBackToLobbyBtn');
+  const feedbackDuration       = document.getElementById('pgGdFeedbackDuration');
+  const feedbackConfidence     = document.getElementById('pgGdFeedbackConfidence');
+  const feedbackParticipation  = document.getElementById('pgGdFeedbackParticipation');
+  const confidenceMini         = document.getElementById('pgGdConfidenceMini');
+  const confidenceValue        = document.getElementById('pgGdConfidenceValue');
 
   // ── Tab / View switching ───────────────────────────────────
   function switchTab(tabName) {
@@ -600,6 +610,144 @@
   }
   function stopCountdownUpdates() {
     if (state.countdownInterval) { clearInterval(state.countdownInterval); state.countdownInterval = null; }
+  }
+
+  // ── Jitsi External API ─────────────────────────────────────
+  function loadJitsiScript() {
+    return new Promise(resolve => {
+      if (window.JitsiMeetExternalAPI) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = 'https://meet.jit.si/external_api.js';
+      s.onload = resolve;
+      s.onerror = resolve; // fail silently, handled below
+      document.head.appendChild(s);
+    });
+  }
+
+  function initJitsi(session) {
+    const container = document.getElementById('pgGdJitsiContainer');
+    if (!container || !window.JitsiMeetExternalAPI) return;
+
+    const roomName = session.room_name || (session.room_url || '').split('/').pop() || 'BDA27-GD-Room';
+
+    state.jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', {
+      roomName,
+      parentNode: container,
+      width: '100%',
+      height: '100%',
+      configOverwrite: {
+        prejoinPageEnabled: false,
+        disableModeratorIndicator: true,
+        startWithAudioMuted: false,
+        startWithVideoMuted: false,
+        disableDeepLinking: true,
+        enableNoisyMicDetection: false,
+        lobby: { enabled: false, autoKnock: false }
+      },
+      interfaceConfigOverwrite: {
+        SHOW_JITSI_WATERMARK: false,
+        SHOW_WATERMARK_FOR_GUESTS: false,
+        TOOLBAR_BUTTONS: ['microphone','camera','desktop','tileview','fullscreen','hangup']
+      }
+    });
+
+    state.jitsiApi.on('videoConferenceJoined', ({ id, displayName }) => {
+      state.localJitsiId = id;
+      if (!state.speakingData[id]) state.speakingData[id] = { name: displayName || 'You', totalMs: 0, startMs: null };
+      renderSpeakingTimes();
+    });
+
+    state.jitsiApi.on('participantJoined', ({ id, displayName }) => {
+      if (!state.speakingData[id]) state.speakingData[id] = { name: displayName || 'Participant', totalMs: 0, startMs: null };
+      renderSpeakingTimes();
+    });
+
+    state.jitsiApi.on('participantLeft', ({ id }) => {
+      if (state.dominantId === id) state.dominantId = null;
+      delete state.speakingData[id];
+      renderSpeakingTimes();
+    });
+
+    state.jitsiApi.on('dominantSpeakerChanged', ({ id }) => {
+      const now = Date.now();
+      if (state.dominantId && state.speakingData[state.dominantId]?.startMs) {
+        state.speakingData[state.dominantId].totalMs += now - state.speakingData[state.dominantId].startMs;
+        state.speakingData[state.dominantId].startMs = null;
+      }
+      state.dominantId = id;
+      if (state.speakingData[id]) state.speakingData[id].startMs = now;
+      renderSpeakingTimes();
+    });
+  }
+
+  function renderSpeakingTimes() {
+    const entries = Object.entries(state.speakingData);
+    if (entries.length === 0) {
+      participantList.innerHTML = '<div class="pg-gd-spk-empty">Waiting for participants to join…</div>';
+      return;
+    }
+    const maxMs = Math.max(1, ...entries.map(([, d]) => {
+      const live = d.startMs ? Date.now() - d.startMs : 0;
+      return d.totalMs + live;
+    }));
+    participantList.innerHTML = entries
+      .sort(([, a], [, b]) => (b.totalMs + (b.startMs ? Date.now() - b.startMs : 0)) - (a.totalMs + (a.startMs ? Date.now() - a.startMs : 0)))
+      .map(([id, d]) => {
+        const live    = d.startMs ? Date.now() - d.startMs : 0;
+        const total   = d.totalMs + live;
+        const pct     = Math.round((total / maxMs) * 100);
+        const isYou   = id === state.localJitsiId;
+        const talking = !!d.startMs;
+        return `
+          <div class="pg-gd-spk-item${talking ? ' talking' : ''}">
+            <div class="pg-gd-spk-name">${escHtml(d.name)}${isYou ? ' <span class="pg-gd-spk-you">You</span>' : ''}</div>
+            <div class="pg-gd-spk-bar-wrap">
+              <div class="pg-gd-spk-bar" style="width:${pct}%"></div>
+            </div>
+            <div class="pg-gd-spk-time">${formatDuration(total)}</div>
+          </div>`;
+      }).join('');
+  }
+
+  // ── Speech Recognition (local user only) ──────────────────
+  function startSpeechRecognition() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    totalWords = 0; fillerCount = 0;
+    const rec = new SR();
+    rec.continuous = true;
+    rec.interimResults = false;
+    rec.lang = 'en-IN';
+    rec.onresult = e => {
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (!e.results[i].isFinal) continue;
+        const text = e.results[i][0].transcript.toLowerCase().trim();
+        if (!text) continue;
+        totalWords += text.split(/\s+/).filter(Boolean).length;
+        FILLERS.forEach(f => {
+          const m = text.match(new RegExp(`\\b${f}\\b`, 'gi'));
+          if (m) fillerCount += m.length;
+        });
+        updateConfidenceMini();
+      }
+    };
+    rec.onerror = () => {};
+    rec.onend   = () => { if (state.currentSession) { try { rec.start(); } catch {} } };
+    try { rec.start(); } catch {}
+    state.recognition = rec;
+  }
+
+  function calcConfidenceScore() {
+    if (totalWords < 15) return null;
+    const rate = fillerCount / totalWords;
+    return Math.max(0, Math.min(100, Math.round(100 - rate * 250)));
+  }
+
+  function updateConfidenceMini() {
+    const score = calcConfidenceScore();
+    if (score === null) return;
+    if (confidenceMini) confidenceMini.style.display = '';
+    if (confidenceValue) confidenceValue.textContent = `${score}/100`;
   }
 
   // ── Load sessions ──────────────────────────────────────────
@@ -778,22 +926,28 @@
   }
 
   // ── Enter session view ────────────────────────────────────
-  function enterSessionView(session) {
-    state.currentSession = session;
+  async function enterSessionView(session) {
+    state.currentSession  = session;
+    state.speakingData    = {};
+    state.dominantId      = null;
+    state.localJitsiId    = null;
+    totalWords = 0; fillerCount = 0;
 
     enterView('session');
 
     sessionTopicEl.textContent   = session.topic;
     sessionSlotEl.textContent    = session.slot_number ? `GD SLOT-${session.slot_number}` : 'GD Session';
     participantCount.textContent = `${session.participant_count}/${session.max_participants}`;
-
-    const roomUrl = session.room_url || '';
-    if (joinCallBtn) { joinCallBtn.href = roomUrl; }
-    if (roomUrlEl)   { roomUrlEl.textContent = roomUrl.replace('https://', ''); }
+    participantList.innerHTML    = '<div class="pg-gd-spk-empty">Loading video room…</div>';
+    if (confidenceMini) confidenceMini.style.display = 'none';
 
     state.timerStart = Date.now();
     startTimer();
-    state.pollInterval = setInterval(() => refreshParticipantCount(session.id), 15000);
+    state.pollInterval = setInterval(() => { refreshParticipantCount(session.id); renderSpeakingTimes(); }, 10000);
+
+    await loadJitsiScript();
+    initJitsi(session);
+    startSpeechRecognition();
   }
 
   async function refreshParticipantCount(sessionId) {
@@ -822,12 +976,50 @@
     showStatus(sessionStatus, 'loading', 'Leaving session…');
     const sessionId = state.currentSession.id;
     const elapsed   = Date.now() - state.timerStart;
+
+    // Flush speaking time for current dominant speaker
+    if (state.dominantId && state.speakingData[state.dominantId]?.startMs) {
+      state.speakingData[state.dominantId].totalMs += Date.now() - state.speakingData[state.dominantId].startMs;
+      state.speakingData[state.dominantId].startMs = null;
+    }
+
+    // Calculate scores before cleanup
+    const confScore = calcConfidenceScore();
+    const myData    = state.speakingData[state.localJitsiId];
+    const totalSpk  = Object.values(state.speakingData).reduce((a, d) => a + d.totalMs, 0);
+    const mySpk     = myData?.totalMs || 0;
+    const partPct   = totalSpk > 0 ? Math.round((mySpk / totalSpk) * 100) : null;
+
+    // Dispose Jitsi
+    if (state.jitsiApi) { try { state.jitsiApi.dispose(); } catch {} state.jitsiApi = null; }
+    // Stop speech recognition
+    if (state.recognition) { try { state.recognition.stop(); } catch {} state.recognition = null; }
+
     try {
       await apiPost('/api/gd/sessions', { action: 'leave', sessionId });
       clearTimerInterval();
       clearPollInterval();
       state.currentSession = null;
+      state.speakingData   = {};
+      state.localJitsiId   = null;
+
       feedbackDuration.textContent = formatDuration(elapsed);
+
+      if (feedbackConfidence) {
+        feedbackConfidence.textContent = confScore !== null ? `${confScore}` : '—';
+        const lbl = document.getElementById('pgGdFeedbackConfidenceLabel');
+        if (lbl && confScore !== null) {
+          lbl.textContent = confScore >= 75 ? 'Great — minimal filler words' :
+                            confScore >= 50 ? 'Good — reduce filler words' :
+                                             'Needs work — too many fillers';
+        }
+      }
+      if (feedbackParticipation) {
+        feedbackParticipation.textContent = partPct !== null ? `${partPct}%` : '—';
+        const lbl = document.getElementById('pgGdFeedbackParticipationLabel');
+        if (lbl && mySpk > 0) lbl.textContent = `${formatDuration(mySpk)} of your speaking time`;
+      }
+
       showEndedFeedback();
     } catch (e) {
       showStatus(sessionStatus, 'error', e.message || 'Could not leave. Try again.');
