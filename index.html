@@ -6442,7 +6442,7 @@ window.signInWithGoogle = async function() {
   const { error } = await sbIndex.auth.signInWithOAuth({
     provider: 'google',
     options: {
-        redirectTo: window.location.origin + window.location.pathname
+        redirectTo: window.location.origin + '/app.html'
     }
   });
   if (error) {
