@@ -252,8 +252,17 @@
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ jdText, cvText, programme })
       });
-      const payload = await res.json();
-      if (!res.ok || !payload.ok) throw new Error(payload?.error?.message || 'Analysis failed.');
+
+      let payload;
+      try {
+        payload = await res.json();
+      } catch {
+        throw new Error('Server returned an unexpected response. Please try again in a moment.');
+      }
+
+      if (!res.ok || !payload?.ok) {
+        throw new Error(payload?.error?.message || 'Analysis failed. Please try again.');
+      }
 
       renderResults(payload);
       showView('results');

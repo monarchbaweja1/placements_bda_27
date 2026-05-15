@@ -226,10 +226,12 @@ Scoring anchors:
     prompt
   });
 
-  const jsonMatch = answer.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('AI returned invalid format for resume analysis.');
+  const cleaned = answer.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('AI returned an unreadable response. Please try again.');
 
-  const raw = JSON.parse(jsonMatch[0]);
+  let raw;
+  try { raw = JSON.parse(jsonMatch[0]); } catch { throw new Error('AI response could not be parsed. Please try again.'); }
 
   const clamp = n => Math.min(100, Math.max(0, Math.round(Number(n) || 0)));
   const arr   = (v, limit) => Array.isArray(v) ? v.slice(0, limit).map(s => String(s)) : [];

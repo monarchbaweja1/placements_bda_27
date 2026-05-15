@@ -272,10 +272,12 @@ Calibration rules:
     prompt
   });
 
-  const jsonMatch = answer.match(/\{[\s\S]*\}/);
+  const cleaned = answer.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
   if (!jsonMatch) return null;
 
-  const raw = JSON.parse(jsonMatch[0]);
+  let raw;
+  try { raw = JSON.parse(jsonMatch[0]); } catch { return null; }
 
   const clamp = (n, lo = 0, hi = 100) => Math.min(hi, Math.max(lo, Math.round(Number(n) || 0)));
   const arr   = (v, limit) => Array.isArray(v) ? v.slice(0, limit).map(s => String(s)) : [];

@@ -105,10 +105,10 @@ export default async function handler(req, res) {
 
     return sendJson(res, 200, { ok: true, programme, ...result });
   } catch (error) {
-    logError('jd_match_failed', error);
+    try { logError('jd_match_failed', { message: error?.message || String(error) }); } catch {}
     return sendJson(res, 500, {
       ok: false,
-      error: { code: 'match_failed', message: 'Unable to analyze JD-CV match right now.' }
+      error: { code: 'match_failed', message: error?.message || 'Unable to analyze JD-CV match right now.' }
     });
   }
 }
@@ -193,10 +193,17 @@ Scoring anchor points:
     prompt
   });
 
-  const jsonMatch = answer.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('AI returned invalid response format.');
+  // Strip markdown fences if Gemini wraps the JSON
+  const cleaned = answer.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('AI returned an unreadable response. Please try again.');
 
-  const raw = JSON.parse(jsonMatch[0]);
+  let raw;
+  try {
+    raw = JSON.parse(jsonMatch[0]);
+  } catch {
+    throw new Error('AI response could not be parsed. Please try again.');
+  }
 
   const clamp = (n) => Math.min(100, Math.max(0, Math.round(Number(n) || 0)));
   const arr   = (v, limit) => Array.isArray(v) ? v.slice(0, limit).map(s => String(s)) : [];
