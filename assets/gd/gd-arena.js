@@ -523,7 +523,7 @@
   async function joinSession(sessionId) {
     showStatus(lobbyStatus, 'loading', 'Joining session…');
     try {
-      const data = await apiPost('/api/gd/join-session', { sessionId });
+      const data = await apiPost('/api/gd/sessions', { action: 'join', sessionId });
       clearStatus(lobbyStatus);
       enterSessionView(data.session);
     } catch (e) {
@@ -626,7 +626,7 @@
     const elapsed = Date.now() - state.timerStart;
 
     try {
-      await apiPost('/api/gd/leave-session', { sessionId, endSession: endForAll });
+      await apiPost('/api/gd/sessions', { action: 'leave', sessionId, endSession: endForAll });
       clearTimerInterval();
       clearPollInterval();
       state.currentSession = null;
@@ -657,7 +657,7 @@
 
     try {
       const programme = state.currentProgramme || getProgramme();
-      const data = await apiPost('/api/gd/create-session', {
+      const data = await apiPost('/api/gd/sessions', {
         topic,
         description: descInput.value.trim(),
         programme
