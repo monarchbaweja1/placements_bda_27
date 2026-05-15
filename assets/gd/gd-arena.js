@@ -43,7 +43,8 @@
     pollInterval: null,
     countdownInterval: null,
     timerPaused: false,
-    timerPauseAt: null
+    timerPauseAt: null,
+    participantsCache: {}
   };
 
   function getToken() {
@@ -253,6 +254,12 @@
           <div class="pg-gd-create-form">
 
             <div class="pg-gd-form-group">
+              <label class="pg-gd-form-label" for="pgGdCreatorName">Your Name *</label>
+              <input class="pg-gd-form-input" id="pgGdCreatorName" type="text" maxlength="100"
+                placeholder="Enter your full name">
+            </div>
+
+            <div class="pg-gd-form-group">
               <label class="pg-gd-form-label" for="pgGdTopic">Discussion Topic *</label>
               <input class="pg-gd-form-input" id="pgGdTopic" type="text" maxlength="200"
                 placeholder="e.g. AI vs human analysts — who will win in BFSI?">
@@ -416,6 +423,7 @@
   const createStatus     = document.getElementById('pgGdCreateStatus');
   const sessionStatus    = document.getElementById('pgGdSessionStatus');
   const progBadge        = document.getElementById('pgGdProgBadge');
+  const creatorNameInput = document.getElementById('pgGdCreatorName');
   const topicInput       = document.getElementById('pgGdTopic');
   const topicChars       = document.getElementById('pgGdTopicChars');
   const descInput        = document.getElementById('pgGdDesc');
@@ -485,37 +493,51 @@
       return;
     }
 
+    const currentUserId = getCurrentUserId();
+
     sessionsList.innerHTML = sessions.map(s => {
-      const count = s.participant_count || 0;
-      const max   = s.max_participants || 11;
-      const isFull = count >= max;
-      const pct    = Math.min(100, Math.round((count / max) * 100));
-      const isActive = s.status === 'active';
-      const slotNum  = s.slot_number || '?';
-      const canJoin  = !isFull && canJoinSession(s.scheduled_at);
+      const count     = s.participant_count || 0;
+      const max       = s.max_participants || 11;
+      const isFull    = count >= max;
+      const pct       = Math.min(100, Math.round((count / max) * 100));
+      const isActive  = s.status === 'active';
+      const slotNum   = s.slot_number || '?';
+      const canJoin   = !isFull && canJoinSession(s.scheduled_at);
       const countdown = !isFull && !canJoin && s.scheduled_at ? formatCountdown(s.scheduled_at) : '';
-      const prog     = (s.programme || 'bda').toUpperCase();
-      const creator  = escHtml(s.creatorName || 'Unknown');
-      const roll     = s.creatorRoll ? ` · ${escHtml(s.creatorRoll)}` : '';
+      const prog      = (s.programme || 'bda').toUpperCase();
+      const creator   = escHtml(s.creator_name || 'Unknown');
+      const isCreator = currentUserId && currentUserId === s.created_by;
+      const isBooked  = localStorage.getItem(`gd_booked_${s.id}`) === '1';
 
       const statusBadge = isActive
         ? `<span class="pg-gd-card-status-active"><span class="pg-gd-live-dot"></span>Live</span>`
         : `<span class="pg-gd-card-status-waiting">Scheduled</span>`;
 
+      const deleteBtn = isCreator
+        ? `<button class="pg-gd-delete-btn" data-action="delete-session" data-id="${s.id}" title="Delete session">🗑</button>`
+        : '';
+
+      const bookBtnHtml = isBooked
+        ? `<span class="pg-gd-booked-badge">✓ Booked</span>`
+        : `<button class="pg-gd-book-btn" data-action="show-book-form" data-id="${s.id}">Book Session</button>`;
+
       return `
         <div class="pg-gd-session-card" data-id="${s.id}" data-scheduled="${s.scheduled_at || ''}">
           <div class="pg-gd-card-body">
             <div class="pg-gd-card-top-row">
-              <span class="pg-gd-slot-badge">GD SLOT-${slotNum}</span>
+              <button class="pg-gd-slot-badge-btn" data-action="toggle-participants" data-id="${s.id}">
+                GD SLOT-${slotNum} <span class="pg-gd-slot-chevron">▾</span>
+              </button>
               <div class="pg-gd-card-badges">
                 <span class="pg-gd-card-prog">${prog}</span>
                 ${statusBadge}
+                ${deleteBtn}
               </div>
             </div>
             <div class="pg-gd-card-topic">${escHtml(s.topic)}</div>
             ${s.description ? `<div class="pg-gd-card-desc">${escHtml(s.description.slice(0,100))}${s.description.length > 100 ? '…' : ''}</div>` : ''}
             <div class="pg-gd-card-schedule">📅 ${formatScheduledAt(s.scheduled_at)}</div>
-            <div class="pg-gd-card-creator">👤 ${creator}${roll}</div>
+            <div class="pg-gd-card-creator">👤 ${creator}</div>
             <div class="pg-gd-participant-bar">
               <div class="pg-gd-participant-label">
                 <span class="pg-gd-participant-count">${count}/${max} participants</span>
@@ -527,12 +549,26 @@
             </div>
           </div>
           <div class="pg-gd-join-col">
+            ${bookBtnHtml}
             <button class="pg-gd-join-btn${canJoin ? ' ready' : ''}"
-                    data-id="${s.id}" data-full="${isFull}"
+                    data-action="join-session" data-id="${s.id}" data-full="${isFull}"
                     ${isFull || !canJoin ? 'disabled' : ''}>
               ${isFull ? 'Full' : (canJoin ? 'Join Now →' : 'Join Session')}
             </button>
             <span class="pg-gd-join-countdown">${countdown}</span>
+          </div>
+          <div class="pg-gd-participants-expand" id="pgGdPtList-${s.id}" style="display:none"></div>
+          <div class="pg-gd-book-form" id="pgGdBookForm-${s.id}" style="display:none">
+            <div class="pg-gd-book-form-fields">
+              <input class="pg-gd-book-input" id="pgGdBookName-${s.id}" type="text" placeholder="Your Full Name *" maxlength="100">
+              <input class="pg-gd-book-input" id="pgGdBookRoll-${s.id}" type="text" placeholder="Roll Number *" maxlength="50">
+              <input class="pg-gd-book-input" id="pgGdBookProg-${s.id}" type="text" placeholder="Programme (e.g. BDA)" maxlength="20">
+            </div>
+            <div class="pg-gd-book-form-actions">
+              <button class="pg-gd-book-confirm-btn" data-action="confirm-book" data-id="${s.id}">Confirm Booking</button>
+              <button class="pg-gd-book-cancel-btn" data-action="cancel-book" data-id="${s.id}">Cancel</button>
+            </div>
+            <div class="pg-gd-book-form-status"></div>
           </div>
         </div>
       `;
@@ -541,11 +577,20 @@
     startCountdownUpdates();
   }
 
-  // Event delegation — handles buttons enabled after countdown expires
+  // Event delegation — all card interactions
   sessionsList.addEventListener('click', e => {
-    const btn = e.target.closest('.pg-gd-join-btn');
-    if (!btn || btn.disabled || btn.dataset.full === 'true') return;
-    joinSession(btn.dataset.id);
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const id     = btn.dataset.id;
+    const card   = btn.closest('.pg-gd-session-card');
+
+    if (action === 'toggle-participants') return toggleParticipants(id, card);
+    if (action === 'show-book-form')      return showBookForm(id, card);
+    if (action === 'cancel-book')         return cancelBooking(id, card);
+    if (action === 'confirm-book')        return confirmBooking(id, card);
+    if (action === 'delete-session')      return confirmDeleteSession(id, card);
+    if (action === 'join-session' && !btn.disabled && btn.dataset.full !== 'true') joinSession(id);
   });
 
   function updateJoinButtons() {
@@ -588,17 +633,162 @@
     }
   }
 
-  // ── Join a session ─────────────────────────────────────────
-  async function joinSession(sessionId) {
-    showStatus(lobbyStatus, 'loading', 'Joining session…');
-    try {
-      const data = await apiPost('/api/gd/sessions', { action: 'join', sessionId });
-      clearStatus(lobbyStatus);
-      stopCountdownUpdates();
-      enterSessionView(data.session);
-    } catch (e) {
-      showStatus(lobbyStatus, 'error', e.message || 'Could not join. Try refreshing.');
+  // ── Participants panel ─────────────────────────────────────
+  async function toggleParticipants(sessionId, card) {
+    const panel = document.getElementById(`pgGdPtList-${sessionId}`);
+    if (!panel) return;
+    const isOpen = panel.style.display !== 'none';
+    const chevron = card.querySelector('.pg-gd-slot-chevron');
+    if (isOpen) {
+      panel.style.display = 'none';
+      if (chevron) chevron.textContent = '▾';
+      return;
     }
+    panel.style.display = '';
+    if (chevron) chevron.textContent = '▴';
+    if (state.participantsCache[sessionId]) {
+      renderParticipants(state.participantsCache[sessionId], panel);
+      return;
+    }
+    panel.innerHTML = '<div class="pg-gd-pt-loading">Loading participants…</div>';
+    try {
+      const data = await apiGet(`/api/gd/sessions?type=participants&sessionId=${sessionId}`);
+      state.participantsCache[sessionId] = data.participants || [];
+      renderParticipants(state.participantsCache[sessionId], panel);
+    } catch {
+      panel.innerHTML = '<div class="pg-gd-pt-loading" style="color:#dc2626">Failed to load participants.</div>';
+    }
+  }
+
+  function renderParticipants(participants, panel) {
+    if (!participants || participants.length === 0) {
+      panel.innerHTML = '<div class="pg-gd-pt-empty">No one has booked this session yet. Be the first!</div>';
+      return;
+    }
+    panel.innerHTML = `
+      <div class="pg-gd-pt-list">
+        <div class="pg-gd-pt-header">
+          <span>#</span><span>Name</span><span>Roll No.</span><span>Programme</span>
+        </div>
+        ${participants.map((p, i) => `
+          <div class="pg-gd-pt-row">
+            <span class="pg-gd-pt-num">${i + 1}</span>
+            <span>${escHtml(p.participant_name || '—')}</span>
+            <span>${escHtml(p.participant_roll || '—')}</span>
+            <span>${escHtml(p.participant_programme || '—')}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // ── Book Session ───────────────────────────────────────────
+  function showBookForm(sessionId, card) {
+    const form = document.getElementById(`pgGdBookForm-${sessionId}`);
+    if (!form) return;
+    form.style.display = '';
+    const bookBtn = card.querySelector('[data-action="show-book-form"]');
+    if (bookBtn) bookBtn.style.display = 'none';
+    const nameInput = document.getElementById(`pgGdBookName-${sessionId}`);
+    if (nameInput) nameInput.focus();
+  }
+
+  function cancelBooking(sessionId, card) {
+    const form = document.getElementById(`pgGdBookForm-${sessionId}`);
+    if (form) form.style.display = 'none';
+    const bookBtn = card.querySelector('[data-action="show-book-form"]');
+    if (bookBtn) bookBtn.style.display = '';
+  }
+
+  async function confirmBooking(sessionId, card) {
+    const nameInput  = document.getElementById(`pgGdBookName-${sessionId}`);
+    const rollInput  = document.getElementById(`pgGdBookRoll-${sessionId}`);
+    const progInput  = document.getElementById(`pgGdBookProg-${sessionId}`);
+    const statusEl   = card.querySelector('.pg-gd-book-form-status');
+    const confirmBtn = card.querySelector('[data-action="confirm-book"]');
+
+    const participantName      = nameInput?.value.trim();
+    const participantRoll      = rollInput?.value.trim();
+    const participantProgramme = progInput?.value.trim() || state.currentProgramme.toUpperCase();
+
+    if (!participantName) { if (statusEl) statusEl.textContent = 'Please enter your name.'; nameInput?.focus(); return; }
+    if (!participantRoll) { if (statusEl) statusEl.textContent = 'Please enter your roll number.'; rollInput?.focus(); return; }
+
+    if (confirmBtn) confirmBtn.disabled = true;
+    if (statusEl) statusEl.textContent = 'Booking…';
+
+    try {
+      const data = await apiPost('/api/gd/sessions', {
+        action: 'book',
+        sessionId,
+        participantName,
+        participantRoll,
+        participantProgramme
+      });
+
+      localStorage.setItem(`gd_booked_${sessionId}`, '1');
+      delete state.participantsCache[sessionId];
+
+      const form = document.getElementById(`pgGdBookForm-${sessionId}`);
+      if (form) form.style.display = 'none';
+
+      const joinCol = card.querySelector('.pg-gd-join-col');
+      const bookBtn = joinCol?.querySelector('[data-action="show-book-form"]');
+      if (bookBtn) bookBtn.outerHTML = `<span class="pg-gd-booked-badge">✓ Booked</span>`;
+
+      if (!data.alreadyBooked && data.newCount !== undefined) {
+        const countEl = card.querySelector('.pg-gd-participant-count');
+        const max = parseInt(countEl?.textContent?.split('/')[1]) || 11;
+        if (countEl) countEl.textContent = `${data.newCount}/${max} participants`;
+        const fillEl = card.querySelector('.pg-gd-bar-fill');
+        if (fillEl) fillEl.style.width = `${Math.min(100, Math.round((data.newCount / max) * 100))}%`;
+        const sess = state.sessions.find(s => s.id === sessionId);
+        if (sess) sess.participant_count = data.newCount;
+      }
+
+      // refresh participants panel if open
+      const panel = document.getElementById(`pgGdPtList-${sessionId}`);
+      if (panel && panel.style.display !== 'none') {
+        panel.innerHTML = '<div class="pg-gd-pt-loading">Refreshing…</div>';
+        try {
+          const fresh = await apiGet(`/api/gd/sessions?type=participants&sessionId=${sessionId}`);
+          state.participantsCache[sessionId] = fresh.participants || [];
+          renderParticipants(state.participantsCache[sessionId], panel);
+        } catch {}
+      }
+    } catch (e) {
+      if (statusEl) statusEl.textContent = e.message || 'Could not book. Try again.';
+      if (confirmBtn) confirmBtn.disabled = false;
+    }
+  }
+
+  // ── Delete Session ─────────────────────────────────────────
+  async function confirmDeleteSession(sessionId, card) {
+    if (!confirm('Delete this GD session? This cannot be undone.')) return;
+    const deleteBtn = card.querySelector('[data-action="delete-session"]');
+    if (deleteBtn) deleteBtn.disabled = true;
+    try {
+      await apiPost('/api/gd/sessions', { action: 'delete', sessionId });
+      card.style.transition = 'opacity 0.4s';
+      card.style.opacity = '0';
+      setTimeout(() => {
+        card.remove();
+        state.sessions = state.sessions.filter(s => s.id !== sessionId);
+        if (sessionsList.querySelectorAll('.pg-gd-session-card').length === 0) renderSessions([]);
+      }, 420);
+    } catch (e) {
+      if (deleteBtn) deleteBtn.disabled = false;
+      showStatus(lobbyStatus, 'error', e.message || 'Could not delete session.');
+    }
+  }
+
+  // ── Join a session ─────────────────────────────────────────
+  function joinSession(sessionId) {
+    const session = state.sessions.find(s => s.id === sessionId);
+    if (!session) { showStatus(lobbyStatus, 'error', 'Session not found. Please refresh.'); return; }
+    stopCountdownUpdates();
+    clearStatus(lobbyStatus);
+    enterSessionView(session);
   }
 
   // ── Enter session view ────────────────────────────────────
@@ -685,10 +875,12 @@
 
   // ── Create / schedule session ──────────────────────────────
   async function createSession() {
-    const topic = topicInput.value.trim();
-    const date  = dateInput.value;
-    const time  = timeInput.value;
+    const creatorName = creatorNameInput.value.trim();
+    const topic       = topicInput.value.trim();
+    const date        = dateInput.value;
+    const time        = timeInput.value;
 
+    if (!creatorName) { showStatus(createStatus, 'error', 'Please enter your name.'); creatorNameInput.focus(); return; }
     if (!topic) { showStatus(createStatus, 'error', 'Please enter a discussion topic.'); topicInput.focus(); return; }
     if (!date)  { showStatus(createStatus, 'error', 'Please select a date for the session.'); dateInput.focus(); return; }
     if (!time)  { showStatus(createStatus, 'error', 'Please select a time for the session.'); timeInput.focus(); return; }
@@ -706,12 +898,14 @@
         description: descInput.value.trim(),
         programme,
         slotNumber: slotNum,
-        scheduledAt
+        scheduledAt,
+        creatorName
       });
 
       showStatus(createStatus, 'success',
         `✓ GD SLOT-${slotNum} scheduled for ${formatScheduledAt(scheduledAt)}. Join opens 15 min before the session.`);
 
+      creatorNameInput.value = '';
       topicInput.value = '';
       descInput.value  = '';
       topicChars.textContent = '0';

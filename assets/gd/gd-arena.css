@@ -1038,6 +1038,213 @@
   color: #047857;
 }
 
+/* ─── Slot badge — clickable button ────────────────────── */
+.pg-gd-slot-badge-btn {
+  font-size: 14px;
+  font-weight: 900;
+  color: #7c3aed;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color .15s;
+}
+.pg-gd-slot-badge-btn:hover { color: #4f46e5; }
+.pg-gd-slot-chevron {
+  font-size: 11px;
+  font-weight: 700;
+  transition: transform .18s;
+}
+
+/* ─── Delete button ─────────────────────────────────────── */
+.pg-gd-delete-btn {
+  background: none;
+  border: none;
+  padding: 2px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  opacity: 0.55;
+  transition: opacity .15s, background .15s;
+  line-height: 1;
+}
+.pg-gd-delete-btn:hover { opacity: 1; background: rgba(220, 38, 38, 0.08); }
+.pg-gd-delete-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ─── Book Session button ───────────────────────────────── */
+.pg-gd-book-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(124, 58, 237, 0.35);
+  background: rgba(124, 58, 237, 0.07);
+  color: #7c3aed;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.pg-gd-book-btn:hover { background: rgba(124, 58, 237, 0.14); border-color: rgba(124, 58, 237, 0.55); }
+
+/* ─── Booked badge ──────────────────────────────────────── */
+.pg-gd-booked-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #047857;
+  background: rgba(5, 150, 105, 0.1);
+  border: 1.5px solid rgba(5, 150, 105, 0.25);
+  padding: 5px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+/* ─── Participants expand panel ─────────────────────────── */
+.pg-gd-participants-expand {
+  grid-column: 1 / -1;
+  border-top: 1px dashed rgba(124, 58, 237, 0.2);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.pg-gd-pt-loading {
+  font-size: 12px;
+  color: #9aa5b1;
+  padding: 4px 0 8px;
+}
+
+.pg-gd-pt-empty {
+  font-size: 12px;
+  color: #9aa5b1;
+  padding: 4px 0 8px;
+  font-style: italic;
+}
+
+.pg-gd-pt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(31, 41, 51, 0.1);
+}
+
+.pg-gd-pt-header {
+  display: grid;
+  grid-template-columns: 24px 1fr 1fr 0.6fr;
+  gap: 8px;
+  padding: 7px 12px;
+  background: rgba(124, 58, 237, 0.06);
+  font-size: 10px;
+  font-weight: 700;
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.pg-gd-pt-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 1fr 0.6fr;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #52616f;
+  border-top: 1px solid rgba(31, 41, 51, 0.07);
+  transition: background .1s;
+}
+.pg-gd-pt-row:hover { background: rgba(31, 41, 51, 0.025); }
+
+.pg-gd-pt-num {
+  color: #9aa5b1;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+/* ─── Inline booking form ───────────────────────────────── */
+.pg-gd-book-form {
+  grid-column: 1 / -1;
+  border-top: 1px dashed rgba(124, 58, 237, 0.2);
+  padding-top: 14px;
+  margin-top: 4px;
+}
+
+.pg-gd-book-form-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 0.6fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.pg-gd-book-input {
+  width: 100%;
+  border: 1.5px solid rgba(31, 41, 51, 0.16);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: var(--font, Inter, system-ui, sans-serif);
+  color: #1f2933;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color .18s;
+}
+.pg-gd-book-input:focus { border-color: #7c3aed; }
+.pg-gd-book-input::placeholder { color: #b0bac3; }
+
+.pg-gd-book-form-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pg-gd-book-confirm-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all .18s;
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.25);
+}
+.pg-gd-book-confirm-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(124, 58, 237, 0.35); }
+.pg-gd-book-confirm-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.pg-gd-book-cancel-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(31, 41, 51, 0.18);
+  background: transparent;
+  color: #7b8794;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.pg-gd-book-cancel-btn:hover { background: rgba(31, 41, 51, 0.05); color: #1f2933; }
+
+.pg-gd-book-form-status {
+  font-size: 12px;
+  color: #dc2626;
+  margin-top: 8px;
+  min-height: 16px;
+}
+
+/* ─── Responsive for booking form ───────────────────────── */
+@media (max-width: 540px) {
+  .pg-gd-book-form-fields { grid-template-columns: 1fr; }
+  .pg-gd-pt-header,
+  .pg-gd-pt-row { grid-template-columns: 24px 1fr 1fr; }
+  .pg-gd-pt-header span:last-child,
+  .pg-gd-pt-row span:last-child { display: none; }
+}
+
 /* ─── Auth screen feature card ──────────────────────── */
 .core-feature-mini-icon.gd-icon {
   background: linear-gradient(135deg, #7c3aed, #4f46e5);
