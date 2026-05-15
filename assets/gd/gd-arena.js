@@ -305,43 +305,49 @@
 
         <!-- ── Session View ── -->
         <div id="pgGdSessionView" style="display:none">
-          <div class="pg-gd-session-view">
-            <div class="pg-gd-video-pane" id="pgGdVideoPane">
-              <div class="pg-gd-video-placeholder">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                  <rect x="2" y="7" width="15" height="10" rx="2"/><path d="M17 9l5-2v10l-5-2"/>
-                </svg>
-                <strong>Loading video room…</strong>
-                <p>The Jitsi Meet room is loading. Allow camera &amp; microphone when prompted.</p>
-              </div>
+
+          <div class="pg-gd-sv-header">
+            <div>
+              <div class="pg-gd-session-slot" id="pgGdSessionSlot"></div>
+              <div class="pg-gd-session-topic-text" id="pgGdSessionTopic">—</div>
             </div>
-
-            <div class="pg-gd-session-sidebar">
-              <div class="pg-gd-session-info">
-                <div class="pg-gd-session-slot" id="pgGdSessionSlot"></div>
-                <div class="pg-gd-session-topic-label">Topic</div>
-                <div class="pg-gd-session-topic-text" id="pgGdSessionTopic">—</div>
-                <div class="pg-gd-timer">
-                  <div>
-                    <div class="pg-gd-timer-display" id="pgGdTimerDisplay">00:00</div>
-                    <div class="pg-gd-timer-label">Session duration</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="pg-gd-participants-panel">
-                <div class="pg-gd-participants-label">
-                  Participants
-                  <span class="pg-gd-participants-count" id="pgGdParticipantCount">0/11</span>
-                </div>
-                <div class="pg-gd-participant-list" id="pgGdParticipantList"></div>
-              </div>
-
-              <div class="pg-gd-session-actions">
-                <button class="pg-gd-leave-btn" id="pgGdLeaveBtn">← Leave Session</button>
-              </div>
+            <div class="pg-gd-timer">
+              <div class="pg-gd-timer-display" id="pgGdTimerDisplay">00:00</div>
+              <div class="pg-gd-timer-label">duration</div>
             </div>
           </div>
+
+          <div class="pg-gd-sv-call-card" id="pgGdCallCard">
+            <div class="pg-gd-sv-call-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                <rect x="2" y="7" width="15" height="10" rx="2"/><path d="M17 9l5-2v10l-5-2"/>
+              </svg>
+            </div>
+            <div class="pg-gd-sv-call-text">
+              <strong>Your GD video room is ready</strong>
+              <p>Click the button below to open the video call in a new tab. Share the same link with all participants.</p>
+            </div>
+            <a class="pg-gd-sv-join-btn" id="pgGdJoinCallBtn" href="#" target="_blank" rel="noopener">
+              Join Video Call ↗
+            </a>
+            <div class="pg-gd-sv-room-label">
+              Room link: <span class="pg-gd-sv-room-url" id="pgGdRoomUrl"></span>
+            </div>
+          </div>
+
+          <div class="pg-gd-sv-bottom">
+            <div class="pg-gd-participants-panel">
+              <div class="pg-gd-participants-label">
+                Participants
+                <span class="pg-gd-participants-count" id="pgGdParticipantCount">0/11</span>
+              </div>
+              <div class="pg-gd-participant-list" id="pgGdParticipantList"></div>
+            </div>
+            <div class="pg-gd-session-actions">
+              <button class="pg-gd-leave-btn" id="pgGdLeaveBtn">← Leave Session</button>
+            </div>
+          </div>
+
           <div class="pg-gd-status" id="pgGdSessionStatus" style="margin-top:12px"></div>
         </div>
 
@@ -423,10 +429,11 @@
   const timerDisplay     = document.getElementById('pgGdTimerDisplay');
   const participantCount = document.getElementById('pgGdParticipantCount');
   const participantList  = document.getElementById('pgGdParticipantList');
+  const joinCallBtn      = document.getElementById('pgGdJoinCallBtn');
+  const roomUrlEl        = document.getElementById('pgGdRoomUrl');
   const leaveBtn         = document.getElementById('pgGdLeaveBtn');
   const backToLobbyBtn   = document.getElementById('pgGdBackToLobbyBtn');
   const feedbackDuration = document.getElementById('pgGdFeedbackDuration');
-  const videoPane        = document.getElementById('pgGdVideoPane');
 
   // ── Tab / View switching ───────────────────────────────────
   function switchTab(tabName) {
@@ -776,53 +783,15 @@
 
     enterView('session');
 
-    sessionTopicEl.textContent = session.topic;
-    sessionSlotEl.textContent  = session.slot_number ? `GD SLOT-${session.slot_number}` : 'GD Session';
+    sessionTopicEl.textContent   = session.topic;
+    sessionSlotEl.textContent    = session.slot_number ? `GD SLOT-${session.slot_number}` : 'GD Session';
     participantCount.textContent = `${session.participant_count}/${session.max_participants}`;
 
-    // Embed Jitsi Meet with config overrides to disable lobby/moderator gate
-    if (session.room_url) {
-      const baseUrl  = session.room_url.split('#')[0];
-      const jitsiCfg = [
-        'config.lobby.enabled=false',
-        'config.lobby.autoKnock=false',
-        'config.prejoinPageEnabled=false',
-        'config.disableModeratorIndicator=true',
-        'config.startWithAudioMuted=false',
-        'config.disableDeepLinking=true',
-        'config.enableNoisyMicDetection=false',
-        'interfaceConfig.SHOW_JITSI_WATERMARK=false',
-        'interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false'
-      ].join('&');
-      const iframeSrc = `${baseUrl}#${jitsiCfg}`;
+    const roomUrl = session.room_url || '';
+    if (joinCallBtn) { joinCallBtn.href = roomUrl; }
+    if (roomUrlEl)   { roomUrlEl.textContent = roomUrl.replace('https://', ''); }
 
-      videoPane.innerHTML = `
-        <div class="pg-gd-video-wrap">
-          <iframe
-            class="pg-gd-video-iframe"
-            src="${iframeSrc}"
-            allow="camera; microphone; fullscreen; display-capture; autoplay"
-            allowfullscreen
-            title="GD Arena Video Room">
-          </iframe>
-          <a class="pg-gd-open-tab-btn" href="${baseUrl}" target="_blank" rel="noopener">
-            ↗ Open in new tab
-          </a>
-        </div>
-      `;
-    } else {
-      videoPane.innerHTML = `
-        <div class="pg-gd-video-placeholder">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-            <rect x="2" y="7" width="15" height="10" rx="2"/><path d="M17 9l5-2v10l-5-2"/>
-          </svg>
-          <strong>Video Room Unavailable</strong>
-          <p>No video room URL found for this session.</p>
-        </div>
-      `;
-    }
-
-    state.timerStart = session.started_at ? new Date(session.started_at).getTime() : Date.now();
+    state.timerStart = Date.now();
     startTimer();
     state.pollInterval = setInterval(() => refreshParticipantCount(session.id), 15000);
   }
