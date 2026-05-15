@@ -48,16 +48,24 @@
 
   function getToken() {
     try {
-      const sbKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+      const keys = Object.keys(localStorage);
+      // Supabase JS v2: sb-{ref}-auth-token
+      const sbKey = keys.find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
       if (sbKey) {
         const d = JSON.parse(localStorage.getItem(sbKey) || '{}');
-        return d?.access_token || null;
+        const t = d?.access_token || d?.session?.access_token || d?.currentSession?.access_token;
+        if (t) return t;
       }
-      const stored = localStorage.getItem('sb-auth-token') ||
-        Object.entries(localStorage).find(([k]) => k.includes('auth-token'))?.[1];
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return parsed?.access_token || parsed?.session?.access_token || null;
+      // Fallback: scan all keys that mention auth
+      for (const key of keys) {
+        if (!key.includes('auth')) continue;
+        try {
+          const val = localStorage.getItem(key);
+          if (!val || !val.includes('access_token')) continue;
+          const d = JSON.parse(val);
+          const t = d?.access_token || d?.session?.access_token || d?.currentSession?.access_token;
+          if (t && t.length > 20) return t;
+        } catch {}
       }
     } catch {}
     return null;

@@ -17,6 +17,12 @@ function getSupabaseForUser(token) {
   });
 }
 
+function getSupabaseAnon() {
+  const { supabaseUrl, anonKey } = getSupabaseAuthConfig();
+  if (!supabaseUrl || !anonKey) return null;
+  return createClient(supabaseUrl, anonKey);
+}
+
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;
 
@@ -30,15 +36,11 @@ export default async function handler(req, res) {
   return methodNotAllowed(res, ['GET', 'POST']);
 }
 
-// ── LIST ────────────────────────────────────────────────────
+// ── LIST — public, no auth required ─────────────────────────
 async function listSessions(req, res) {
   try {
-    const auth = await requireUser(req);
-    if (!auth.ok) return sendJson(res, auth.status, { ok: false, error: auth.error });
-
     const programme = normalizeProgrammeCode(req.query?.programme) || 'bda';
-    const token = getBearerToken(req);
-    const supabase = getSupabaseForUser(token);
+    const supabase = getSupabaseAnon();
     if (!supabase) return sendJson(res, 200, { ok: true, sessions: [] });
 
     const { data, error } = await supabase
