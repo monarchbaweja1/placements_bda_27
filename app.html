@@ -198,6 +198,59 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
   .main{margin-left:0}
   .frow{grid-template-columns:1fr}
 }
+
+/* ── Sidebar user — clickable ── */
+.sb-user{cursor:pointer;transition:background .15s;border-radius:10px;margin:8px 8px;padding:10px 12px;border-bottom:none}
+.sb-user:hover{background:rgba(59,130,246,.07)}
+.sb-user-info{flex:1;min-width:0}
+.sb-user-arrow{color:var(--text3);font-size:18px;line-height:1;flex-shrink:0;transition:color .15s}
+.sb-user:hover .sb-user-arrow{color:var(--accent)}
+
+/* ── OTP Login extra styles ── */
+.lc-domain-hint{font-size:11px;color:var(--text3);margin-top:-4px;margin-bottom:14px;font-family:var(--font-mono)}
+.lc-otp-header{text-align:center;padding:8px 0 18px}
+.lc-otp-icon{font-size:40px;margin-bottom:10px}
+.lc-otp-title{font-family:var(--font-head);font-size:19px;font-weight:800;margin-bottom:6px}
+.lc-otp-sub{font-size:12.5px;color:var(--text2);line-height:1.6}
+.lc-otp-input{letter-spacing:8px;font-size:24px !important;font-family:var(--font-mono) !important;text-align:center}
+.lc-resend{text-align:center;font-size:12px;color:var(--text3);margin-top:14px}
+.lc-resend-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;font-family:var(--font-body);text-decoration:underline;padding:0}
+.lc-back-btn{display:block;width:100%;background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;margin-top:10px;text-align:center;font-family:var(--font-body)}
+.lc-back-btn:hover{color:var(--text2)}
+
+/* ── Profile modal ── */
+.pmod-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:850;align-items:center;justify-content:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.pmod-panel{background:var(--card);border:1px solid var(--border2);border-radius:20px;width:90%;max-width:380px;max-height:90vh;overflow-y:auto;animation:pmod-in .2s ease}
+@keyframes pmod-in{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:none}}
+.pmod-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0}
+.pmod-title{font-family:var(--font-head);font-size:15px;font-weight:800;letter-spacing:.5px;color:var(--text2)}
+.pmod-close{background:none;border:none;color:var(--text2);font-size:24px;cursor:pointer;line-height:1;padding:0}
+.pmod-close:hover{color:var(--red)}
+.pmod-avatar-section{text-align:center;padding:20px 20px 14px}
+.pmod-av-wrap{position:relative;width:80px;height:80px;margin:0 auto 14px}
+.pmod-av{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:28px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0}
+.pmod-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.pmod-av-upload{position:absolute;bottom:0;right:0;width:26px;height:26px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;border:2px solid var(--card);transition:background .15s}
+.pmod-av-upload:hover{background:var(--cyan)}
+.pmod-user-name{font-family:var(--font-head);font-size:21px;font-weight:800;margin-bottom:4px}
+.pmod-user-sub{font-size:12px;color:var(--text2);font-family:var(--font-mono)}
+.pmod-details{padding:0 20px 14px}
+.pmod-detail-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.pmod-detail-row:last-child{border-bottom:none}
+.pmod-detail-label{font-size:11px;font-family:var(--font-mono);color:var(--text3);letter-spacing:.5px}
+.pmod-detail-val{font-size:13px;font-weight:600;color:var(--text);font-family:var(--font-mono);text-align:right;max-width:60%}
+.pmod-edit-btn{display:block;width:calc(100% - 40px);margin:0 20px 14px;padding:12px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:10px;color:var(--accent);font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;transition:all .15s}
+.pmod-edit-btn:hover{background:rgba(59,130,246,.18)}
+.pmod-edit-fields{padding:0 20px}
+.pmod-edit-actions{display:flex;gap:10px;padding:14px 20px}
+.pmod-save-btn{flex:1;padding:11px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-family:var(--font-body);font-weight:700;font-size:13px;cursor:pointer;transition:opacity .15s}
+.pmod-save-btn:hover{opacity:.88}
+.pmod-save-btn:disabled{opacity:.45;cursor:not-allowed}
+.pmod-cancel-btn{padding:11px 18px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--text2);font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer}
+.pmod-signout{display:block;width:calc(100% - 40px);margin:4px 20px 20px;padding:10px;background:transparent;border:1px solid rgba(239,68,68,.2);border-radius:10px;color:var(--red);font-family:var(--font-body);font-size:12px;cursor:pointer;text-align:center;transition:background .15s}
+.pmod-signout:hover{background:rgba(239,68,68,.06)}
+/* Onboard email display */
+.ob-email-val{padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;font-family:var(--font-mono);font-size:13px;color:var(--cyan);text-align:left}
 </style>
 </head>
 <body>
@@ -212,19 +265,34 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
 <div id="s-login" class="screen">
   <div class="login-wrap">
     <div class="login-card">
-      <div class="lc-badge">PGDM BDA · BATCH 2025-27</div>
-      <div class="lc-title">BDA<br><span>Placement Hub</span></div>
-      <div class="lc-sub">Your batch's complete placement tracker. Log interviews, track offers, see live batch stats.</div>
-      <input type="email" class="lc-input" id="loginEmail" placeholder="yourname@email.com" autocomplete="email">
-      <button class="lc-btn" id="loginBtn" onclick="sendMagicLink()">Send Login Link →</button>
-      <div class="magic-sent" id="magicSent">
-        ✅ Magic link sent! Check your email and click the link to sign in.
+      <div class="lc-badge">🎓 Goa Institute of Management</div>
+      <div class="lc-title">Placement<br><span>Hub</span></div>
+      <div class="lc-sub">Exclusively for GIM students. Log interviews, track offers, and see live batch stats.</div>
+
+      <!-- Step 1: Enter GIM email -->
+      <div id="loginStep1">
+        <input type="email" class="lc-input" id="loginEmail" placeholder="yourname@gim.ac.in" autocomplete="email">
+        <div class="lc-domain-hint">Only @gim.ac.in email addresses are accepted</div>
+        <button class="lc-btn" id="loginBtn" onclick="sendOTP()">Send OTP →</button>
       </div>
-      <div class="lc-note">Enter your email → get a one-click login link.<br>No password needed. Free forever.</div>
+
+      <!-- Step 2: Enter OTP -->
+      <div id="loginStep2" style="display:none">
+        <div class="lc-otp-header">
+          <div class="lc-otp-icon">✉️</div>
+          <div class="lc-otp-title">Check your GIM email</div>
+          <div class="lc-otp-sub">We sent a 6-digit code to<br><strong id="loginEmailDisplay"></strong></div>
+        </div>
+        <input type="text" class="lc-input lc-otp-input" id="loginOTP" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+        <button class="lc-btn" id="verifyBtn" onclick="verifyOTP()">Verify & Sign In →</button>
+        <div class="lc-resend">Didn't receive it? <button class="lc-resend-btn" onclick="resendOTP()">Resend OTP</button></div>
+        <button class="lc-back-btn" onclick="backToEmail()">← Use a different email</button>
+      </div>
+
       <div class="lc-stats">
-        <div><div class="lcs-n">63</div><div class="lcs-l">Companies</div></div>
+        <div><div class="lcs-n">GIM</div><div class="lcs-l">Only</div></div>
         <div><div class="lcs-n">600+</div><div class="lcs-l">Questions</div></div>
-        <div><div class="lcs-n">∞</div><div class="lcs-l">Free</div></div>
+        <div><div class="lcs-n">Live</div><div class="lcs-l">Batch Stats</div></div>
       </div>
     </div>
   </div>
@@ -233,14 +301,51 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
 <!-- ══════════ ONBOARD ══════════ -->
 <div id="s-onboard" class="screen">
   <div class="ob-card">
-    <div class="ob-step">FIRST TIME SETUP</div>
-    <div class="ob-title">Set up your profile</div>
-    <div class="ob-sub">Helps personalise your tracker and contributes to batch placement stats.</div>
+    <div class="ob-step">FIRST TIME SETUP · GIM PLACEMENT HUB</div>
+    <div class="ob-title">Complete your profile</div>
+    <div class="ob-sub">This information is used to personalise your placement hub and batch statistics.</div>
 
     <div class="frow">
-      <div class="fg"><label class="fl">FULL NAME</label><input type="text" class="fi" id="ob_name" placeholder="Your name"></div>
-      <div class="fg"><label class="fl">ROLL NUMBER</label><input type="text" class="fi" id="ob_roll" placeholder="BDA2025001"></div>
+      <div class="fg"><label class="fl">FULL NAME *</label><input type="text" class="fi" id="ob_name" placeholder="Your full name"></div>
+      <div class="fg"><label class="fl">ROLL NUMBER *</label><input type="text" class="fi" id="ob_roll" placeholder="e.g. BDA2025001"></div>
     </div>
+    <div class="frow">
+      <div class="fg">
+        <label class="fl">PROGRAMME *</label>
+        <select class="fi" id="ob_programme">
+          <option value="">Select Programme</option>
+          <option value="BDA">BDA — Business Data Analytics</option>
+          <option value="BIFS">BIFS — Banking, Insurance &amp; Finance</option>
+          <option value="HCM">HCM — Healthcare Management</option>
+          <option value="Core">Core — General Management</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">BATCH *</label>
+        <select class="fi" id="ob_batch">
+          <option value="">Select Batch</option>
+          <option value="2025-27">2025–27</option>
+          <option value="2026-28">2026–28</option>
+          <option value="2027-29">2027–29</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">SECTION *</label>
+        <select class="fi" id="ob_section">
+          <option value="">Select Section</option>
+          <option value="A">Section A</option>
+          <option value="B">Section B</option>
+          <option value="C">Section C</option>
+          <option value="D">Section D</option>
+          <option value="E">Section E</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">GIM EMAIL (from login)</label>
+      <div class="ob-email-val" id="ob_email_display">—</div>
+    </div>
+
     <div class="fg"><label class="fl">CURRENT INTERNSHIP / LAST ROLE</label><input type="text" class="fi" id="ob_intern" placeholder="Data Analyst Intern @ ABC Corp"></div>
     <div class="fg"><label class="fl">RESUME / LINKEDIN LINK</label><input type="url" class="fi" id="ob_resume" placeholder="https://linkedin.com/in/yourname"></div>
     <div class="fg">
@@ -263,12 +368,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
       <div class="sb-logo">BDA HUB</div>
       <div class="sb-sub">// batch.2025.27</div>
     </div>
-    <div class="sb-user">
+    <div class="sb-user" onclick="openProfileModal()" title="View Profile">
       <div class="sb-av" id="sbAv">?</div>
-      <div>
+      <div class="sb-user-info">
         <div class="sb-name" id="sbName">—</div>
         <div class="sb-roll" id="sbRoll">—</div>
       </div>
+      <div class="sb-user-arrow">›</div>
     </div>
     <div class="nav-sec">
       <div class="nav-lbl">Main</div>
@@ -379,6 +485,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
             <div style="font-family:var(--font-head);font-size:16px;font-weight:800" id="pName">—</div>
             <div style="font-size:11px;color:var(--text2);font-family:var(--font-mono)" id="pRoll">—</div>
             <div style="font-size:11px;color:var(--text3);margin-top:3px" id="pEmail">—</div>
+            <div id="pProfileMeta" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;justify-content:center"></div>
             <a id="pResume" href="#" target="_blank" style="display:block;margin-top:10px;font-size:12px;color:var(--accent);font-family:var(--font-mono)">→ LinkedIn / Resume</a>
           </div>
           <div class="card">
@@ -446,6 +553,85 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
     </div>
     <div class="fg"><label class="fl">NOTES (optional — visible to batch)</label><textarea class="fi" id="int_notes" rows="3" placeholder="Questions asked, tips for others..."></textarea></div>
     <button class="sbtn" onclick="saveInterview()">Save Interview Log</button>
+  </div>
+</div>
+
+<!-- ══════════ PROFILE MODAL ══════════ -->
+<div id="profileModal" class="pmod-overlay" style="display:none" onclick="pmodOverlayClick(event)">
+  <div class="pmod-panel">
+    <div class="pmod-head">
+      <span class="pmod-title">MY PROFILE</span>
+      <button class="pmod-close" onclick="closeProfileModal()">×</button>
+    </div>
+
+    <!-- Avatar + name -->
+    <div class="pmod-avatar-section">
+      <div class="pmod-av-wrap">
+        <div class="pmod-av" id="pmodAv">?</div>
+        <label class="pmod-av-upload" for="pmodAvatarInput" title="Upload photo">📷</label>
+        <input type="file" id="pmodAvatarInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="uploadAvatar(this)">
+      </div>
+      <div class="pmod-user-name" id="pmodName">—</div>
+      <div class="pmod-user-sub" id="pmodSub">—</div>
+    </div>
+
+    <!-- View mode -->
+    <div id="pmodView">
+      <div class="pmod-details">
+        <div class="pmod-detail-row"><span class="pmod-detail-label">ROLL NO.</span><span class="pmod-detail-val" id="pmodRoll">—</span></div>
+        <div class="pmod-detail-row"><span class="pmod-detail-label">PROGRAMME</span><span class="pmod-detail-val" id="pmodProgramme">—</span></div>
+        <div class="pmod-detail-row"><span class="pmod-detail-label">BATCH</span><span class="pmod-detail-val" id="pmodBatch">—</span></div>
+        <div class="pmod-detail-row"><span class="pmod-detail-label">SECTION</span><span class="pmod-detail-val" id="pmodSection">—</span></div>
+        <div class="pmod-detail-row"><span class="pmod-detail-label">GIM EMAIL</span><span class="pmod-detail-val" id="pmodEmail">—</span></div>
+      </div>
+      <button class="pmod-edit-btn" onclick="openEditModal()">✏️ Edit Profile</button>
+    </div>
+
+    <!-- Edit mode -->
+    <div id="pmodEdit" style="display:none">
+      <div class="pmod-edit-fields">
+        <div class="fg"><label class="fl">FULL NAME</label><input class="fi" type="text" id="pmodEditName" placeholder="Full name"></div>
+        <div class="fg"><label class="fl">ROLL NUMBER</label><input class="fi" type="text" id="pmodEditRoll" placeholder="Roll number"></div>
+        <div class="frow">
+          <div class="fg">
+            <label class="fl">PROGRAMME</label>
+            <select class="fi" id="pmodEditProgramme">
+              <option value="">Select</option>
+              <option value="BDA">BDA</option>
+              <option value="BIFS">BIFS</option>
+              <option value="HCM">HCM</option>
+              <option value="Core">Core</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl">BATCH</label>
+            <select class="fi" id="pmodEditBatch">
+              <option value="">Select</option>
+              <option value="2025-27">2025–27</option>
+              <option value="2026-28">2026–28</option>
+              <option value="2027-29">2027–29</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl">SECTION</label>
+            <select class="fi" id="pmodEditSection">
+              <option value="">Select</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+              <option value="E">E</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="pmod-edit-actions">
+        <button class="pmod-save-btn" onclick="saveProfileModal()">Save Changes</button>
+        <button class="pmod-cancel-btn" onclick="closeEditModal()">Cancel</button>
+      </div>
+    </div>
+
+    <button class="pmod-signout" onclick="doSignOut()">⎋ Sign Out</button>
   </div>
 </div>
 
@@ -537,6 +723,8 @@ function buildChips() {
 // ── Load all data ──
 async function loadAll() {
   try {
+    const emailEl = document.getElementById('ob_email_display');
+    if (emailEl) emailEl.textContent = CU?.email || '—';
     const { data: profile } = await sb.from('profiles').select('*').eq('id', CU.id).single();
     if (!profile) { showScreen('s-onboard'); return; }
     CP = profile;
@@ -547,19 +735,45 @@ async function loadAll() {
   } catch(e) { showScreen('s-onboard'); }
 }
 
-// ── Magic link ──
-window.sendMagicLink = async () => {
-  const email = document.getElementById('loginEmail').value.trim();
-  if (!email || !email.includes('@')) { toast('Enter a valid email','err'); return; }
+// ── OTP Login (GIM @gim.ac.in only) ──
+let otpEmail = '';
+
+window.sendOTP = async () => {
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  if (!email) { toast('Enter your GIM email address','err'); return; }
+  if (!email.endsWith('@gim.ac.in')) { toast('Only @gim.ac.in email addresses are allowed','err'); return; }
   const btn = document.getElementById('loginBtn');
-  btn.disabled = true; btn.textContent = 'Sending...';
-  const { error } = await sb.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.href }
-  });
-  if (error) { toast('Error: ' + error.message,'err'); btn.disabled=false; btn.textContent='Send Login Link →'; return; }
-  document.getElementById('magicSent').style.display = 'block';
-  btn.textContent = 'Link Sent! Check your email ✓';
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const { error } = await sb.auth.signInWithOtp({ email });
+  if (error) { toast('Error: ' + error.message,'err'); btn.disabled=false; btn.textContent='Send OTP →'; return; }
+  otpEmail = email;
+  document.getElementById('loginEmailDisplay').textContent = email;
+  document.getElementById('loginStep1').style.display = 'none';
+  document.getElementById('loginStep2').style.display = '';
+  document.getElementById('loginOTP').focus();
+  btn.disabled = false; btn.textContent = 'Send OTP →';
+};
+
+window.verifyOTP = async () => {
+  const token = document.getElementById('loginOTP').value.trim();
+  if (!token || token.length < 6) { toast('Enter the 6-digit code from your email','err'); return; }
+  const btn = document.getElementById('verifyBtn');
+  btn.disabled = true; btn.textContent = 'Verifying…';
+  const { error } = await sb.auth.verifyOtp({ email: otpEmail, token, type: 'email' });
+  if (error) { toast('Invalid or expired code — try again','err'); btn.disabled=false; btn.textContent='Verify & Sign In →'; return; }
+  // onAuthStateChange will fire and handle navigation
+};
+
+window.resendOTP = async () => {
+  if (!otpEmail) return;
+  await sb.auth.signInWithOtp({ email: otpEmail });
+  toast('New OTP sent to ' + otpEmail,'ok');
+};
+
+window.backToEmail = () => {
+  document.getElementById('loginStep1').style.display = '';
+  document.getElementById('loginStep2').style.display = 'none';
+  document.getElementById('loginOTP').value = '';
 };
 
 // ── Sign out ──
@@ -567,22 +781,29 @@ window.doSignOut = async () => { await sb.auth.signOut(); CU=null; CP=null; CPla
 
 // ── Save profile (onboard) ──
 window.saveProfile = async () => {
-  const name = document.getElementById('ob_name').value.trim();
-  const roll = document.getElementById('ob_roll').value.trim();
-  if (!name||!roll) { toast('Fill in name and roll number','err'); return; }
+  const name      = document.getElementById('ob_name').value.trim();
+  const roll      = document.getElementById('ob_roll').value.trim();
+  const programme = document.getElementById('ob_programme').value;
+  const batch     = document.getElementById('ob_batch').value;
+  const section   = document.getElementById('ob_section').value;
+  if (!name || !roll)      { toast('Fill in your name and roll number','err'); return; }
+  if (!programme)          { toast('Select your programme','err'); return; }
+  if (!batch)              { toast('Select your batch','err'); return; }
+  if (!section)            { toast('Select your section','err'); return; }
   const btn = document.getElementById('ob_save');
-  btn.disabled=true; btn.textContent='Saving...';
-  const roles = [...document.querySelectorAll('#ob_roles .gsel')].map(c=>c.dataset.v);
+  btn.disabled=true; btn.textContent='Saving…';
+  const roles     = [...document.querySelectorAll('#ob_roles .gsel')].map(c=>c.dataset.v);
   const companies = [...document.querySelectorAll('#ob_companies .sel')].map(c=>c.dataset.v);
   const { error } = await sb.from('profiles').upsert({
     id: CU.id, name, roll_no: roll, email: CU.email,
+    programme, batch, section,
     internship: document.getElementById('ob_intern').value.trim(),
     resume_link: document.getElementById('ob_resume').value.trim(),
     target_roles: roles, target_companies: companies,
     updated_at: new Date().toISOString()
   });
   if (error) { toast('Error: '+error.message,'err'); btn.disabled=false; btn.textContent='Save & Enter Hub →'; return; }
-  CP = { name, roll_no:roll, email:CU.email, target_roles:roles, target_companies:companies };
+  CP = { name, roll_no:roll, email:CU.email, programme, batch, section, target_roles:roles, target_companies:companies };
   CPlac = { status:'searching', interviews:[] };
   await sb.from('placements').upsert({ id:CU.id, status:'searching', interviews:[], updated_at:new Date().toISOString() });
   showApp();
@@ -608,16 +829,119 @@ window.updateProfile = async () => {
 // ── Show app ──
 function showApp() {
   showScreen('s-app');
-  const initials = (CP.name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-  document.getElementById('sbAv').textContent = initials;
-  document.getElementById('sbName').textContent = CP.name||'—';
-  document.getElementById('sbRoll').textContent = CP.roll_no||'—';
+  updateSidebarUser();
   if (ADMIN_EMAILS.includes(CU.email)) document.getElementById('adminNav').style.display='block';
   renderDashboard();
   renderTracker();
   renderProfile();
   loadBatchStats();
 }
+
+function updateSidebarUser() {
+  const avEl = document.getElementById('sbAv');
+  if (CP.avatar_url) {
+    avEl.innerHTML = `<img src="${CP.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">`;
+  } else {
+    avEl.textContent = (CP.name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  }
+  document.getElementById('sbName').textContent = CP.name || '—';
+  document.getElementById('sbRoll').textContent =
+    [CP.programme, CP.section ? 'Sec '+CP.section : '', CP.batch].filter(Boolean).join(' · ') || CP.roll_no || '—';
+}
+
+// ── Profile modal ──
+function setAvEl(el, avatarUrl, name) {
+  if (avatarUrl) {
+    el.innerHTML = `<img src="${avatarUrl}" alt="">`;
+  } else {
+    el.textContent = (name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  }
+}
+
+window.openProfileModal = () => {
+  if (!CP) return;
+  const modal = document.getElementById('profileModal');
+  setAvEl(document.getElementById('pmodAv'), CP.avatar_url, CP.name);
+  document.getElementById('pmodName').textContent = CP.name || '—';
+  document.getElementById('pmodSub').textContent  = [CP.programme, CP.section?'Sec '+CP.section:'', CP.batch].filter(Boolean).join(' · ') || CP.roll_no || '—';
+  document.getElementById('pmodRoll').textContent      = CP.roll_no    || '—';
+  document.getElementById('pmodProgramme').textContent = CP.programme  || '—';
+  document.getElementById('pmodBatch').textContent     = CP.batch      || '—';
+  document.getElementById('pmodSection').textContent   = CP.section    ? 'Section '+CP.section : '—';
+  document.getElementById('pmodEmail').textContent     = CU?.email     || '—';
+  document.getElementById('pmodView').style.display    = '';
+  document.getElementById('pmodEdit').style.display    = 'none';
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeProfileModal = () => {
+  document.getElementById('profileModal').style.display = 'none';
+  document.body.style.overflow = '';
+};
+
+window.pmodOverlayClick = (e) => {
+  if (e.target === document.getElementById('profileModal')) closeProfileModal();
+};
+
+window.openEditModal = () => {
+  document.getElementById('pmodView').style.display = 'none';
+  document.getElementById('pmodEdit').style.display = '';
+  document.getElementById('pmodEditName').value      = CP.name      || '';
+  document.getElementById('pmodEditRoll').value      = CP.roll_no   || '';
+  document.getElementById('pmodEditProgramme').value = CP.programme || '';
+  document.getElementById('pmodEditBatch').value     = CP.batch     || '';
+  document.getElementById('pmodEditSection').value   = CP.section   || '';
+};
+
+window.closeEditModal = () => {
+  document.getElementById('pmodView').style.display = '';
+  document.getElementById('pmodEdit').style.display = 'none';
+};
+
+window.saveProfileModal = async () => {
+  const name      = document.getElementById('pmodEditName').value.trim();
+  const roll      = document.getElementById('pmodEditRoll').value.trim();
+  const programme = document.getElementById('pmodEditProgramme').value;
+  const batch     = document.getElementById('pmodEditBatch').value;
+  const section   = document.getElementById('pmodEditSection').value;
+  if (!name || !roll) { toast('Name and roll number are required','err'); return; }
+  const btn = document.querySelector('#pmodEdit .pmod-save-btn');
+  if (btn) { btn.disabled=true; btn.textContent='Saving…'; }
+  const { error } = await sb.from('profiles').update({
+    name, roll_no: roll, programme, batch, section,
+    updated_at: new Date().toISOString()
+  }).eq('id', CU.id);
+  if (error) {
+    toast('Error: '+error.message,'err');
+    if (btn) { btn.disabled=false; btn.textContent='Save Changes'; }
+    return;
+  }
+  CP = { ...CP, name, roll_no:roll, programme, batch, section };
+  updateSidebarUser();
+  renderProfile();
+  openProfileModal();
+  toast('Profile updated ✅','ok');
+};
+
+window.uploadAvatar = async (input) => {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { toast('Image must be under 2 MB','err'); return; }
+  toast('Uploading…','ok');
+  const ext  = file.name.split('.').pop().toLowerCase() || 'jpg';
+  const path = `${CU.id}.${ext}`;
+  const { error: upErr } = await sb.storage.from('avatars').upload(path, file, { upsert:true, contentType:file.type });
+  if (upErr) { toast('Upload failed: '+upErr.message,'err'); return; }
+  const { data: { publicUrl } } = sb.storage.from('avatars').getPublicUrl(path);
+  await sb.from('profiles').update({ avatar_url: publicUrl }).eq('id', CU.id);
+  CP.avatar_url = publicUrl;
+  updateSidebarUser();
+  setAvEl(document.getElementById('pmodAv'), publicUrl, CP.name);
+  renderProfile();
+  toast('Photo updated ✅','ok');
+  input.value = '';
+};
 
 // ── Dashboard ──
 function renderDashboard() {
@@ -671,13 +995,24 @@ function renderIntLog(interviews) {
 
 // ── Profile page ──
 function renderProfile() {
-  document.getElementById('pName').textContent=CP.name||'—';
-  document.getElementById('pRoll').textContent=CP.roll_no||'—';
-  document.getElementById('pEmail').textContent=CU.email||'—';
-  document.getElementById('pResume').href=CP.resume_link||'#';
-  document.getElementById('pAvBig').textContent=(CP.name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-  document.getElementById('ed_intern').value=CP.internship||'';
-  document.getElementById('ed_resume').value=CP.resume_link||'';
+  document.getElementById('pName').textContent  = CP.name    || '—';
+  document.getElementById('pRoll').textContent  = CP.roll_no || '—';
+  document.getElementById('pEmail').textContent = CU.email   || '—';
+  document.getElementById('pResume').href       = CP.resume_link || '#';
+  const avBig = document.getElementById('pAvBig');
+  if (CP.avatar_url) {
+    avBig.innerHTML = `<img src="${CP.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">`;
+  } else {
+    avBig.textContent = (CP.name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  }
+  // Programme / batch / section tags
+  const metaEl = document.getElementById('pProfileMeta');
+  if (metaEl) {
+    const tags = [CP.programme, CP.batch, CP.section?'Sec '+CP.section:''].filter(Boolean);
+    metaEl.innerHTML = tags.map(t=>`<span class="ttag">${t}</span>`).join('') || '';
+  }
+  document.getElementById('ed_intern').value  = CP.internship  || '';
+  document.getElementById('ed_resume').value  = CP.resume_link || '';
   document.querySelectorAll('#ed_roles .chip').forEach(c=>c.classList.toggle('gsel',(CP.target_roles||[]).includes(c.dataset.v)));
   document.querySelectorAll('#ed_companies .chip').forEach(c=>c.classList.toggle('sel',(CP.target_companies||[]).includes(c.dataset.v)));
 }
