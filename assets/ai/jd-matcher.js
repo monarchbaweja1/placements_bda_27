@@ -56,8 +56,13 @@
                 <div class="pg-jd-panel-label-dot jd"></div>
                 Job Description
               </div>
+              <div class="pg-jd-upload-row">
+                <input class="pg-jd-file jd-file" id="pgJdJdFile" type="file"
+                  accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+              </div>
+              <div class="pg-jd-upload-status" id="pgJdJdUploadStatus"></div>
               <textarea class="pg-jd-textarea jd-focus" id="pgJdJdText" maxlength="60000"
-                placeholder="Paste the full job description here — include requirements, responsibilities, and skills listed by the recruiter."></textarea>
+                placeholder="Upload a PDF/DOCX JD file to extract text automatically, or paste the job description here."></textarea>
               <div class="pg-jd-charcount"><span id="pgJdJdChars">0</span> / 60,000</div>
             </div>
 
@@ -110,20 +115,22 @@
   document.body.appendChild(overlay);
 
   // ── Element refs ───────────────────────────────────────────────
-  const trigger       = wrap.querySelector('.pg-jd-trigger');
-  const closeBtn      = overlay.querySelector('.pg-jd-close-btn');
-  const scopeEl       = overlay.querySelector('#pgJdScope');
-  const jdTextarea    = overlay.querySelector('#pgJdJdText');
-  const cvTextarea    = overlay.querySelector('#pgJdCvText');
-  const cvFileInput   = overlay.querySelector('#pgJdCvFile');
-  const uploadStatus  = overlay.querySelector('#pgJdUploadStatus');
-  const jdCharsEl     = overlay.querySelector('#pgJdJdChars');
-  const cvCharsEl     = overlay.querySelector('#pgJdCvChars');
-  const submitBtn     = overlay.querySelector('#pgJdSubmit');
-  const errorEl       = overlay.querySelector('#pgJdError');
-  const formView      = overlay.querySelector('#pgJdFormView');
-  const loadView      = overlay.querySelector('#pgJdLoadingView');
-  const resView       = overlay.querySelector('#pgJdResultsView');
+  const trigger         = wrap.querySelector('.pg-jd-trigger');
+  const closeBtn        = overlay.querySelector('.pg-jd-close-btn');
+  const scopeEl         = overlay.querySelector('#pgJdScope');
+  const jdTextarea      = overlay.querySelector('#pgJdJdText');
+  const cvTextarea      = overlay.querySelector('#pgJdCvText');
+  const jdFileInput     = overlay.querySelector('#pgJdJdFile');
+  const cvFileInput     = overlay.querySelector('#pgJdCvFile');
+  const jdUploadStatus  = overlay.querySelector('#pgJdJdUploadStatus');
+  const uploadStatus    = overlay.querySelector('#pgJdUploadStatus');
+  const jdCharsEl       = overlay.querySelector('#pgJdJdChars');
+  const cvCharsEl       = overlay.querySelector('#pgJdCvChars');
+  const submitBtn       = overlay.querySelector('#pgJdSubmit');
+  const errorEl         = overlay.querySelector('#pgJdError');
+  const formView        = overlay.querySelector('#pgJdFormView');
+  const loadView        = overlay.querySelector('#pgJdLoadingView');
+  const resView         = overlay.querySelector('#pgJdResultsView');
 
   // ── Event wiring ───────────────────────────────────────────────
   trigger.addEventListener('click', open);
@@ -135,6 +142,7 @@
 
   jdTextarea.addEventListener('input', updateFormState);
   cvTextarea.addEventListener('input', updateFormState);
+  jdFileInput.addEventListener('change', handleJdUpload);
   cvFileInput.addEventListener('change', handleCvUpload);
   submitBtn.addEventListener('click', runAnalysis);
 
@@ -157,6 +165,29 @@
     jdCharsEl.textContent = jdTextarea.value.length.toLocaleString();
     cvCharsEl.textContent = cvTextarea.value.length.toLocaleString();
     submitBtn.disabled = jdTextarea.value.trim().length < 200 || cvTextarea.value.trim().length < 200;
+  }
+
+  async function handleJdUpload() {
+    const file = jdFileInput.files?.[0];
+    if (!file) return;
+
+    jdUploadStatus.textContent = 'Extracting JD text…';
+    jdFileInput.disabled = true;
+    submitBtn.disabled = true;
+
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('Please sign in before uploading a file.');
+      const payload = await window.PlacementResumeUpload.extractResumeFile(file, token);
+      jdTextarea.value = payload.text;
+      updateFormState();
+      jdUploadStatus.textContent = `Extracted ${payload.characters.toLocaleString()} characters.`;
+    } catch (err) {
+      jdUploadStatus.textContent = 'Upload failed.';
+      showError(err.message || 'Could not extract this file.');
+    } finally {
+      jdFileInput.disabled = false;
+    }
   }
 
   async function handleCvUpload() {
@@ -383,7 +414,9 @@
   function resetForm() {
     jdTextarea.value = '';
     cvTextarea.value = '';
+    jdFileInput.value = '';
     cvFileInput.value = '';
+    jdUploadStatus.textContent = '';
     uploadStatus.textContent = '';
     jdCharsEl.textContent = '0';
     cvCharsEl.textContent = '0';

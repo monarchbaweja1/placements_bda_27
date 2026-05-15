@@ -221,6 +221,7 @@
   font-weight: 700;
   cursor: pointer;
 }
+.pg-jd-file.jd-file::file-selector-button { background: #0284c7; }
 .pg-jd-upload-status {
   font-size: 10px;
   color: #9aa5b1;
