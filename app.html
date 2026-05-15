@@ -730,23 +730,27 @@ let CU = null, CP = null, CPlac = null;
 // ── Init ──
 window.addEventListener('DOMContentLoaded', () => {
   buildChips();
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if (session?.user) {
-      CU = session.user;
-      await loadAll();
-    } else if (event === 'SIGNED_OUT') {
-      showScreen('s-login');
-    }
-  });
-  sb.auth.getSession().then(async ({ data: { session } }) => {
-    if (session?.user) { CU = session.user; await loadAll(); }
+
+  // Always hide loader after 2s — never blocked by loadAll hanging
+  setTimeout(() => {
+    const ld = document.getElementById('loader');
+    if (ld) { ld.style.opacity='0'; setTimeout(()=>{ if(ld) ld.style.display='none'; },400); }
+  }, 2000);
+
+  let _initDone = false;
+  function runInit(session) {
+    if (_initDone) return;
+    _initDone = true;
+    if (session?.user) { CU = session.user; loadAll(); }
     else showScreen('s-login');
-    setTimeout(() => {
-      const ld = document.getElementById('loader');
-      ld.style.opacity = '0';
-      setTimeout(() => ld.style.display = 'none', 400);
-    }, 1400);
+  }
+
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') runInit(session);
+    else if (event === 'SIGNED_OUT') { CU=null; CP=null; CPlac=null; showScreen('s-login'); }
   });
+
+  sb.auth.getSession().then(({ data: { session } }) => runInit(session));
 });
 
 // ── Build chip UI ──
@@ -808,14 +812,15 @@ async function loadAll() {
   try {
     const emailEl = document.getElementById('ob_email_display');
     if (emailEl) emailEl.textContent = CU?.email || '—';
-    const { data: profile } = await sb.from('profiles').select('*').eq('id', CU.id).single();
+    const { data: profile, error: pe } = await sb.from('profiles').select('*').eq('id', CU.id).maybeSingle();
+    if (pe) { console.error('profile fetch:', pe.message); showScreen('s-onboard'); return; }
     if (!profile) { showScreen('s-onboard'); return; }
     CP = profile;
-    const { data: plac } = await sb.from('placements').select('*').eq('id', CU.id).single();
+    const { data: plac } = await sb.from('placements').select('*').eq('id', CU.id).maybeSingle();
     CPlac = plac || { status:'searching', interviews:[] };
-    if (!plac) await sb.from('placements').insert({ id: CU.id, status:'searching', interviews:[] });
-    showApp();
-  } catch(e) { showScreen('s-onboard'); }
+    if (!plac) sb.from('placements').insert({ id: CU.id, status:'searching', interviews:[] });
+    try { showApp(); } catch(appErr) { console.error('showApp crash:', appErr); }
+  } catch(e) { console.error('loadAll:', e); showScreen('s-onboard'); }
 }
 
 // ── Google Sign-In ──
