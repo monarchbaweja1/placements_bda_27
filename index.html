@@ -4451,7 +4451,7 @@ function downloadSectionAsPDF(title, contentId) {
 <!-- ══════════════════════════════════════════
      LOGIN SCREEN
 ══════════════════════════════════════════ -->
-<div id="loginScreen">
+<div id="loginScreen" style="display:none!important">
   <div class="login-card">
     <div class="lc-brand">Independent student resource</div>
     <div class="lc-title">Placement <span>Prep</span><br>Guide</div>
@@ -7479,16 +7479,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function showAuthGate() {
-  const legacyLogin = document.getElementById('loginScreen');
-  if (legacyLogin) legacyLogin.style.display = 'none';
   document.getElementById('mainApp').style.display = 'none';
   document.getElementById('mainApp').classList.remove('show');
   document.getElementById('mainNav').style.display = 'none';
   document.getElementById('progSelector').style.display = 'none';
   document.getElementById('authNav').style.display = 'flex';
-  document.getElementById('screen-otp')?.classList.add('hidden');
-  document.getElementById('screen-email')?.classList.remove('hidden');
-  document.getElementById('authEmail')?.focus();
+  showScreen('screen-email');
 }
 
 window.goHomeLogin = function() {
@@ -7511,12 +7507,7 @@ window.signOut = async function() {
   window.goHomeLogin();
 };
 
-window.addEventListener('DOMContentLoaded', () => {
-  showAuthGate();
-  if (typeof sbIndex !== 'undefined' && sbIndex?.auth) {
-    sbIndex.auth.signOut().finally(showAuthGate);
-  }
-});
+// DOMContentLoaded: session handled by getSession().then() above — no signOut here.
 
 window.downloadSectionAsPDF = function(title, contentId) {
   const source = document.getElementById(contentId);
