@@ -35,31 +35,31 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
 .screen{display:none;min-height:100vh}
 .screen.on{display:flex}
 
-/* ══ LOGIN ══ */
-#s-login{align-items:center;justify-content:center;
-  background:radial-gradient(ellipse 80% 50% at 50% -5%,rgba(59,130,246,.1),transparent),var(--bg)}
+/* ══ LOGIN — website light theme ══ */
+#s-login{
+  align-items:center;justify-content:center;
+  background:radial-gradient(circle at 14% 0%,rgba(5,150,105,.07),transparent 32%),
+             radial-gradient(circle at 86% 12%,rgba(245,158,11,.07),transparent 30%),
+             linear-gradient(180deg,#fffdf8 0%,#faf7f0 60%,#f3eee4 100%);
+}
 .login-wrap{width:90%;max-width:420px}
-.login-card{background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:44px;position:relative;overflow:hidden;text-align:center}
-.login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--cyan),var(--purple))}
-.lc-badge{display:inline-block;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:20px;padding:4px 14px;font-family:var(--font-mono);font-size:11px;color:var(--accent);letter-spacing:1px;margin-bottom:18px}
-.lc-title{font-family:var(--font-head);font-size:28px;font-weight:800;line-height:1.2;margin-bottom:8px}
-.lc-title span{color:var(--accent)}
-.lc-sub{color:var(--text2);font-size:13.5px;margin-bottom:28px}
-.lc-input{width:100%;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;margin-bottom:10px}
-.lc-input:focus{border-color:var(--accent)}
-.lc-input::placeholder{color:var(--text3)}
-.lc-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--cyan));border:none;border-radius:var(--r);color:#fff;font-family:var(--font-head);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px}
-.lc-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(59,130,246,.3)}
-.lc-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.lc-note{font-size:12px;color:var(--text3);font-family:var(--font-mono);margin-top:16px;line-height:1.6}
-.lc-stats{display:flex;justify-content:center;gap:24px;margin-top:28px;padding-top:22px;border-top:1px solid var(--border)}
-.lcs-n{font-family:var(--font-head);font-size:22px;font-weight:800;color:var(--accent)}
-.lcs-l{font-size:11px;color:var(--text3);font-family:var(--font-mono)}
-.magic-sent{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:var(--r);padding:16px;color:var(--green);font-size:13px;text-align:center;display:none;margin-top:12px}
-.google-btn{width:100%;padding:13px;background:#fff;border:1.5px solid rgba(255,255,255,.2);border-radius:var(--r);color:#1f2937;font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;box-shadow:0 1px 6px rgba(0,0,0,.15)}
-.google-btn:hover{box-shadow:0 4px 16px rgba(0,0,0,.2);transform:translateY(-1px)}
+.login-card{
+  background:rgba(255,255,255,.92);border:1px solid rgba(31,41,51,.1);
+  border-radius:20px;padding:44px;position:relative;overflow:hidden;text-align:center;
+  box-shadow:0 20px 60px rgba(15,23,42,.08);
+}
+.login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#059669,#34d399,#059669)}
+.lc-badge{display:inline-block;background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.2);border-radius:20px;padding:4px 14px;font-family:var(--font-mono);font-size:11px;color:#059669;letter-spacing:1px;margin-bottom:18px}
+.lc-title{font-family:var(--font-head);font-size:28px;font-weight:800;line-height:1.2;margin-bottom:8px;color:#1f2933}
+.lc-title span{color:#059669}
+.lc-sub{color:#52616f;font-size:13.5px;margin-bottom:28px;line-height:1.6}
+.lc-stats{display:flex;justify-content:center;gap:24px;margin-top:28px;padding-top:22px;border-top:1px solid rgba(31,41,51,.1)}
+.lcs-n{font-family:var(--font-head);font-size:22px;font-weight:800;color:#059669}
+.lcs-l{font-size:11px;color:#7a8794;font-family:var(--font-mono)}
+.google-btn{width:100%;padding:13px;background:#fff;border:1.5px solid rgba(31,41,51,.15);border-radius:var(--r);color:#1f2933;font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;box-shadow:0 1px 6px rgba(0,0,0,.08)}
+.google-btn:hover{box-shadow:0 4px 16px rgba(5,150,105,.15);border-color:#059669;transform:translateY(-1px)}
 .google-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.lc-err{color:var(--red);font-size:12px;margin-top:10px;display:none}
+.lc-err{color:#dc2626;font-size:12px;margin-top:10px;display:none}
 .lc-err.show{display:block}
 
 /* ══ ONBOARD — website light theme ══ */
@@ -92,6 +92,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
 .chip.sel{background:rgba(5,150,105,.1);border-color:#059669;color:#059669}
 .chip.gsel{background:rgba(5,150,105,.1);border-color:#059669;color:#059669}
 .co-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:7px;max-height:190px;overflow-y:auto;padding:10px;background:#f3eee4;border:1px solid rgba(31,41,51,.1);border-radius:var(--r)}
+.custom-add-row{display:flex;gap:.5rem;margin-top:.5rem}
+.custom-add-inp{flex:1;padding:.4rem .7rem;font-size:.82rem}
+.custom-add-btn{padding:.4rem .85rem;background:#059669;color:#fff;border:none;border-radius:.5rem;cursor:pointer;font-size:.82rem;white-space:nowrap;font-family:var(--font-mono)}
+.custom-add-btn:hover{background:#047857}
 .sbtn{width:100%;padding:14px;background:#059669;border:none;border-radius:var(--r);color:#fff;font-family:var(--font-head);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:6px;letter-spacing:.3px}
 .sbtn:hover{background:#047857;transform:translateY(-1px);box-shadow:0 6px 20px rgba(5,150,105,.3)}
 .sbtn:disabled{opacity:.5;cursor:not-allowed;transform:none}
@@ -280,7 +284,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
 <div id="s-login" class="screen">
   <div class="login-wrap">
     <div class="login-card">
-      <div class="lc-badge">🎓 GIM Placement Hub</div>
+      <div class="lc-badge">PLACEMENT HUB</div>
       <div class="lc-title">Welcome<br><span>Back</span></div>
       <div class="lc-sub">Sign in with your Google account to access your placement hub.</div>
 
@@ -357,10 +361,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
     <div class="fg">
       <label class="fl">TARGET ROLE(S)</label>
       <div class="chips" id="ob_roles"></div>
+      <div class="custom-add-row">
+        <input type="text" class="fi custom-add-inp" id="ob_roles_custom" placeholder="Add a custom role…">
+        <button class="custom-add-btn" onclick="addCustomChip('ob_roles_custom','ob_roles','gsel')">+ Add</button>
+      </div>
     </div>
     <div class="fg">
       <label class="fl">TARGET COMPANIES (select all that apply)</label>
       <div class="co-grid" id="ob_companies"></div>
+      <div class="custom-add-row">
+        <input type="text" class="fi custom-add-inp" id="ob_companies_custom" placeholder="Add a custom company…">
+        <button class="custom-add-btn" onclick="addCustomChip('ob_companies_custom','ob_companies','sel')">+ Add</button>
+      </div>
     </div>
     <button class="sbtn" id="ob_save" onclick="saveProfile()">Save &amp; Enter Hub →</button>
   </div>
@@ -498,8 +510,22 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
             <div class="ct">EDIT PROFILE</div>
             <div class="fg"><label class="fl">INTERNSHIP</label><input type="text" class="fi" id="ed_intern"></div>
             <div class="fg"><label class="fl">RESUME / LINKEDIN</label><input type="url" class="fi" id="ed_resume"></div>
-            <div class="fg"><label class="fl">TARGET ROLES</label><div class="chips" id="ed_roles"></div></div>
-            <div class="fg"><label class="fl">TARGET COMPANIES</label><div class="co-grid" id="ed_companies"></div></div>
+            <div class="fg">
+              <label class="fl">TARGET ROLES</label>
+              <div class="chips" id="ed_roles"></div>
+              <div class="custom-add-row">
+                <input type="text" class="fi custom-add-inp" id="ed_roles_custom" placeholder="Add a custom role…">
+                <button class="custom-add-btn" onclick="addCustomChip('ed_roles_custom','ed_roles','gsel')">+ Add</button>
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl">TARGET COMPANIES</label>
+              <div class="co-grid" id="ed_companies"></div>
+              <div class="custom-add-row">
+                <input type="text" class="fi custom-add-inp" id="ed_companies_custom" placeholder="Add a custom company…">
+                <button class="custom-add-btn" onclick="addCustomChip('ed_companies_custom','ed_companies','sel')">+ Add</button>
+              </div>
+            </div>
             <button class="sbtn" onclick="updateProfile()">Update Profile</button>
           </div>
         </div>
@@ -655,20 +681,40 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const ADMIN_EMAILS = ['monarch.baweja25b@example.com'];
 
 const COMPANIES = [
-  'McKinsey','Bain','Deloitte','KPMG','EY','Accenture','PwC','Thoucentric',
+  // Consulting
+  'McKinsey','Bain','BCG','Deloitte','KPMG','EY','Accenture','PwC','ZS Associates','Thoucentric',
+  // Finance & Banking
   'Goldman Sachs','JP Morgan','HSBC','NatWest','BNY Mellon','Nomura',
   'Axis Bank','Kotak','HDFC Bank','HDFC Life','ICICI','Standard Chartered',
-  'IDFC First','Future Generali','Tata Capital','Northern Arc',
+  'IDFC First','Future Generali','Tata Capital','Northern Arc','D.E. Shaw',
+  // Analytics & Data
   'Fractal','Tiger Analytics','EXL','Latentview','Tredence','dunnhumby',
-  'Analytics Quotient','Course5i','WNS','Genpact','Mu Sigma',
-  'Flipkart','Dell','Cognizant','TCS','Infosys','Wipro','IBM',
+  'Analytics Quotient','Course5i','WNS','Genpact','Mu Sigma','Kantar',
+  // Healthcare & Pharma
+  'Optum','MSD','Novartis','Philips','J&J','Cipla','Dr. Reddy\'s','Sun Pharma',
+  'Apollo Hospitals','Fortis','Manipal Hospitals',
+  // FMCG & Consumer
+  'HUL','Mondelez',"Kellogg's",'Marico','Dabur','ITC','Nestlé','Britannia','P&G','Godrej',
+  // Tech & IT
+  'Flipkart','Amazon','Dell','Cognizant','TCS','Infosys','Wipro','IBM',
   'Capgemini','Tech Mahindra',"Lowe's",'Jio','Prodapt','Reliance Retail',
-  'FedEx','NetApp','Philips','Optum','MSD','Novartis','ZS Associates',
-  'Mondelez',"Kellogg's",'HUL','J&J','Mahindra','Godrej','Kantar','D.E. Shaw'
+  'FedEx','NetApp','Mahindra',
 ];
 
-const ROLES = ['Data Scientist','Business Analyst','Data Engineer',
-  'Management Trainee','Product Analyst','Financial Analyst','Analytics Consultant'];
+const ROLES = [
+  // BDA / Analytics
+  'Data Scientist','ML Engineer','Data Analyst','Data Engineer',
+  'Product Analyst','Analytics Consultant','Business Analyst',
+  // BIFS / Finance
+  'Financial Analyst','Investment Banking Analyst','Credit Analyst',
+  'Risk Analyst','Equity Research Analyst',
+  // HCM / Healthcare
+  'Healthcare Consultant','Hospital Administrator',
+  'Clinical Operations Manager','Pharma Marketing Manager','Health Policy Analyst',
+  // Core / General Management
+  'Management Trainee','Strategy Consultant','Brand Manager',
+  'Marketing Manager','HR Manager','Operations Manager','Supply Chain Manager',
+];
 
 const STATUS_MAP = {
   searching:'🔍 Searching', interviewing:'🎤 Interviewing',
@@ -725,6 +771,36 @@ function buildChips() {
     });
   });
 }
+
+// ── Add custom chip ──
+window.addCustomChip = function(inputId, containerId, selClass) {
+  const inp = document.getElementById(inputId);
+  const val = inp.value.trim();
+  if (!val) return;
+  const container = document.getElementById(containerId);
+  const existing = [...container.querySelectorAll('.chip')].find(c => c.dataset.v.toLowerCase() === val.toLowerCase());
+  if (existing) { existing.classList.add(selClass); inp.value = ''; return; }
+  const d = document.createElement('div');
+  d.className = 'chip ' + selClass;
+  d.textContent = val; d.dataset.v = val;
+  d.onclick = () => d.classList.toggle(selClass);
+  container.appendChild(d);
+  inp.value = '';
+};
+
+// allow Enter key in custom inputs
+document.addEventListener('DOMContentLoaded', () => {
+  const pairs = [
+    ['ob_roles_custom','ob_roles','gsel'],
+    ['ob_companies_custom','ob_companies','sel'],
+    ['ed_roles_custom','ed_roles','gsel'],
+    ['ed_companies_custom','ed_companies','sel'],
+  ];
+  pairs.forEach(([inp, cont, cls]) => {
+    const el = document.getElementById(inp);
+    if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCustomChip(inp, cont, cls); } });
+  });
+});
 
 // ── Load all data ──
 async function loadAll() {
@@ -996,6 +1072,25 @@ function renderProfile() {
   document.getElementById('ed_resume').value  = CP.resume_link || '';
   document.querySelectorAll('#ed_roles .chip').forEach(c=>c.classList.toggle('gsel',(CP.target_roles||[]).includes(c.dataset.v)));
   document.querySelectorAll('#ed_companies .chip').forEach(c=>c.classList.toggle('sel',(CP.target_companies||[]).includes(c.dataset.v)));
+  // restore any custom roles/companies not in the predefined list
+  const edRolesEl = document.getElementById('ed_roles');
+  (CP.target_roles||[]).forEach(r => {
+    if (!ROLES.includes(r) && !edRolesEl.querySelector(`[data-v="${CSS.escape(r)}"]`)) {
+      const d = document.createElement('div');
+      d.className='chip gsel'; d.textContent=r; d.dataset.v=r;
+      d.onclick=()=>d.classList.toggle('gsel');
+      edRolesEl.appendChild(d);
+    }
+  });
+  const edCosEl = document.getElementById('ed_companies');
+  (CP.target_companies||[]).forEach(r => {
+    if (!COMPANIES.includes(r) && !edCosEl.querySelector(`[data-v="${CSS.escape(r)}"]`)) {
+      const d = document.createElement('div');
+      d.className='chip sel'; d.textContent=r; d.dataset.v=r;
+      d.onclick=()=>d.classList.toggle('sel');
+      edCosEl.appendChild(d);
+    }
+  });
 }
 
 // ── Batch stats ──
