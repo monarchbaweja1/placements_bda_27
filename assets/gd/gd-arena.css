@@ -1389,13 +1389,7 @@ mark.pg-gd-filler {
   font-style: normal;
 }
 
-/* ─── Feedback grid — 3 col + overflow to 2 col ─── */
-.pg-gd-feedback-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 14px;
-}
+/* duplicate rule removed — original at line 902 */
 
 /* ─── Score history ─────────────────────────────── */
 .pg-gd-score-history {
