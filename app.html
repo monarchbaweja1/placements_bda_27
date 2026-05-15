@@ -860,10 +860,9 @@ window.saveProfile = async () => {
     p_target_roles: roles, p_target_companies: companies
   });
   if (error) { toast('Error: '+error.message,'err'); btn.disabled=false; btn.textContent='Save & Enter Hub →'; return; }
-  CP = { name, roll_no:roll, email:CU.email, programme, batch, section, target_roles:roles, target_companies:companies };
-  CPlac = { status:'searching', interviews:[] };
-  showApp();
-  toast('Welcome to the Hub! 🎉','ok');
+  // reload so loadAll() fetches fresh profile and drives showApp() cleanly
+  toast('Profile saved! Loading your hub…','ok');
+  setTimeout(() => location.reload(), 1000);
 };
 
 // ── Update profile ──
