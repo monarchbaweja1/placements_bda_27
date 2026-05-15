@@ -48,12 +48,18 @@
     speakingData: {},
     audioSpeakingState: {},
     dominantId: null,
-    localJitsiId: null
+    localJitsiId: null,
+    speakingTurns: 0,
+    interruptionCount: 0
   };
 
   let totalWords = 0;
   let fillerCount = 0;
   let wordTimestamps = [];
+  let uniqueWords = new Set();
+  let transcriptEntries = [];
+  let audioThreshold = 0.06;
+
   const FILLERS = [
     'um','uh','er','erm',
     'like','you know','basically','actually','literally',
@@ -62,6 +68,12 @@
     'isn\'t it','what to say','how to say',
     'basically speaking','frankly speaking','no no','see see'
   ];
+
+  // Pre-built regex for transcript filler highlighting
+  const FILLER_REGEX = new RegExp(
+    `\\b(${FILLERS.map(f => f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`,
+    'gi'
+  );
 
   function getToken() {
     try {
@@ -354,6 +366,13 @@
                 <div class="pg-gd-participant-list" id="pgGdParticipantList"></div>
               </div>
 
+              <div class="pg-gd-transcript-panel" id="pgGdTranscriptPanel">
+                <div class="pg-gd-transcript-label">Your speech <span class="pg-gd-transcript-hint">(fillers in orange)</span></div>
+                <div class="pg-gd-transcript-body" id="pgGdTranscriptBody">
+                  <div class="pg-gd-transcript-empty">Listening…</div>
+                </div>
+              </div>
+
               <div class="pg-gd-confidence-mini" id="pgGdConfidenceMini" style="display:none">
                 <div class="pg-gd-confidence-label">Your Confidence</div>
                 <div class="pg-gd-confidence-value" id="pgGdConfidenceValue">—</div>
@@ -397,6 +416,24 @@
                 <div class="pg-gd-feedback-score" id="pgGdFeedbackParticipation">—</div>
                 <div class="pg-gd-feedback-score-label" id="pgGdFeedbackParticipationLabel">Share of speaking time</div>
               </div>
+              <div class="pg-gd-feedback-card">
+                <div class="pg-gd-feedback-card-label">Contributions</div>
+                <div class="pg-gd-feedback-score" id="pgGdFeedbackTurns">—</div>
+                <div class="pg-gd-feedback-score-label" id="pgGdFeedbackTurnsLabel">Speaking turns taken</div>
+              </div>
+              <div class="pg-gd-feedback-card">
+                <div class="pg-gd-feedback-card-label">Vocabulary</div>
+                <div class="pg-gd-feedback-score" id="pgGdFeedbackVocab">—</div>
+                <div class="pg-gd-feedback-score-label" id="pgGdFeedbackVocabLabel">Lexical diversity</div>
+              </div>
+            </div>
+
+            <div class="pg-gd-score-history" id="pgGdScoreHistory" style="display:none">
+              <div class="pg-gd-history-label">Your GD Progress</div>
+              <div class="pg-gd-history-header">
+                <span>#</span><span>Date</span><span>Confidence</span><span>Participation</span><span>WPM</span>
+              </div>
+              <div id="pgGdHistoryList"></div>
             </div>
 
             <div class="pg-gd-feedback-note">
@@ -691,12 +728,18 @@
           state.audioSpeakingState[id] = { speaking: false, aboveStart: null, graceTimer: null };
         }
         const s = state.audioSpeakingState[id];
-        if (level > 0.06) {
+        if (level > audioThreshold) {
           if (!s.aboveStart) s.aboveStart = now;
           if (s.graceTimer) { clearTimeout(s.graceTimer); s.graceTimer = null; }
           if (!s.speaking && (now - s.aboveStart) >= 250) {
             s.speaking = true;
             if (!d.startMs) d.startMs = now;
+            if (id === state.localJitsiId) {
+              state.speakingTurns++;
+              const othersAlreadySpeaking = Object.entries(state.audioSpeakingState)
+                .some(([oid, os]) => oid !== id && os.speaking);
+              if (othersAlreadySpeaking) state.interruptionCount++;
+            }
           }
         } else {
           if (!s.speaking) { s.aboveStart = null; return; }
@@ -770,12 +813,14 @@
         const words = text.split(/\s+/).filter(Boolean);
         totalWords += words.length;
         const now = Date.now();
-        words.forEach(() => wordTimestamps.push(now));
-        FILLERS.forEach(f => {
-          const escaped = f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const m = text.match(new RegExp(`\\b${escaped}\\b`, 'gi'));
-          if (m) fillerCount += m.length;
+        words.forEach(w => {
+          wordTimestamps.push(now);
+          const clean = w.replace(/[^a-z]/g, '');
+          if (clean.length > 2) uniqueWords.add(clean);
         });
+        const matches = text.match(FILLER_REGEX);
+        if (matches) fillerCount += matches.length;
+        appendTranscript(text);
         updateConfidenceMini();
       }
     };
@@ -820,6 +865,90 @@
     const wpm = calcWPM();
     const sub = confidenceMini?.querySelector('.pg-gd-confidence-sub');
     if (sub) sub.textContent = wpm !== null ? `${wpm} WPM · filler-based` : 'Filler words & pace';
+  }
+
+  function calcVocabRichness() {
+    if (totalWords < 15) return null;
+    return Math.round((uniqueWords.size / totalWords) * 100);
+  }
+
+  function appendTranscript(text) {
+    const highlighted = text.replace(FILLER_REGEX, '<mark class="pg-gd-filler">$&</mark>');
+    transcriptEntries.push(highlighted);
+    if (transcriptEntries.length > 6) transcriptEntries.shift();
+    const body = document.getElementById('pgGdTranscriptBody');
+    if (body) {
+      body.innerHTML = transcriptEntries
+        .map(t => `<div class="pg-gd-transcript-entry">${t}</div>`)
+        .join('');
+      body.scrollTop = body.scrollHeight;
+    }
+  }
+
+  async function calibrateNoiseThreshold() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const ctx     = new AudioContext();
+      const src     = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      src.connect(analyser);
+      const buf = new Float32Array(analyser.frequencyBinCount);
+      return new Promise(resolve => {
+        const samples = [];
+        const take = () => {
+          analyser.getFloatTimeDomainData(buf);
+          const rms = Math.sqrt(buf.reduce((s, v) => s + v * v, 0) / buf.length);
+          samples.push(rms);
+          if (samples.length >= 8) {
+            stream.getTracks().forEach(t => t.stop());
+            ctx.close();
+            const avg = samples.reduce((a, b) => a + b, 0) / samples.length;
+            resolve(Math.min(0.18, Math.max(0.04, avg * 2.8)));
+          } else {
+            setTimeout(take, 200);
+          }
+        };
+        setTimeout(take, 300);
+      });
+    } catch {
+      return 0.06;
+    }
+  }
+
+  function renderHistory(scores) {
+    const el = document.getElementById('pgGdHistoryList');
+    if (!el) return;
+    if (!scores || scores.length === 0) {
+      el.innerHTML = '<div class="pg-gd-history-empty">No previous sessions yet.</div>';
+      return;
+    }
+    el.innerHTML = scores.map((s, i) => {
+      const date = new Date(s.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      const conf = s.confidence_score !== null ? `${s.confidence_score}` : '—';
+      const wpm  = s.wpm             !== null ? `${s.wpm} WPM`         : '';
+      const part = s.participation_pct !== null ? `${s.participation_pct}%` : '—';
+      return `
+        <div class="pg-gd-history-row">
+          <span class="pg-gd-history-num">#${scores.length - i}</span>
+          <span class="pg-gd-history-date">${date}</span>
+          <span class="pg-gd-history-conf" title="Confidence">${conf}</span>
+          <span class="pg-gd-history-part" title="Participation">${part}</span>
+          ${wpm ? `<span class="pg-gd-history-wpm">${wpm}</span>` : '<span></span>'}
+        </div>`;
+    }).join('');
+  }
+
+  async function loadHistory() {
+    const historySection = document.getElementById('pgGdScoreHistory');
+    if (!historySection) return;
+    try {
+      const data = await apiGet('/api/gd/scores');
+      if (data.scores && data.scores.length > 0) {
+        historySection.style.display = '';
+        renderHistory(data.scores);
+      }
+    } catch {}
   }
 
   // ── Load sessions ──────────────────────────────────────────
@@ -1004,7 +1133,10 @@
     state.audioSpeakingState = {};
     state.dominantId         = null;
     state.localJitsiId       = null;
+    state.speakingTurns      = 0;
+    state.interruptionCount  = 0;
     totalWords = 0; fillerCount = 0; wordTimestamps = [];
+    uniqueWords = new Set(); transcriptEntries = [];
 
     enterView('session');
 
@@ -1019,6 +1151,7 @@
     state.speakingInterval = setInterval(renderSpeakingTimes, 1000);
     state.pollInterval = setInterval(() => refreshParticipantCount(session.id), 10000);
 
+    audioThreshold = await calibrateNoiseThreshold();
     await loadJitsiScript();
     initJitsi(session);
     startSpeechRecognition();
@@ -1061,12 +1194,16 @@
     Object.values(state.audioSpeakingState).forEach(s => { if (s.graceTimer) clearTimeout(s.graceTimer); });
 
     // Calculate scores before cleanup
-    const confScore = calcConfidenceScore();
-    const myData    = state.speakingData[state.localJitsiId];
-    const totalSpk  = Object.values(state.speakingData).reduce((a, d) => a + d.totalMs, 0);
-    const mySpk     = myData?.totalMs || 0;
-    const myWpm     = calcWPM();
-    const partPct   = totalSpk > 0 ? Math.round((mySpk / totalSpk) * 100) : null;
+    const confScore  = calcConfidenceScore();
+    const myData     = state.speakingData[state.localJitsiId];
+    const totalSpk   = Object.values(state.speakingData).reduce((a, d) => a + d.totalMs, 0);
+    const mySpk      = myData?.totalMs || 0;
+    const myWpm      = calcWPM();
+    const partPct    = totalSpk > 0 ? Math.round((mySpk / totalSpk) * 100) : null;
+    const vocabScore = calcVocabRichness();
+    const turns      = state.speakingTurns;
+    const interrupts = state.interruptionCount;
+    const savedSessionId = state.currentSession.id;
 
     // Dispose Jitsi
     if (state.jitsiApi) { try { state.jitsiApi.dispose(); } catch {} state.jitsiApi = null; }
@@ -1101,7 +1238,43 @@
         if (lbl && mySpk > 0) lbl.textContent = `${formatDuration(mySpk)} of your speaking time`;
       }
 
+      const turnsEl = document.getElementById('pgGdFeedbackTurns');
+      if (turnsEl) {
+        turnsEl.textContent = turns > 0 ? `${turns}` : '—';
+        const lbl = document.getElementById('pgGdFeedbackTurnsLabel');
+        if (lbl && turns > 0) {
+          lbl.textContent = interrupts > 0
+            ? `${turns} turns · ${interrupts} overlap${interrupts > 1 ? 's' : ''}`
+            : `${turns} speaking contributions`;
+        }
+      }
+
+      const vocabEl = document.getElementById('pgGdFeedbackVocab');
+      if (vocabEl) {
+        vocabEl.textContent = vocabScore !== null ? `${vocabScore}%` : '—';
+        const lbl = document.getElementById('pgGdFeedbackVocabLabel');
+        if (lbl && vocabScore !== null) {
+          lbl.textContent = vocabScore >= 65 ? 'Rich — varied vocabulary' :
+                            vocabScore >= 45 ? 'Moderate — some repetition' :
+                                              'Low — try more varied words';
+        }
+      }
+
+      // Save score to Supabase (best-effort, don't block UI)
+      apiPost('/api/gd/scores', {
+        sessionId:          savedSessionId,
+        programme:          state.currentProgramme,
+        confidenceScore:    confScore,
+        wpm:                myWpm,
+        participationPct:   partPct,
+        speakingTurns:      turns,
+        vocabularyRichness: vocabScore,
+        interruptions:      interrupts,
+        elapsedMs:          elapsed
+      }).catch(() => {});
+
       showEndedFeedback();
+      loadHistory();
     } catch (e) {
       showStatus(sessionStatus, 'error', e.message || 'Could not leave. Try again.');
     }
