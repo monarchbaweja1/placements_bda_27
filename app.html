@@ -852,18 +852,24 @@ window.saveProfile = async () => {
   btn.disabled=true; btn.textContent='Saving…';
   const roles     = [...document.querySelectorAll('#ob_roles .gsel')].map(c=>c.dataset.v);
   const companies = [...document.querySelectorAll('#ob_companies .sel')].map(c=>c.dataset.v);
-  const { error } = await sb.from('profiles').upsert({
+  const profileData = {
     id: CU.id, name, roll_no: roll, email: CU.email,
     programme, batch, section,
     internship: document.getElementById('ob_intern').value.trim(),
     resume_link: document.getElementById('ob_resume').value.trim(),
     target_roles: roles, target_companies: companies,
     updated_at: new Date().toISOString()
-  });
+  };
+  // use insert first; if duplicate fall back to update (avoids upsert RLS quirks)
+  let { error } = await sb.from('profiles').insert(profileData);
+  if (error && error.code === '23505') {
+    ({ error } = await sb.from('profiles').update(profileData).eq('id', CU.id));
+  }
   if (error) { toast('Error: '+error.message,'err'); btn.disabled=false; btn.textContent='Save & Enter Hub →'; return; }
   CP = { name, roll_no:roll, email:CU.email, programme, batch, section, target_roles:roles, target_companies:companies };
   CPlac = { status:'searching', interviews:[] };
-  await sb.from('placements').upsert({ id:CU.id, status:'searching', interviews:[], updated_at:new Date().toISOString() });
+  const { error: pe } = await sb.from('placements').insert({ id:CU.id, status:'searching', interviews:[] });
+  if (pe && pe.code !== '23505') console.warn('placements insert:', pe.message);
   showApp();
   toast('Welcome to the Hub! 🎉','ok');
 };
