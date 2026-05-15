@@ -852,24 +852,16 @@ window.saveProfile = async () => {
   btn.disabled=true; btn.textContent='Saving…';
   const roles     = [...document.querySelectorAll('#ob_roles .gsel')].map(c=>c.dataset.v);
   const companies = [...document.querySelectorAll('#ob_companies .sel')].map(c=>c.dataset.v);
-  const profileData = {
-    id: CU.id, name, roll_no: roll, email: CU.email,
-    programme, batch, section,
-    internship: document.getElementById('ob_intern').value.trim(),
-    resume_link: document.getElementById('ob_resume').value.trim(),
-    target_roles: roles, target_companies: companies,
-    updated_at: new Date().toISOString()
-  };
-  // use insert first; if duplicate fall back to update (avoids upsert RLS quirks)
-  let { error } = await sb.from('profiles').insert(profileData);
-  if (error && error.code === '23505') {
-    ({ error } = await sb.from('profiles').update(profileData).eq('id', CU.id));
-  }
+  const { error } = await sb.rpc('upsert_my_profile', {
+    p_name: name, p_roll_no: roll, p_email: CU.email,
+    p_programme: programme, p_batch: batch, p_section: section,
+    p_internship: document.getElementById('ob_intern').value.trim(),
+    p_resume_link: document.getElementById('ob_resume').value.trim(),
+    p_target_roles: roles, p_target_companies: companies
+  });
   if (error) { toast('Error: '+error.message,'err'); btn.disabled=false; btn.textContent='Save & Enter Hub →'; return; }
   CP = { name, roll_no:roll, email:CU.email, programme, batch, section, target_roles:roles, target_companies:companies };
   CPlac = { status:'searching', interviews:[] };
-  const { error: pe } = await sb.from('placements').insert({ id:CU.id, status:'searching', interviews:[] });
-  if (pe && pe.code !== '23505') console.warn('placements insert:', pe.message);
   showApp();
   toast('Welcome to the Hub! 🎉','ok');
 };
