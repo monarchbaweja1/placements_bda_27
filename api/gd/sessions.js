@@ -39,16 +39,17 @@ export default async function handler(req, res) {
   return methodNotAllowed(res, ['GET', 'POST']);
 }
 
-// ── LIST SESSIONS — public ───────────────────────────────────
+// ── LIST SESSIONS — use token if present, anon fallback ─────
 async function listSessions(req, res) {
   try {
     const programme = normalizeProgrammeCode(req.query?.programme) || 'bda';
-    const supabase = getSupabaseAnon();
+    const token = getBearerToken(req);
+    const supabase = token ? getSupabaseForUser(token) : getSupabaseAnon();
     if (!supabase) return sendJson(res, 200, { ok: true, sessions: [] });
 
     const { data, error } = await supabase
       .from('gd_sessions')
-      .select('id, topic, description, programme, status, slot_number, scheduled_at, creator_name, moderator_id, created_by, room_url, room_name, max_participants, participant_count, created_at, started_at')
+      .select('*')
       .eq('programme', programme)
       .neq('status', 'ended')
       .order('scheduled_at', { ascending: true, nullsFirst: false })
@@ -62,13 +63,14 @@ async function listSessions(req, res) {
   }
 }
 
-// ── LIST PARTICIPANTS — public ───────────────────────────────
+// ── LIST PARTICIPANTS — use token if present, anon fallback ──
 async function listParticipants(req, res) {
   try {
     const sessionId = String(req.query?.sessionId || '').trim();
     if (!sessionId) return sendJson(res, 400, { ok: false, error: { code: 'session_id_required', message: 'Session ID required.' } });
 
-    const supabase = getSupabaseAnon();
+    const token = getBearerToken(req);
+    const supabase = token ? getSupabaseForUser(token) : getSupabaseAnon();
     if (!supabase) return sendJson(res, 200, { ok: true, participants: [] });
 
     const { data, error } = await supabase
