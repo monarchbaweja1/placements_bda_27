@@ -1616,21 +1616,19 @@ h2.section-h2 {
   <div class="auth-inner">
     <div class="auth-headline reveal" style="text-align:center;align-items:center;display:flex;flex-direction:column">
       <h1 style="font-size:clamp(36px,5vw,60px);text-align:center">Check your inbox</h1>
-      <p class="sub" style="text-align:center">We sent an 8-digit code to</p>
+      <p class="sub" style="text-align:center">We sent a 6-digit code to</p>
     </div>
 
-    <div class="auth-form-card reveal reveal-delay-1" style="max-width:520px">
+    <div class="auth-form-card reveal reveal-delay-1" style="max-width:480px">
       <div class="otp-email-chip" id="otpEmailBadge">✉️ —</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;">Enter the code below</div>
-      <div class="otp-boxes">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;">Enter the 6-digit code from your GIM inbox (check spam too)</div>
+      <div class="otp-boxes" style="justify-content:center">
         <input class="otp-box" id="otp0" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
         <input class="otp-box" id="otp1" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
         <input class="otp-box" id="otp2" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
         <input class="otp-box" id="otp3" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
         <input class="otp-box" id="otp4" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
         <input class="otp-box" id="otp5" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-        <input class="otp-box" id="otp6" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-        <input class="otp-box" id="otp7" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
       </div>
       <div class="otp-actions">
         <button class="otp-verify-btn" id="authVerifyBtn" onclick="verifyOTP()">Verify &amp; Enter Hub →</button>
@@ -2103,7 +2101,7 @@ document.querySelectorAll('.otp-box').forEach((box, i, all) => {
     box.value = box.value.replace(/\D/g,'').slice(-1);
     box.classList.toggle('filled', !!box.value);
     if(box.value && all[i+1]) all[i+1].focus();
-    if(['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'].every(id => document.getElementById(id)?.value)) verifyOTP();
+    if(['otp0','otp1','otp2','otp3','otp4','otp5'].every(id => document.getElementById(id)?.value)) verifyOTP();
   });
   box.addEventListener('keydown', e => {
     if(e.key==='Backspace' && !box.value && all[i-1]) { all[i-1].focus(); all[i-1].classList.remove('filled'); }
@@ -6510,7 +6508,7 @@ window.sendOTP = async function() {
     const emailChip = document.getElementById('otpEmailShow');
     if (emailChip) emailChip.textContent = email;
 
-    showAuthStatus('OTP sent! Check your inbox for the 8-digit code.', 'ok');
+    showAuthStatus('OTP sent! Check your GIM inbox (and spam folder) for the 6-digit code.', 'ok');
     showScreen('screen-otp');
     startOtpTimer();
     document.getElementById('otp0')?.focus();
@@ -6536,11 +6534,11 @@ window.sendOTP = async function() {
 
 // ── Step 2: Verify OTP
 window.verifyOTP = async function() {
-  const token = ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7']
+  const token = ['otp0','otp1','otp2','otp3','otp4','otp5']
     .map(id => document.getElementById(id)?.value || '').join('');
 
-  if (token.length !== 8) {
-    showAuthStatus('Enter all 8 digits from your email.', 'err');
+  if (token.length !== 6) {
+    showAuthStatus('Enter all 6 digits from your email.', 'err');
     return;
   }
 
@@ -6577,7 +6575,7 @@ window.verifyOTP = async function() {
     console.error('verifyOTP failed', error);
     showAuthStatus('Incorrect code or expired link. Try again.', 'err');
     resetButton(btn, 'Verify & Enter Hub →');
-    ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'].forEach(id => {
+    ['otp0','otp1','otp2','otp3','otp4','otp5'].forEach(id => {
       const el = document.getElementById(id);
       if (el) { el.value = ''; el.classList.remove('filled'); }
     });
@@ -6609,7 +6607,7 @@ window.resendOTP = async function() {
     }
 
     showAuthStatus('New code sent! Check your inbox.', 'ok');
-    ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'].forEach(id => {
+    ['otp0','otp1','otp2','otp3','otp4','otp5'].forEach(id => {
       const el = document.getElementById(id);
       if (el) { el.value = ''; el.classList.remove('filled'); }
     });
@@ -6627,7 +6625,7 @@ window.resendOTP = async function() {
 window.backToEmail = function() {
   clearOtpTimer();
   showScreen('screen-email');
-  ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'].forEach(id => {
+  ['otp0','otp1','otp2','otp3','otp4','otp5'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.value = ''; el.classList.remove('filled'); }
   });
@@ -6640,7 +6638,7 @@ window.doSignOutIndex = async function() {
 
 // ── OTP box keyboard navigation (auto-advance)
 document.addEventListener('DOMContentLoaded', function() {
-  const boxes = ['otp0','otp1','otp2','otp3','otp4','otp5','otp6','otp7'];
+  const boxes = ['otp0','otp1','otp2','otp3','otp4','otp5'];
   boxes.forEach((id, i) => {
     const el = document.getElementById(id);
     if (!el) return;
