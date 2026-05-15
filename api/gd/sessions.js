@@ -1,12 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { requireUser } from '../shared/auth.js';
 import { applyCors, getBearerToken, methodNotAllowed, sendJson } from '../shared/http.js';
-import { logError, logInfo, logWarn } from '../shared/logger.js';
+import { logError, logInfo } from '../shared/logger.js';
 import { normalizeProgrammeCode } from '../shared/programmeGuard.js';
 import { getSupabaseAuthConfig } from '../shared/supabaseAdmin.js';
 
 const MAX_PARTICIPANTS = 11;
-const SESSION_EXPIRY_HOURS = 4;
 
 // Uses the user's own auth token — works with SUPABASE_URL + SUPABASE_ANON_KEY
 // (no service role key required), and respects RLS policies properly.
@@ -40,21 +39,36 @@ async function listSessions(req, res) {
     const programme = normalizeProgrammeCode(req.query?.programme) || 'bda';
     const token = getBearerToken(req);
     const supabase = getSupabaseForUser(token);
-
-    if (!supabase) {
-      return sendJson(res, 200, { ok: true, sessions: [] });
-    }
+    if (!supabase) return sendJson(res, 200, { ok: true, sessions: [] });
 
     const { data, error } = await supabase
       .from('gd_sessions')
-      .select('id, topic, description, programme, status, moderator_id, room_url, max_participants, participant_count, created_at, started_at')
+      .select('id, topic, description, programme, status, slot_number, scheduled_at, moderator_id, created_by, room_url, room_name, max_participants, participant_count, created_at, started_at')
       .eq('programme', programme)
       .neq('status', 'ended')
-      .order('created_at', { ascending: false })
+      .order('scheduled_at', { ascending: true, nullsFirst: false })
       .limit(20);
 
     if (error) throw error;
-    return sendJson(res, 200, { ok: true, sessions: data || [] });
+
+    // Fetch creator names from profiles
+    const creatorIds = [...new Set((data || []).map(s => s.created_by).filter(Boolean))];
+    let creatorMap = {};
+    if (creatorIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, name, roll_no')
+        .in('id', creatorIds);
+      creatorMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+    }
+
+    const sessions = (data || []).map(s => ({
+      ...s,
+      creatorName: creatorMap[s.created_by]?.name || null,
+      creatorRoll: creatorMap[s.created_by]?.roll_no || null
+    }));
+
+    return sendJson(res, 200, { ok: true, sessions });
   } catch (error) {
     logError('gd_list_sessions_failed', { message: error?.message || String(error) });
     return sendJson(res, 500, { ok: false, error: { code: 'list_failed', message: 'Unable to load sessions.' } });
@@ -67,57 +81,47 @@ async function createSession(req, res) {
     const auth = await requireUser(req);
     if (!auth.ok) return sendJson(res, auth.status, { ok: false, error: auth.error });
 
-    const body = req.body || {};
-    const topic = String(body.topic || '').trim().slice(0, 200);
+    const body        = req.body || {};
+    const topic       = String(body.topic       || '').trim().slice(0, 200);
     const description = String(body.description || '').trim().slice(0, 500);
-    const programme = normalizeProgrammeCode(body.programme) || 'bda';
+    const programme   = normalizeProgrammeCode(body.programme) || 'bda';
+    const slotNumber  = Math.min(10, Math.max(1, parseInt(body.slotNumber) || 1));
+    const scheduledAt = body.scheduledAt ? new Date(body.scheduledAt).toISOString() : null;
 
-    if (!topic) {
-      return sendJson(res, 400, { ok: false, error: { code: 'topic_required', message: 'A discussion topic is required.' } });
-    }
+    if (!topic) return sendJson(res, 400, { ok: false, error: { code: 'topic_required', message: 'A discussion topic is required.' } });
+    if (!scheduledAt) return sendJson(res, 400, { ok: false, error: { code: 'scheduled_required', message: 'Please select a date and time for the session.' } });
 
     const token = getBearerToken(req);
     const supabase = getSupabaseForUser(token);
-    if (!supabase) {
-      return sendJson(res, 503, { ok: false, error: { code: 'db_not_configured', message: 'Database not configured. Please contact the admin.' } });
-    }
+    if (!supabase) return sendJson(res, 503, { ok: false, error: { code: 'db_not_configured', message: 'Database not configured.' } });
 
-    let roomUrl = null, roomName = null;
-    try {
-      const room = await createDailyRoom({ programme });
-      roomUrl = room?.url || null;
-      roomName = room?.name || null;
-    } catch (e) {
-      logWarn('gd_daily_room_failed', { message: e?.message || String(e) });
-    }
+    // Jitsi Meet — completely free, no API key required; rooms are auto-created on first join
+    const roomId   = crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+    const roomName = `BDA27-GD-SLOT${slotNumber}-${programme.toUpperCase()}-${roomId}`;
+    const roomUrl  = `https://meet.jit.si/${roomName}`;
 
     const { data: session, error: sessionError } = await supabase
       .from('gd_sessions')
       .insert({
         topic,
-        description: description || null,
+        description:   description || null,
         programme,
-        status: 'waiting',
-        created_by: auth.user.id,
-        moderator_id: auth.user.id,
-        room_url: roomUrl,
-        room_name: roomName,
+        slot_number:   slotNumber,
+        scheduled_at:  scheduledAt,
+        status:        'waiting',
+        created_by:    auth.user.id,
+        moderator_id:  auth.user.id,
+        room_url:      roomUrl,
+        room_name:     roomName,
         max_participants: MAX_PARTICIPANTS,
-        participant_count: 1
+        participant_count: 0
       })
       .select('*')
       .single();
 
     if (sessionError) throw sessionError;
 
-    // Add creator as moderator participant
-    await supabase.from('gd_participants').insert({
-      session_id: session.id,
-      user_id: auth.user.id,
-      role: 'moderator'
-    });
-
-    logInfo('gd_session_created', { userId: auth.user.id, sessionId: session.id, programme, hasVideo: !!roomUrl });
+    logInfo('gd_session_created', { userId: auth.user.id, sessionId: session.id, programme, slotNumber });
     return sendJson(res, 201, { ok: true, session });
   } catch (error) {
     logError('gd_create_session_failed', { message: error?.message || String(error) });
@@ -167,28 +171,31 @@ async function joinSession(req, res) {
       return sendJson(res, 200, { ok: true, session, rejoined: true });
     }
 
+    const isCreator = auth.user.id === session.created_by;
+    const role = isCreator ? 'moderator' : 'participant';
+
     if (existing) {
-      // Re-activate: user can update their own participant record
       await supabase.from('gd_participants')
-        .update({ left_at: null, joined_at: new Date().toISOString(), role: 'participant' })
+        .update({ left_at: null, joined_at: new Date().toISOString(), role })
         .eq('id', existing.id);
     } else {
       await supabase.from('gd_participants').insert({
         session_id: sessionId,
         user_id: auth.user.id,
-        role: 'participant'
+        role
       });
     }
 
     const newCount = session.participant_count + 1;
-    const updates = { participant_count: newCount };
-    if (session.status === 'waiting' && newCount >= 2) updates.status = 'active';
-    if (!session.started_at) updates.started_at = new Date().toISOString();
-
+    const updates  = { participant_count: newCount };
+    if (session.status === 'waiting') {
+      updates.status     = 'active';
+      updates.started_at = new Date().toISOString();
+    }
     await supabase.from('gd_sessions').update(updates).eq('id', sessionId);
 
-    logInfo('gd_participant_joined', { userId: auth.user.id, sessionId, participantCount: newCount });
-    return sendJson(res, 200, { ok: true, session: { ...session, ...updates } });
+    logInfo('gd_participant_joined', { userId: auth.user.id, sessionId, count: newCount });
+    return sendJson(res, 200, { ok: true, session: { ...session, ...updates, isCreator } });
   } catch (error) {
     logError('gd_join_session_failed', { message: error?.message || String(error) });
     return sendJson(res, 500, { ok: false, error: { code: 'join_failed', message: 'Unable to join session.' } });
@@ -272,33 +279,3 @@ async function leaveSession(req, res) {
   }
 }
 
-// ── DAILY.CO ROOM ────────────────────────────────────────────
-async function createDailyRoom({ programme }) {
-  const apiKey = process.env.DAILY_API_KEY;
-  if (!apiKey) return null;
-
-  const expiryTs = Math.floor(Date.now() / 1000) + SESSION_EXPIRY_HOURS * 3600;
-  const roomName = `gd-${programme}-${Date.now()}`;
-
-  const response = await fetch('https://api.daily.co/v1/rooms', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      name: roomName,
-      privacy: 'private',
-      properties: {
-        max_participants: MAX_PARTICIPANTS,
-        exp: expiryTs,
-        enable_chat: true,
-        enable_knocking: false,
-        start_audio_off: true
-      }
-    })
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Daily.co API error: ${errText}`);
-  }
-  return response.json();
-}

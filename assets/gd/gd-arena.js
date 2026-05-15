@@ -32,9 +32,8 @@
     ]
   };
 
-  // ── State ──────────────────────────────────────────────────
   let state = {
-    view: 'lobby',        // 'lobby' | 'create' | 'session' | 'feedback'
+    view: 'lobby',
     sessions: [],
     currentSession: null,
     currentProgramme: 'bda',
@@ -42,13 +41,18 @@
     timerStart: null,
     timerInterval: null,
     pollInterval: null,
-    realtimeSub: null,
-    loading: false
+    countdownInterval: null,
+    timerPaused: false,
+    timerPauseAt: null
   };
 
-  // ── Get auth token ─────────────────────────────────────────
   function getToken() {
     try {
+      const sbKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+      if (sbKey) {
+        const d = JSON.parse(localStorage.getItem(sbKey) || '{}');
+        return d?.access_token || null;
+      }
       const stored = localStorage.getItem('sb-auth-token') ||
         Object.entries(localStorage).find(([k]) => k.includes('auth-token'))?.[1];
       if (stored) {
@@ -56,27 +60,25 @@
         return parsed?.access_token || parsed?.session?.access_token || null;
       }
     } catch {}
-    // Try supabase JS client if available
+    return null;
+  }
+
+  function getProgramme() { return localStorage.getItem('selectedProgramme') || 'bda'; }
+
+  function getCurrentUserId() {
     try {
       const sbKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
       if (sbKey) {
         const d = JSON.parse(localStorage.getItem(sbKey) || '{}');
-        return d?.access_token || null;
+        return d?.user?.id || null;
       }
     } catch {}
     return null;
   }
 
-  function getProgramme() {
-    return localStorage.getItem('selectedProgramme') || 'bda';
-  }
-
-  // ── API helpers ───────────────────────────────────────────
   async function apiGet(path) {
     const token = getToken();
-    const res = await fetch(path, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
-    });
+    const res = await fetch(path, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
     let payload;
     try { payload = await res.json(); } catch { throw new Error('Server returned an unexpected response.'); }
     if (!res.ok || !payload?.ok) throw new Error(payload?.error?.message || 'Request failed.');
@@ -87,10 +89,7 @@
     const token = getToken();
     const res = await fetch(path, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      },
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: JSON.stringify(body)
     });
     let payload;
@@ -99,7 +98,68 @@
     return payload;
   }
 
+  // ── Helpers ────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatDuration(ms) {
+    const s = Math.floor(ms / 1000);
+    const m = Math.floor(s / 60);
+    const h = Math.floor(m / 60);
+    if (h > 0) return `${h}h ${m % 60}m`;
+    return `${String(m).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
+  }
+
+  function formatScheduledAt(iso) {
+    if (!iso) return 'Date TBD';
+    const d = new Date(iso);
+    const now = new Date();
+    const sessionDateStr = d.toDateString();
+    let dateLabel;
+    if (sessionDateStr === now.toDateString()) dateLabel = 'Today';
+    else if (sessionDateStr === new Date(now.getTime() + 86400000).toDateString()) dateLabel = 'Tomorrow';
+    else dateLabel = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+    return `${dateLabel}, ${time}`;
+  }
+
+  function canJoinSession(scheduledAt) {
+    if (!scheduledAt) return true;
+    return new Date(scheduledAt).getTime() - Date.now() <= 15 * 60 * 1000;
+  }
+
+  function formatCountdown(scheduledAt) {
+    if (!scheduledAt) return '';
+    const diff = new Date(scheduledAt).getTime() - Date.now();
+    if (diff <= 0) return '';
+    const totalMin = Math.ceil(diff / 60000);
+    if (totalMin > 60 * 24) {
+      const d = Math.floor(totalMin / (60 * 24));
+      const h = Math.floor((totalMin % (60 * 24)) / 60);
+      return `Opens in ${d}d${h > 0 ? ' ' + h + 'h' : ''}`;
+    }
+    if (totalMin > 60) {
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      return `Opens in ${h}h${m > 0 ? ' ' + m + 'm' : ''}`;
+    }
+    return `Opens in ${totalMin}m`;
+  }
+
+  function showStatus(el, type, msg) {
+    el.className = `pg-gd-status ${type} visible`;
+    el.innerHTML = type === 'loading' ? `<div class="pg-gd-spinner"></div>${msg}` : msg;
+  }
+  function clearStatus(el) { el.className = 'pg-gd-status'; el.textContent = ''; }
+
   // ── Build DOM ──────────────────────────────────────────────
+  const slotOptions = Array.from({ length: 10 }, (_, i) =>
+    `<option value="${i + 1}">GD SLOT-${i + 1}</option>`
+  ).join('');
+
+  const minDate = new Date().toISOString().split('T')[0];
+
   const wrap = document.createElement('div');
   wrap.className = 'pg-gd-wrap';
   wrap.innerHTML = `
@@ -109,12 +169,9 @@
           stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
         <path d="M4 20v-2a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v2"
           stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-        <circle cx="12" cy="10" r="3"
-          stroke="currentColor" stroke-width="1.7"/>
-        <path d="M20 8c0 2-1.5 3.5-3 4"
-          stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-        <path d="M4 8c0 2 1.5 3.5 3 4"
-          stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.7"/>
+        <path d="M20 8c0 2-1.5 3.5-3 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        <path d="M4 8c0 2 1.5 3.5 3 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
       </svg>
     </button>
     <span class="pg-gd-tip" aria-hidden="true">GD Arena</span>
@@ -124,7 +181,7 @@
   overlay.className = 'pg-gd-overlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', 'GD Arena — Live Group Discussion');
+  overlay.setAttribute('aria-label', 'GD Arena — Group Discussion');
   overlay.innerHTML = `
     <div class="pg-gd-modal">
       <div class="pg-gd-head">
@@ -141,15 +198,15 @@
         </div>
         <div class="pg-gd-head-text">
           <strong>GD Arena</strong>
-          <span id="pgGdScope">Live group discussion practice with real participants</span>
+          <span>Schedule GD sessions &bull; Join opens 15 min before</span>
         </div>
         <span class="pg-gd-prog-badge" id="pgGdProgBadge">BDA</span>
         <button class="pg-gd-close-btn" type="button" aria-label="Close">&#215;</button>
       </div>
 
       <div class="pg-gd-tabs" id="pgGdTabs">
-        <button class="pg-gd-tab active" data-tab="lobby">Active Sessions</button>
-        <button class="pg-gd-tab" data-tab="create">Start Discussion</button>
+        <button class="pg-gd-tab active" data-tab="lobby">Sessions</button>
+        <button class="pg-gd-tab" data-tab="create">Schedule New</button>
       </div>
 
       <div class="pg-gd-body" id="pgGdBody">
@@ -157,7 +214,7 @@
         <!-- ── Lobby View ── -->
         <div id="pgGdLobbyView">
           <div class="pg-gd-lobby-toolbar">
-            <span class="pg-gd-lobby-label" id="pgGdLobbyLabel">Active Discussions</span>
+            <span class="pg-gd-lobby-label" id="pgGdLobbyLabel">GD Sessions</span>
             <button class="pg-gd-refresh-btn" id="pgGdRefreshBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
@@ -172,12 +229,12 @@
           <div id="pgGdSessionsList"></div>
 
           <div class="pg-gd-create-cta" id="pgGdCreateCta">
-            <span>No discussion to join?</span>
+            <span>Don't see your slot?</span>
             <button class="pg-gd-start-btn" id="pgGdStartNewBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:16px;height:16px">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              Start a Discussion
+              Schedule a Session
             </button>
           </div>
           <div class="pg-gd-status" id="pgGdLobbyStatus"></div>
@@ -186,6 +243,7 @@
         <!-- ── Create View ── -->
         <div id="pgGdCreateView" style="display:none">
           <div class="pg-gd-create-form">
+
             <div class="pg-gd-form-group">
               <label class="pg-gd-form-label" for="pgGdTopic">Discussion Topic *</label>
               <input class="pg-gd-form-input" id="pgGdTopic" type="text" maxlength="200"
@@ -202,26 +260,34 @@
               <div class="pg-gd-form-charcount"><span id="pgGdDescChars">0</span>/500</div>
             </div>
 
-            <div class="pg-gd-form-group" style="background:#fafafa;border:1px solid rgba(31,41,51,0.1);border-radius:12px;padding:14px">
-              <div style="font-size:12px;font-weight:700;color:#52616f;margin-bottom:6px">Session Rules</div>
-              <div style="font-size:12px;color:#7b8794;line-height:1.7">
-                • Max <strong>11 participants</strong> per session<br>
-                • You are automatically the <strong>moderator</strong><br>
-                • Session stays active until you or all participants leave<br>
-                • Video requires Daily.co integration (configured by admin)
+            <div class="pg-gd-form-row">
+              <div class="pg-gd-form-col">
+                <label class="pg-gd-form-label" for="pgGdSlot">Slot</label>
+                <select class="pg-gd-form-select" id="pgGdSlot">${slotOptions}</select>
+              </div>
+              <div class="pg-gd-form-col">
+                <label class="pg-gd-form-label" for="pgGdDate">Date *</label>
+                <input class="pg-gd-form-input" id="pgGdDate" type="date" min="${minDate}">
+              </div>
+              <div class="pg-gd-form-col">
+                <label class="pg-gd-form-label" for="pgGdTime">Time *</label>
+                <input class="pg-gd-form-input" id="pgGdTime" type="time">
               </div>
             </div>
 
             <button class="pg-gd-create-submit" id="pgGdCreateSubmit">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:18px;height:18px">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
-              Create Session &amp; Open Arena
+              Schedule GD Session
             </button>
             <div class="pg-gd-create-note">
-              You will join automatically as the moderator. Share the session link with your batchmates.
+              A Jitsi Meet video room is auto-created. Join opens 15 minutes before the scheduled time.
             </div>
             <div class="pg-gd-status" id="pgGdCreateStatus"></div>
+
           </div>
         </div>
 
@@ -229,18 +295,18 @@
         <div id="pgGdSessionView" style="display:none">
           <div class="pg-gd-session-view">
             <div class="pg-gd-video-pane" id="pgGdVideoPane">
-              <div class="pg-gd-video-placeholder" id="pgGdVideoPlaceholder">
+              <div class="pg-gd-video-placeholder">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                  <rect x="2" y="7" width="15" height="10" rx="2"/>
-                  <path d="M17 9l5-2v10l-5-2"/>
+                  <rect x="2" y="7" width="15" height="10" rx="2"/><path d="M17 9l5-2v10l-5-2"/>
                 </svg>
-                <strong>Video Room</strong>
-                <p>Video conferencing is not configured.<br>Use your preferred video tool (Google Meet, Zoom) and share the link with participants.</p>
+                <strong>Loading video room…</strong>
+                <p>The Jitsi Meet room is loading. Allow camera &amp; microphone when prompted.</p>
               </div>
             </div>
 
             <div class="pg-gd-session-sidebar">
               <div class="pg-gd-session-info">
+                <div class="pg-gd-session-slot" id="pgGdSessionSlot"></div>
                 <div class="pg-gd-session-topic-label">Topic</div>
                 <div class="pg-gd-session-topic-text" id="pgGdSessionTopic">—</div>
                 <div class="pg-gd-timer">
@@ -266,9 +332,7 @@
               </div>
 
               <div class="pg-gd-mod-panel" id="pgGdModPanel" style="display:none">
-                <div class="pg-gd-mod-label">
-                  <span>👑</span> Moderator Controls
-                </div>
+                <div class="pg-gd-mod-label"><span>👑</span> Moderator Controls</div>
                 <div class="pg-gd-mod-actions">
                   <button class="pg-gd-mod-btn" id="pgGdTimerToggleBtn">⏸ Pause Timer</button>
                   <button class="pg-gd-mod-btn danger" id="pgGdEndSessionBtn">End Session for All</button>
@@ -315,13 +379,11 @@
 
             <div class="pg-gd-feedback-note">
               <strong>Self-Assessment Tip:</strong> After every GD, ask yourself — Did I initiate? Did I build on others' points?
-              Did I summarise effectively? Did I let others speak? These are the exact criteria real recruiters evaluate in GD rounds.
+              Did I summarise effectively? Did I let others speak? These are the exact criteria real recruiters evaluate.
             </div>
 
             <div style="text-align:center">
-              <button class="pg-gd-feedback-back-btn" id="pgGdBackToLobbyBtn">
-                Back to Lobby →
-              </button>
+              <button class="pg-gd-feedback-back-btn" id="pgGdBackToLobbyBtn">Back to Sessions →</button>
             </div>
           </div>
         </div>
@@ -334,82 +396,52 @@
   document.body.appendChild(overlay);
 
   // ── Element references ─────────────────────────────────────
-  const triggerBtn     = wrap.querySelector('.pg-gd-trigger');
-  const closeBtn       = overlay.querySelector('.pg-gd-close-btn');
-  const tabs           = overlay.querySelectorAll('.pg-gd-tab');
-  const lobbyView      = document.getElementById('pgGdLobbyView');
-  const createView     = document.getElementById('pgGdCreateView');
-  const sessionView    = document.getElementById('pgGdSessionView');
-  const feedbackView   = document.getElementById('pgGdFeedbackView');
-  const sessionsList   = document.getElementById('pgGdSessionsList');
-  const lobbyStatus    = document.getElementById('pgGdLobbyStatus');
-  const createStatus   = document.getElementById('pgGdCreateStatus');
-  const sessionStatus  = document.getElementById('pgGdSessionStatus');
-  const progBadge      = document.getElementById('pgGdProgBadge');
-  const topicInput     = document.getElementById('pgGdTopic');
-  const topicChars     = document.getElementById('pgGdTopicChars');
-  const descInput      = document.getElementById('pgGdDesc');
-  const descChars      = document.getElementById('pgGdDescChars');
-  const createSubmit   = document.getElementById('pgGdCreateSubmit');
-  const refreshBtn     = document.getElementById('pgGdRefreshBtn');
-  const startNewBtn    = document.getElementById('pgGdStartNewBtn');
+  const triggerBtn       = wrap.querySelector('.pg-gd-trigger');
+  const closeBtn         = overlay.querySelector('.pg-gd-close-btn');
+  const tabs             = overlay.querySelectorAll('.pg-gd-tab');
+  const lobbyView        = document.getElementById('pgGdLobbyView');
+  const createView       = document.getElementById('pgGdCreateView');
+  const sessionView      = document.getElementById('pgGdSessionView');
+  const feedbackView     = document.getElementById('pgGdFeedbackView');
+  const sessionsList     = document.getElementById('pgGdSessionsList');
+  const lobbyStatus      = document.getElementById('pgGdLobbyStatus');
+  const createStatus     = document.getElementById('pgGdCreateStatus');
+  const sessionStatus    = document.getElementById('pgGdSessionStatus');
+  const progBadge        = document.getElementById('pgGdProgBadge');
+  const topicInput       = document.getElementById('pgGdTopic');
+  const topicChars       = document.getElementById('pgGdTopicChars');
+  const descInput        = document.getElementById('pgGdDesc');
+  const descChars        = document.getElementById('pgGdDescChars');
+  const slotSelect       = document.getElementById('pgGdSlot');
+  const dateInput        = document.getElementById('pgGdDate');
+  const timeInput        = document.getElementById('pgGdTime');
+  const createSubmit     = document.getElementById('pgGdCreateSubmit');
+  const refreshBtn       = document.getElementById('pgGdRefreshBtn');
+  const startNewBtn      = document.getElementById('pgGdStartNewBtn');
   const topicSuggestions = document.getElementById('pgGdTopicSuggestions');
-  const sessionTopicEl = document.getElementById('pgGdSessionTopic');
-  const timerDisplay   = document.getElementById('pgGdTimerDisplay');
+  const sessionTopicEl   = document.getElementById('pgGdSessionTopic');
+  const sessionSlotEl    = document.getElementById('pgGdSessionSlot');
+  const timerDisplay     = document.getElementById('pgGdTimerDisplay');
   const participantCount = document.getElementById('pgGdParticipantCount');
   const participantList  = document.getElementById('pgGdParticipantList');
-  const yourRoleEl     = document.getElementById('pgGdYourRole');
-  const modPanel       = document.getElementById('pgGdModPanel');
-  const timerToggleBtn = document.getElementById('pgGdTimerToggleBtn');
-  const endSessionBtn  = document.getElementById('pgGdEndSessionBtn');
-  const leaveBtn       = document.getElementById('pgGdLeaveBtn');
-  const backToLobbyBtn = document.getElementById('pgGdBackToLobbyBtn');
+  const yourRoleEl       = document.getElementById('pgGdYourRole');
+  const modPanel         = document.getElementById('pgGdModPanel');
+  const timerToggleBtn   = document.getElementById('pgGdTimerToggleBtn');
+  const endSessionBtn    = document.getElementById('pgGdEndSessionBtn');
+  const leaveBtn         = document.getElementById('pgGdLeaveBtn');
+  const backToLobbyBtn   = document.getElementById('pgGdBackToLobbyBtn');
   const feedbackDuration = document.getElementById('pgGdFeedbackDuration');
-  const videoPane      = document.getElementById('pgGdVideoPane');
+  const videoPane        = document.getElementById('pgGdVideoPane');
 
-  // ── Helpers ────────────────────────────────────────────────
-  function timeAgo(dateStr) {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const m = Math.floor(diff / 60000);
-    if (m < 1) return 'just now';
-    if (m < 60) return `${m}m ago`;
-    const h = Math.floor(m / 60);
-    if (h < 24) return `${h}h ago`;
-    return `${Math.floor(h / 24)}d ago`;
-  }
-
-  function formatDuration(ms) {
-    const s = Math.floor(ms / 1000);
-    const m = Math.floor(s / 60);
-    const h = Math.floor(m / 60);
-    if (h > 0) return `${h}h ${m % 60}m`;
-    return `${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-  }
-
-  function showStatus(el, type, msg) {
-    el.className = `pg-gd-status ${type} visible`;
-    el.innerHTML = type === 'loading'
-      ? `<div class="pg-gd-spinner"></div>${msg}`
-      : msg;
-  }
-  function clearStatus(el) {
-    el.className = 'pg-gd-status';
-    el.textContent = '';
-  }
-
-  // ── Tab switching ──────────────────────────────────────────
+  // ── Tab / View switching ───────────────────────────────────
   function switchTab(tabName) {
-    // Don't allow tab switch while in a session
     if (state.currentSession && tabName !== 'lobby' && tabName !== 'create') return;
-
     state.view = tabName;
     tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
-    lobbyView.style.display  = tabName === 'lobby'  ? '' : 'none';
-    createView.style.display = tabName === 'create' ? '' : 'none';
+    lobbyView.style.display    = tabName === 'lobby'  ? '' : 'none';
+    createView.style.display   = tabName === 'create' ? '' : 'none';
     sessionView.style.display  = tabName === 'session'  ? '' : 'none';
     feedbackView.style.display = tabName === 'feedback' ? '' : 'none';
-
-    // Hide the tabs strip when in session or feedback
     document.getElementById('pgGdTabs').style.display =
       (tabName === 'session' || tabName === 'feedback') ? 'none' : '';
   }
@@ -438,8 +470,8 @@
               <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
           </div>
-          <strong>No active discussions</strong>
-          <p>Be the first to start a group discussion for your programme. Invite batchmates to join and practice together.</p>
+          <strong>No sessions scheduled</strong>
+          <p>Be the first to schedule a GD session for your programme. Others can join 15 minutes before the session time.</p>
         </div>
       `;
       return;
@@ -447,67 +479,96 @@
 
     sessionsList.innerHTML = sessions.map(s => {
       const count = s.participant_count || 0;
-      const max = s.max_participants || 11;
+      const max   = s.max_participants || 11;
       const isFull = count >= max;
-      const pct = Math.min(100, Math.round((count / max) * 100));
+      const pct    = Math.min(100, Math.round((count / max) * 100));
       const isActive = s.status === 'active';
+      const slotNum  = s.slot_number || '?';
+      const canJoin  = !isFull && canJoinSession(s.scheduled_at);
+      const countdown = !isFull && !canJoin && s.scheduled_at ? formatCountdown(s.scheduled_at) : '';
+      const prog     = (s.programme || 'bda').toUpperCase();
+      const creator  = escHtml(s.creatorName || 'Unknown');
+      const roll     = s.creatorRoll ? ` · ${escHtml(s.creatorRoll)}` : '';
+
+      const statusBadge = isActive
+        ? `<span class="pg-gd-card-status-active"><span class="pg-gd-live-dot"></span>Live</span>`
+        : `<span class="pg-gd-card-status-waiting">Scheduled</span>`;
 
       return `
-        <div class="pg-gd-session-card">
-          <div>
-            <div class="pg-gd-card-topic">${escHtml(s.topic)}</div>
-            ${s.description ? `<div class="pg-gd-card-desc">${escHtml(s.description.slice(0, 100))}${s.description.length > 100 ? '…' : ''}</div>` : ''}
-            <div class="pg-gd-card-meta">
-              <span class="pg-gd-card-prog">${(s.programme || 'bda').toUpperCase()}</span>
-              ${isActive
-                ? `<span class="pg-gd-card-status-active"><span class="pg-gd-live-dot"></span>Live</span>`
-                : `<span class="pg-gd-card-status-waiting">Waiting</span>`}
+        <div class="pg-gd-session-card" data-id="${s.id}" data-scheduled="${s.scheduled_at || ''}">
+          <div class="pg-gd-card-body">
+            <div class="pg-gd-card-top-row">
+              <span class="pg-gd-slot-badge">GD SLOT-${slotNum}</span>
+              <div class="pg-gd-card-badges">
+                <span class="pg-gd-card-prog">${prog}</span>
+                ${statusBadge}
+              </div>
             </div>
+            <div class="pg-gd-card-topic">${escHtml(s.topic)}</div>
+            ${s.description ? `<div class="pg-gd-card-desc">${escHtml(s.description.slice(0,100))}${s.description.length > 100 ? '…' : ''}</div>` : ''}
+            <div class="pg-gd-card-schedule">📅 ${formatScheduledAt(s.scheduled_at)}</div>
+            <div class="pg-gd-card-creator">👤 ${creator}${roll}</div>
             <div class="pg-gd-participant-bar">
               <div class="pg-gd-participant-label">
                 <span class="pg-gd-participant-count">${count}/${max} participants</span>
                 ${isFull ? '<span class="pg-gd-participant-full">Full</span>' : ''}
               </div>
               <div class="pg-gd-bar-track">
-                <div class="pg-gd-bar-fill ${isFull ? 'full' : ''}" style="width:${pct}%"></div>
+                <div class="pg-gd-bar-fill${isFull ? ' full' : ''}" style="width:${pct}%"></div>
               </div>
             </div>
-            <div class="pg-gd-card-time">Started ${timeAgo(s.created_at)}</div>
           </div>
           <div class="pg-gd-join-col">
-            <button class="pg-gd-join-btn" data-id="${s.id}" ${isFull ? 'disabled' : ''}>
-              ${isFull ? 'Full' : 'Join →'}
+            <button class="pg-gd-join-btn${canJoin ? ' ready' : ''}"
+                    data-id="${s.id}" data-full="${isFull}"
+                    ${isFull || !canJoin ? 'disabled' : ''}>
+              ${isFull ? 'Full' : (canJoin ? 'Join Now →' : 'Join Session')}
             </button>
-            ${s.room_url ? `
-              <span class="pg-gd-video-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                  <rect x="2" y="7" width="15" height="10" rx="2"/>
-                  <path d="M17 9l5-2v10l-5-2"/>
-                </svg>
-                Video
-              </span>` : ''}
+            <span class="pg-gd-join-countdown">${countdown}</span>
           </div>
         </div>
       `;
     }).join('');
 
-    // Bind join buttons
-    sessionsList.querySelectorAll('.pg-gd-join-btn:not([disabled])').forEach(btn => {
-      btn.addEventListener('click', () => joinSession(btn.dataset.id));
+    startCountdownUpdates();
+  }
+
+  // Event delegation — handles buttons enabled after countdown expires
+  sessionsList.addEventListener('click', e => {
+    const btn = e.target.closest('.pg-gd-join-btn');
+    if (!btn || btn.disabled || btn.dataset.full === 'true') return;
+    joinSession(btn.dataset.id);
+  });
+
+  function updateJoinButtons() {
+    sessionsList.querySelectorAll('.pg-gd-session-card').forEach(card => {
+      const scheduledAt = card.dataset.scheduled;
+      const btn = card.querySelector('.pg-gd-join-btn');
+      const countdownEl = card.querySelector('.pg-gd-join-countdown');
+      if (!btn || btn.dataset.full === 'true') return;
+
+      const canJoin = canJoinSession(scheduledAt);
+      btn.disabled = !canJoin;
+      btn.textContent = canJoin ? 'Join Now →' : 'Join Session';
+      btn.classList.toggle('ready', canJoin);
+      if (countdownEl) countdownEl.textContent = !canJoin && scheduledAt ? formatCountdown(scheduledAt) : '';
     });
   }
 
-  function escHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  function startCountdownUpdates() {
+    stopCountdownUpdates();
+    state.countdownInterval = setInterval(updateJoinButtons, 30000);
+  }
+  function stopCountdownUpdates() {
+    if (state.countdownInterval) { clearInterval(state.countdownInterval); state.countdownInterval = null; }
   }
 
   // ── Load sessions ──────────────────────────────────────────
   async function loadSessions() {
     state.currentProgramme = getProgramme();
     progBadge.textContent = state.currentProgramme.toUpperCase();
-    document.getElementById('pgGdLobbyLabel').textContent = `Active Discussions — ${state.currentProgramme.toUpperCase()}`;
-
-    showStatus(lobbyStatus, 'loading', 'Loading active sessions…');
+    document.getElementById('pgGdLobbyLabel').textContent = `GD Sessions — ${state.currentProgramme.toUpperCase()}`;
+    showStatus(lobbyStatus, 'loading', 'Loading sessions…');
     try {
       const data = await apiGet(`/api/gd/sessions?programme=${state.currentProgramme}`);
       state.sessions = data.sessions || [];
@@ -525,6 +586,7 @@
     try {
       const data = await apiPost('/api/gd/sessions', { action: 'join', sessionId });
       clearStatus(lobbyStatus);
+      stopCountdownUpdates();
       enterSessionView(data.session);
     } catch (e) {
       showStatus(lobbyStatus, 'error', e.message || 'Could not join. Try refreshing.');
@@ -534,67 +596,50 @@
   // ── Enter session view ────────────────────────────────────
   function enterSessionView(session) {
     state.currentSession = session;
-    state.isModerator = session.moderator_id === getCurrentUserId();
+    state.isModerator = session.moderator_id === getCurrentUserId() || !!session.isCreator;
 
-    // Switch view
     enterView('session');
 
-    // Set topic
     sessionTopicEl.textContent = session.topic;
-
-    // Participant count
+    sessionSlotEl.textContent  = session.slot_number ? `GD SLOT-${session.slot_number}` : 'GD Session';
     participantCount.textContent = `${session.participant_count}/${session.max_participants}`;
-
-    // Show/hide mod panel
     modPanel.style.display = state.isModerator ? '' : 'none';
     yourRoleEl.textContent = state.isModerator ? '👑 Moderator' : 'Participant';
 
-    // Video embed
+    // Embed Jitsi Meet — free, no API key required
     if (session.room_url) {
-      videoPane.innerHTML = `<iframe class="pg-gd-video-iframe" src="${session.room_url}" allow="camera;microphone;fullscreen;display-capture;autoplay" allowfullscreen></iframe>`;
+      videoPane.innerHTML = `
+        <iframe
+          class="pg-gd-video-iframe"
+          src="${session.room_url}"
+          allow="camera; microphone; fullscreen; display-capture; autoplay"
+          allowfullscreen
+          title="GD Arena Video Room">
+        </iframe>
+      `;
     } else {
       videoPane.innerHTML = `
         <div class="pg-gd-video-placeholder">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-            <rect x="2" y="7" width="15" height="10" rx="2"/>
-            <path d="M17 9l5-2v10l-5-2"/>
+            <rect x="2" y="7" width="15" height="10" rx="2"/><path d="M17 9l5-2v10l-5-2"/>
           </svg>
-          <strong>Video Not Configured</strong>
-          <p>Use Google Meet, Zoom, or any video tool with your batchmates.<br>Your GD discussion and timer are tracked here.</p>
+          <strong>Video Room Unavailable</strong>
+          <p>Use Google Meet or Zoom with your batchmates while tracking your session here.</p>
         </div>
       `;
     }
 
-    // Start timer
-    state.timerStart = session.started_at ? new Date(session.started_at).getTime() : Date.now();
+    state.timerStart  = session.started_at ? new Date(session.started_at).getTime() : Date.now();
     state.timerPaused = false;
     startTimer();
-
-    // Poll for participant count updates
     state.pollInterval = setInterval(() => refreshParticipantCount(session.id), 15000);
-  }
-
-  function getCurrentUserId() {
-    try {
-      const sbKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
-      if (sbKey) {
-        const d = JSON.parse(localStorage.getItem(sbKey) || '{}');
-        return d?.user?.id || null;
-      }
-    } catch {}
-    return null;
   }
 
   async function refreshParticipantCount(sessionId) {
     try {
       const data = await apiGet(`/api/gd/sessions?programme=${state.currentProgramme}`);
       const updated = (data.sessions || []).find(s => s.id === sessionId);
-      if (!updated) {
-        // Session ended
-        clearPollInterval();
-        showEndedFeedback();
-        return;
-      }
+      if (!updated) { clearPollInterval(); showEndedFeedback(); return; }
       participantCount.textContent = `${updated.participant_count}/${updated.max_participants}`;
       if (state.currentSession) state.currentSession.participant_count = updated.participant_count;
     } catch {}
@@ -604,34 +649,23 @@
   function startTimer() {
     clearTimerInterval();
     state.timerInterval = setInterval(() => {
-      if (!state.timerPaused) {
-        const elapsed = Date.now() - state.timerStart;
-        timerDisplay.textContent = formatDuration(elapsed);
-      }
+      if (!state.timerPaused) timerDisplay.textContent = formatDuration(Date.now() - state.timerStart);
     }, 1000);
   }
-
-  function clearTimerInterval() {
-    if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
-  }
-  function clearPollInterval() {
-    if (state.pollInterval) { clearInterval(state.pollInterval); state.pollInterval = null; }
-  }
+  function clearTimerInterval() { if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; } }
+  function clearPollInterval()  { if (state.pollInterval)  { clearInterval(state.pollInterval);  state.pollInterval  = null; } }
 
   // ── Leave / End session ───────────────────────────────────
   async function leaveSession(endForAll = false) {
     if (!state.currentSession) return;
     showStatus(sessionStatus, 'loading', endForAll ? 'Ending session…' : 'Leaving session…');
     const sessionId = state.currentSession.id;
-    const elapsed = Date.now() - state.timerStart;
-
+    const elapsed   = Date.now() - state.timerStart;
     try {
       await apiPost('/api/gd/sessions', { action: 'leave', sessionId, endSession: endForAll });
       clearTimerInterval();
       clearPollInterval();
       state.currentSession = null;
-
-      // Show feedback
       feedbackDuration.textContent = formatDuration(elapsed);
       showEndedFeedback();
     } catch (e) {
@@ -639,45 +673,56 @@
     }
   }
 
-  function showEndedFeedback() {
-    enterView('feedback');
-  }
+  function showEndedFeedback() { enterView('feedback'); }
 
-  // ── Create session ────────────────────────────────────────
+  // ── Create / schedule session ──────────────────────────────
   async function createSession() {
     const topic = topicInput.value.trim();
-    if (!topic) {
-      showStatus(createStatus, 'error', 'Please enter a discussion topic.');
-      topicInput.focus();
-      return;
-    }
+    const date  = dateInput.value;
+    const time  = timeInput.value;
+
+    if (!topic) { showStatus(createStatus, 'error', 'Please enter a discussion topic.'); topicInput.focus(); return; }
+    if (!date)  { showStatus(createStatus, 'error', 'Please select a date for the session.'); dateInput.focus(); return; }
+    if (!time)  { showStatus(createStatus, 'error', 'Please select a time for the session.'); timeInput.focus(); return; }
+
+    const scheduledAt = new Date(`${date}T${time}:00`).toISOString();
+    const slotNum     = parseInt(slotSelect.value) || 1;
+    const programme   = state.currentProgramme || getProgramme();
 
     createSubmit.disabled = true;
-    showStatus(createStatus, 'loading', 'Creating session and setting up arena…');
+    showStatus(createStatus, 'loading', 'Scheduling GD session…');
 
     try {
-      const programme = state.currentProgramme || getProgramme();
-      const data = await apiPost('/api/gd/sessions', {
+      await apiPost('/api/gd/sessions', {
         topic,
         description: descInput.value.trim(),
-        programme
+        programme,
+        slotNumber: slotNum,
+        scheduledAt
       });
 
-      clearStatus(createStatus);
-      topicInput.value = '';
-      descInput.value = '';
-      topicChars.textContent = '0';
-      descChars.textContent = '0';
+      showStatus(createStatus, 'success',
+        `✓ GD SLOT-${slotNum} scheduled for ${formatScheduledAt(scheduledAt)}. Join opens 15 min before the session.`);
 
-      enterSessionView(data.session);
+      topicInput.value = '';
+      descInput.value  = '';
+      topicChars.textContent = '0';
+      descChars.textContent  = '0';
+
+      setTimeout(() => {
+        clearStatus(createStatus);
+        switchTab('lobby');
+        tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === 'lobby'));
+        loadSessions();
+      }, 2200);
     } catch (e) {
-      showStatus(createStatus, 'error', e.message || 'Could not create session. Please try again.');
+      showStatus(createStatus, 'error', e.message || 'Could not schedule session. Please try again.');
     } finally {
       createSubmit.disabled = false;
     }
   }
 
-  // ── Populate topic suggestions ─────────────────────────────
+  // ── Topic suggestions ──────────────────────────────────────
   function populateTopicSuggestions(programme) {
     const topics = GD_TOPICS[programme] || GD_TOPICS.bda;
     topicSuggestions.innerHTML = topics.map(t =>
@@ -697,14 +742,7 @@
     progBadge.textContent = state.currentProgramme.toUpperCase();
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
-
-    // If already in session, show session view
-    if (state.currentSession) {
-      enterView('session');
-      return;
-    }
-
-    // Load lobby
+    if (state.currentSession) { enterView('session'); return; }
     enterView('lobby');
     loadSessions();
     populateTopicSuggestions(state.currentProgramme);
@@ -713,6 +751,7 @@
   function closeArena() {
     overlay.classList.remove('open');
     document.body.style.overflow = '';
+    stopCountdownUpdates();
     clearStatus(lobbyStatus);
     clearStatus(createStatus);
     clearStatus(sessionStatus);
@@ -721,28 +760,19 @@
   // ── Event bindings ────────────────────────────────────────
   triggerBtn.addEventListener('click', openArena);
   closeBtn.addEventListener('click', closeArena);
-
-  overlay.addEventListener('click', e => {
-    if (e.target === overlay) closeArena();
-  });
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && overlay.classList.contains('open')) closeArena();
-  });
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeArena(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) closeArena(); });
 
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       if (state.currentSession) return;
       switchTab(tab.dataset.tab);
-      if (tab.dataset.tab === 'lobby') loadSessions();
+      if (tab.dataset.tab === 'lobby')  loadSessions();
       if (tab.dataset.tab === 'create') populateTopicSuggestions(state.currentProgramme);
     });
   });
 
-  refreshBtn.addEventListener('click', () => {
-    clearStatus(lobbyStatus);
-    loadSessions();
-  });
+  refreshBtn.addEventListener('click', () => { clearStatus(lobbyStatus); loadSessions(); });
 
   startNewBtn.addEventListener('click', () => {
     switchTab('create');
@@ -751,27 +781,19 @@
   });
 
   createSubmit.addEventListener('click', createSession);
-
   topicInput.addEventListener('input', () => { topicChars.textContent = topicInput.value.length; });
-  descInput.addEventListener('input', () => { descChars.textContent = descInput.value.length; });
-
-  topicInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); createSession(); }
-  });
+  descInput.addEventListener('input',  () => { descChars.textContent  = descInput.value.length;  });
 
   leaveBtn.addEventListener('click', () => {
     if (confirm('Leave the discussion session?')) leaveSession(false);
   });
-
   endSessionBtn.addEventListener('click', () => {
     if (confirm('End the session for all participants? This cannot be undone.')) leaveSession(true);
   });
 
-  let timerPaused = false;
   timerToggleBtn.addEventListener('click', () => {
-    timerPaused = !timerPaused;
-    state.timerPaused = timerPaused;
-    if (timerPaused) {
+    state.timerPaused = !state.timerPaused;
+    if (state.timerPaused) {
       state.timerPauseAt = Date.now();
       timerToggleBtn.textContent = '▶ Resume Timer';
     } else {
@@ -780,24 +802,16 @@
     }
   });
 
-  backToLobbyBtn.addEventListener('click', () => {
-    enterView('lobby');
-    loadSessions();
-  });
+  backToLobbyBtn.addEventListener('click', () => { enterView('lobby'); loadSessions(); });
 
   // ── Show trigger only when logged in ──────────────────────
-  function syncVisibility() {
-    const token = getToken();
-    wrap.hidden = !token;
-  }
+  function syncVisibility() { wrap.hidden = !getToken(); }
   syncVisibility();
-  // Re-check every 3 seconds until logged in
   const visibilityInterval = setInterval(() => {
     syncVisibility();
     if (getToken()) clearInterval(visibilityInterval);
   }, 3000);
 
-  // ── Listen for programme change ────────────────────────────
   window.addEventListener('storage', e => {
     if (e.key === 'selectedProgramme') {
       state.currentProgramme = e.newValue || 'bda';

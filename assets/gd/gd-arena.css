@@ -932,6 +932,112 @@
 }
 @keyframes pg-gd-spin { to { transform: rotate(360deg); } }
 
+/* ─── Session card — new layout ────────────────────────── */
+.pg-gd-card-body { min-width: 0; }
+
+.pg-gd-card-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.pg-gd-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.pg-gd-slot-badge {
+  font-size: 14px;
+  font-weight: 900;
+  color: #7c3aed;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.pg-gd-card-schedule {
+  font-size: 12px;
+  font-weight: 600;
+  color: #52616f;
+  margin-bottom: 3px;
+}
+
+.pg-gd-card-creator {
+  font-size: 12px;
+  color: #7b8794;
+  margin-bottom: 12px;
+}
+
+.pg-gd-join-countdown {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9aa5b1;
+  text-align: center;
+  white-space: nowrap;
+  min-height: 16px;
+}
+
+.pg-gd-join-btn.ready {
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 3px 10px rgba(5, 150, 105, 0.3);
+  animation: pg-gd-join-pulse 2s ease-in-out infinite;
+}
+.pg-gd-join-btn.ready:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.42);
+  animation: none;
+}
+@keyframes pg-gd-join-pulse {
+  0%, 100% { box-shadow: 0 3px 10px rgba(5, 150, 105, 0.3); }
+  50%       { box-shadow: 0 3px 20px rgba(5, 150, 105, 0.55); }
+}
+
+.pg-gd-session-slot {
+  font-size: 13px;
+  font-weight: 800;
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+/* ─── Schedule form row (slot / date / time) ────────────── */
+.pg-gd-form-row {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+  align-items: start;
+}
+.pg-gd-form-col { display: flex; flex-direction: column; }
+.pg-gd-form-col .pg-gd-form-label { margin-bottom: 7px; }
+
+.pg-gd-form-select {
+  width: 100%;
+  border: 1.5px solid rgba(31, 41, 51, 0.16);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-family: var(--font, Inter, system-ui, sans-serif);
+  color: #1f2933;
+  background: #fff;
+  transition: border-color .18s;
+  outline: none;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.pg-gd-form-select:focus { border-color: #7c3aed; }
+
+.pg-gd-status.success {
+  background: rgba(5, 150, 105, 0.08);
+  border: 1px solid rgba(5, 150, 105, 0.22);
+  color: #047857;
+}
+
 /* ─── Auth screen feature card ──────────────────────── */
 .core-feature-mini-icon.gd-icon {
   background: linear-gradient(135deg, #7c3aed, #4f46e5);
@@ -947,6 +1053,8 @@
   .pg-gd-session-sidebar { width: 100%; }
   .pg-gd-feedback-grid { grid-template-columns: 1fr; }
   .pg-gd-sessions-grid { grid-template-columns: 1fr; }
+  .pg-gd-form-row { grid-template-columns: 1fr 1fr; }
+  .pg-gd-form-row > .pg-gd-form-col:first-child { grid-column: 1 / -1; }
 }
 @media (max-width: 420px) {
   .pg-gd-wrap { right: 12px; bottom: 264px; }
