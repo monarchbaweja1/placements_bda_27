@@ -41,17 +41,27 @@
     timerInterval: null,
     pollInterval: null,
     countdownInterval: null,
+    speakingInterval: null,
     participantsCache: {},
     jitsiApi: null,
     recognition: null,
     speakingData: {},
+    audioSpeakingState: {},
     dominantId: null,
     localJitsiId: null
   };
 
   let totalWords = 0;
   let fillerCount = 0;
-  const FILLERS = ['um','uh','like','you know','basically','actually','literally','so','right','okay','kind of','sort of','i mean','you see'];
+  let wordTimestamps = [];
+  const FILLERS = [
+    'um','uh','er','erm',
+    'like','you know','basically','actually','literally',
+    'so','right','okay','kind of','sort of','i mean','you see',
+    // Indian English
+    'isn\'t it','what to say','how to say',
+    'basically speaking','frankly speaking','no no','see see'
+  ];
 
   function getToken() {
     try {
@@ -668,7 +678,42 @@
       renderSpeakingTimes();
     });
 
+    // audioLevelsChanged gives per-person audio levels — more accurate than dominant speaker
+    let usingAudioLevels = false;
+    state.jitsiApi.on('audioLevelsChanged', (data) => {
+      usingAudioLevels = true;
+      const levels = (data?.audioLevels) || (typeof data === 'object' ? data : {});
+      const now = Date.now();
+      Object.entries(levels).forEach(([id, level]) => {
+        const d = state.speakingData[id];
+        if (!d) return;
+        if (!state.audioSpeakingState[id]) {
+          state.audioSpeakingState[id] = { speaking: false, aboveStart: null, graceTimer: null };
+        }
+        const s = state.audioSpeakingState[id];
+        if (level > 0.06) {
+          if (!s.aboveStart) s.aboveStart = now;
+          if (s.graceTimer) { clearTimeout(s.graceTimer); s.graceTimer = null; }
+          if (!s.speaking && (now - s.aboveStart) >= 250) {
+            s.speaking = true;
+            if (!d.startMs) d.startMs = now;
+          }
+        } else {
+          if (!s.speaking) { s.aboveStart = null; return; }
+          if (s.graceTimer) return;
+          s.graceTimer = setTimeout(() => {
+            s.speaking = false;
+            if (d.startMs) { d.totalMs += Date.now() - d.startMs; d.startMs = null; }
+            s.graceTimer = null;
+            s.aboveStart = null;
+          }, 600);
+        }
+      });
+    });
+
+    // Fallback: use dominant speaker if audioLevelsChanged doesn't fire
     state.jitsiApi.on('dominantSpeakerChanged', ({ id }) => {
+      if (usingAudioLevels) return;
       const now = Date.now();
       if (state.dominantId && state.speakingData[state.dominantId]?.startMs) {
         state.speakingData[state.dominantId].totalMs += now - state.speakingData[state.dominantId].startMs;
@@ -676,7 +721,6 @@
       }
       state.dominantId = id;
       if (state.speakingData[id]) state.speakingData[id].startMs = now;
-      renderSpeakingTimes();
     });
   }
 
@@ -723,9 +767,13 @@
         if (!e.results[i].isFinal) continue;
         const text = e.results[i][0].transcript.toLowerCase().trim();
         if (!text) continue;
-        totalWords += text.split(/\s+/).filter(Boolean).length;
+        const words = text.split(/\s+/).filter(Boolean);
+        totalWords += words.length;
+        const now = Date.now();
+        words.forEach(() => wordTimestamps.push(now));
         FILLERS.forEach(f => {
-          const m = text.match(new RegExp(`\\b${f}\\b`, 'gi'));
+          const escaped = f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const m = text.match(new RegExp(`\\b${escaped}\\b`, 'gi'));
           if (m) fillerCount += m.length;
         });
         updateConfidenceMini();
@@ -737,10 +785,31 @@
     state.recognition = rec;
   }
 
+  function calcWPM() {
+    if (wordTimestamps.length < 10) return null;
+    const now = Date.now();
+    const recent = wordTimestamps.filter(t => now - t < 60000);
+    if (recent.length < 10) {
+      const elapsed = (now - wordTimestamps[0]) / 60000;
+      return elapsed < 0.2 ? null : Math.round(totalWords / elapsed);
+    }
+    const elapsed = (now - recent[0]) / 60000;
+    return elapsed < 0.1 ? null : Math.round(recent.length / elapsed);
+  }
+
   function calcConfidenceScore() {
     if (totalWords < 15) return null;
-    const rate = fillerCount / totalWords;
-    return Math.max(0, Math.min(100, Math.round(100 - rate * 250)));
+    const fillerRate = fillerCount / totalWords;
+    const fillerScore = Math.max(0, Math.min(100, 100 - fillerRate * 300));
+    const wpm = calcWPM();
+    if (wpm === null) return Math.round(fillerScore);
+    let paceScore;
+    if      (wpm < 80)   paceScore = Math.max(0, 50 + (wpm - 80) * 1.5);
+    else if (wpm < 120)  paceScore = 50 + ((wpm - 80) / 40) * 50;
+    else if (wpm <= 170) paceScore = 100;
+    else if (wpm <= 220) paceScore = 100 - ((wpm - 170) / 50) * 30;
+    else                 paceScore = Math.max(0, 70 - (wpm - 220) * 0.5);
+    return Math.max(0, Math.min(100, Math.round(fillerScore * 0.65 + paceScore * 0.35)));
   }
 
   function updateConfidenceMini() {
@@ -748,6 +817,9 @@
     if (score === null) return;
     if (confidenceMini) confidenceMini.style.display = '';
     if (confidenceValue) confidenceValue.textContent = `${score}/100`;
+    const wpm = calcWPM();
+    const sub = confidenceMini?.querySelector('.pg-gd-confidence-sub');
+    if (sub) sub.textContent = wpm !== null ? `${wpm} WPM · filler-based` : 'Filler words & pace';
   }
 
   // ── Load sessions ──────────────────────────────────────────
@@ -927,11 +999,12 @@
 
   // ── Enter session view ────────────────────────────────────
   async function enterSessionView(session) {
-    state.currentSession  = session;
-    state.speakingData    = {};
-    state.dominantId      = null;
-    state.localJitsiId    = null;
-    totalWords = 0; fillerCount = 0;
+    state.currentSession     = session;
+    state.speakingData       = {};
+    state.audioSpeakingState = {};
+    state.dominantId         = null;
+    state.localJitsiId       = null;
+    totalWords = 0; fillerCount = 0; wordTimestamps = [];
 
     enterView('session');
 
@@ -943,7 +1016,8 @@
 
     state.timerStart = Date.now();
     startTimer();
-    state.pollInterval = setInterval(() => { refreshParticipantCount(session.id); renderSpeakingTimes(); }, 10000);
+    state.speakingInterval = setInterval(renderSpeakingTimes, 1000);
+    state.pollInterval = setInterval(() => refreshParticipantCount(session.id), 10000);
 
     await loadJitsiScript();
     initJitsi(session);
@@ -967,8 +1041,9 @@
       timerDisplay.textContent = formatDuration(Date.now() - state.timerStart);
     }, 1000);
   }
-  function clearTimerInterval() { if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; } }
-  function clearPollInterval()  { if (state.pollInterval)  { clearInterval(state.pollInterval);  state.pollInterval  = null; } }
+  function clearTimerInterval()    { if (state.timerInterval)    { clearInterval(state.timerInterval);    state.timerInterval    = null; } }
+  function clearPollInterval()     { if (state.pollInterval)     { clearInterval(state.pollInterval);     state.pollInterval     = null; } }
+  function clearSpeakingInterval() { if (state.speakingInterval) { clearInterval(state.speakingInterval); state.speakingInterval = null; } }
 
   // ── Leave session ─────────────────────────────────────────
   async function leaveSession() {
@@ -977,17 +1052,20 @@
     const sessionId = state.currentSession.id;
     const elapsed   = Date.now() - state.timerStart;
 
-    // Flush speaking time for current dominant speaker
-    if (state.dominantId && state.speakingData[state.dominantId]?.startMs) {
-      state.speakingData[state.dominantId].totalMs += Date.now() - state.speakingData[state.dominantId].startMs;
-      state.speakingData[state.dominantId].startMs = null;
-    }
+    // Flush all currently-speaking participants
+    const flushNow = Date.now();
+    Object.values(state.speakingData).forEach(d => {
+      if (d.startMs) { d.totalMs += flushNow - d.startMs; d.startMs = null; }
+    });
+    // Clear audio grace timers
+    Object.values(state.audioSpeakingState).forEach(s => { if (s.graceTimer) clearTimeout(s.graceTimer); });
 
     // Calculate scores before cleanup
     const confScore = calcConfidenceScore();
     const myData    = state.speakingData[state.localJitsiId];
     const totalSpk  = Object.values(state.speakingData).reduce((a, d) => a + d.totalMs, 0);
     const mySpk     = myData?.totalMs || 0;
+    const myWpm     = calcWPM();
     const partPct   = totalSpk > 0 ? Math.round((mySpk / totalSpk) * 100) : null;
 
     // Dispose Jitsi
@@ -999,9 +1077,11 @@
       await apiPost('/api/gd/sessions', { action: 'leave', sessionId });
       clearTimerInterval();
       clearPollInterval();
-      state.currentSession = null;
-      state.speakingData   = {};
-      state.localJitsiId   = null;
+      clearSpeakingInterval();
+      state.currentSession     = null;
+      state.speakingData       = {};
+      state.audioSpeakingState = {};
+      state.localJitsiId       = null;
 
       feedbackDuration.textContent = formatDuration(elapsed);
 
@@ -1009,9 +1089,10 @@
         feedbackConfidence.textContent = confScore !== null ? `${confScore}` : '—';
         const lbl = document.getElementById('pgGdFeedbackConfidenceLabel');
         if (lbl && confScore !== null) {
-          lbl.textContent = confScore >= 75 ? 'Great — minimal filler words' :
-                            confScore >= 50 ? 'Good — reduce filler words' :
-                                             'Needs work — too many fillers';
+          const wpmNote = myWpm !== null ? ` · ${myWpm} WPM` : '';
+          lbl.textContent = confScore >= 75 ? `Great — minimal fillers${wpmNote}` :
+                            confScore >= 50 ? `Good — reduce filler words${wpmNote}` :
+                                             `Needs work — too many fillers${wpmNote}`;
         }
       }
       if (feedbackParticipation) {
