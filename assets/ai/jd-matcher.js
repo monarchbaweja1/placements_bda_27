@@ -100,7 +100,7 @@
         <div id="pgJdLoadingView" style="display:none">
           <div class="pg-jd-loading">
             <div class="pg-jd-spinner"></div>
-            <p>Analyzing JD-CV match against ${'<span id="pgJdLoadProg"></span>'} standards&hellip;<br>Gemini is reading both documents carefully.</p>
+            <p>Analyzing JD-CV match against ${'<span id="pgJdLoadProg"></span>'} standards&hellip;<br>We are carefully reading both documents. This takes a few seconds.</p>
           </div>
         </div>
 
