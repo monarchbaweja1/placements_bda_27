@@ -658,14 +658,14 @@ h2.section-h2 {
 .prog-sel-inner {
   position: relative; z-index: 1;
   min-height: 100vh; display: flex; flex-direction: column;
-  align-items: center; padding: 64px 24px 80px;
+  align-items: center; padding: 52px 24px 60px;
 }
-.prog-sel-hero { text-align: center; max-width: 680px; margin-bottom: 32px; }
+.prog-sel-hero { text-align: center; max-width: 640px; margin-bottom: 24px; }
 .prog-sel-hero h1 {
-  font-size: clamp(40px, 6vw, 72px); font-weight: 900;
-  letter-spacing: -2px; line-height: 1.05; margin-bottom: 16px;
+  font-size: clamp(36px, 5vw, 58px); font-weight: 900;
+  letter-spacing: -1.5px; line-height: 1.06; margin-bottom: 12px;
 }
-.prog-sel-hero .sub { font-size: 16px; color: var(--text2); line-height: 1.7; }
+.prog-sel-hero .sub { font-size: 14px; color: var(--text2); line-height: 1.65; }
 
 .prog-side-panel {
   display: none; /* shown only in grid layout via min-width query */
@@ -798,14 +798,14 @@ h2.section-h2 {
   display: flex; gap: 0; margin-bottom: 16px;
   background: var(--card); border: 1px solid var(--border);
   border-radius: 100px; overflow: hidden;
-  width: 100%;
+  max-width: 760px; width: 100%;
 }
 .prog-stats-strip-item {
-  padding: 14px 32px; border-right: 1px solid var(--border); text-align: center;
+  flex: 1; padding: 11px 18px; border-right: 1px solid var(--border); text-align: center;
 }
 .prog-stats-strip-item:last-child { border-right: none; }
-.prog-stats-strip-n { font-size: 22px; font-weight: 900; color: var(--green); font-family: var(--mono); }
-.prog-stats-strip-l { font-size: 10px; color: var(--text3); margin-top: 2px; letter-spacing: 1px; }
+.prog-stats-strip-n { font-size: 19px; font-weight: 900; color: var(--green); font-family: var(--mono); }
+.prog-stats-strip-l { font-size: 9px; color: var(--text3); margin-top: 2px; letter-spacing: 0.8px; }
 
 /* Programme cards — Helium service card style */
 .prog-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; max-width: 760px; width: 100%; }
@@ -1305,7 +1305,7 @@ h2.section-h2 {
   .navbar-links { display: none; }
   .session-actions { left: 50%; right: auto; transform: translateX(-50%); top: 16px; }
   .auth-visual { display: none; }
-  h1.hero-h1, .auth-headline h1, .prog-sel-hero h1 { font-size: 40px; }
+  h1.hero-h1, .auth-headline h1, .prog-sel-hero h1 { font-size: 34px; }
   .auth-access-row { max-width: 600px; grid-template-columns: 1fr; }
   .core-feature-mini { padding: 24px; }
 }
@@ -1313,10 +1313,10 @@ h2.section-h2 {
 @media(min-width:1041px) {
   .prog-sel-inner {
     display: grid;
-    grid-template-columns: 1fr 284px;
-    column-gap: 28px;
+    grid-template-columns: 1fr 272px;
+    column-gap: 24px;
     align-items: start;
-    max-width: 1300px;
+    max-width: 1280px;
     margin-left: auto;
     margin-right: auto;
     padding-left: 36px;
@@ -1325,30 +1325,33 @@ h2.section-h2 {
   .prog-sel-hero {
     grid-column: 1 / 3;
     justify-self: center;
+    margin-bottom: 28px;
   }
   .prog-stats-strip {
     grid-column: 1 / 2;
     grid-row: 2;
     margin-bottom: 14px;
+    width: 100%;
   }
   .prog-side-panel {
     display: block;
     grid-column: 2 / 3;
-    grid-row: 2 / 6;
+    grid-row: 2 / 5;
     align-self: start;
-    position: sticky;
-    top: 68px;
-    width: 284px;
+    position: relative;
+    width: 272px;
   }
   .prog-grid {
     grid-column: 1 / 2;
     grid-row: 3;
     max-width: none;
+    width: 100%;
   }
   .prog-disclaimer {
     grid-column: 1 / 2;
     grid-row: 4;
     max-width: none;
+    width: 100%;
   }
 }
 @media(max-width:600px) {
