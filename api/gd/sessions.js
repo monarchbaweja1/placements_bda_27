@@ -113,7 +113,7 @@ async function createSession(req, res) {
     // Jitsi Meet — free, no API key required
     const roomId   = crypto.randomUUID().replace(/-/g, '').slice(0, 10);
     const roomName = `BDA27-GD-SLOT${slotNumber}-${programme.toUpperCase()}-${roomId}`;
-    const roomUrl  = `https://meet.jit.si/${roomName}`;
+    const roomUrl  = `https://meet.jit.si/${roomName}`; // hash config applied client-side
 
     const { data: session, error: sessionError } = await supabase
       .from('gd_sessions')

@@ -780,16 +780,35 @@
     sessionSlotEl.textContent  = session.slot_number ? `GD SLOT-${session.slot_number}` : 'GD Session';
     participantCount.textContent = `${session.participant_count}/${session.max_participants}`;
 
-    // Embed Jitsi Meet — free, no API key required
+    // Embed Jitsi Meet with config overrides to disable lobby/moderator gate
     if (session.room_url) {
+      const baseUrl  = session.room_url.split('#')[0];
+      const jitsiCfg = [
+        'config.lobby.enabled=false',
+        'config.lobby.autoKnock=false',
+        'config.prejoinPageEnabled=false',
+        'config.disableModeratorIndicator=true',
+        'config.startWithAudioMuted=false',
+        'config.disableDeepLinking=true',
+        'config.enableNoisyMicDetection=false',
+        'interfaceConfig.SHOW_JITSI_WATERMARK=false',
+        'interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false'
+      ].join('&');
+      const iframeSrc = `${baseUrl}#${jitsiCfg}`;
+
       videoPane.innerHTML = `
-        <iframe
-          class="pg-gd-video-iframe"
-          src="${session.room_url}"
-          allow="camera; microphone; fullscreen; display-capture; autoplay"
-          allowfullscreen
-          title="GD Arena Video Room">
-        </iframe>
+        <div class="pg-gd-video-wrap">
+          <iframe
+            class="pg-gd-video-iframe"
+            src="${iframeSrc}"
+            allow="camera; microphone; fullscreen; display-capture; autoplay"
+            allowfullscreen
+            title="GD Arena Video Room">
+          </iframe>
+          <a class="pg-gd-open-tab-btn" href="${baseUrl}" target="_blank" rel="noopener">
+            ↗ Open in new tab
+          </a>
+        </div>
       `;
     } else {
       videoPane.innerHTML = `
@@ -798,7 +817,7 @@
             <rect x="2" y="7" width="15" height="10" rx="2"/><path d="M17 9l5-2v10l-5-2"/>
           </svg>
           <strong>Video Room Unavailable</strong>
-          <p>Use Google Meet or Zoom with your batchmates while tracking your session here.</p>
+          <p>No video room URL found for this session.</p>
         </div>
       `;
     }
