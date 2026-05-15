@@ -37,13 +37,10 @@
     sessions: [],
     currentSession: null,
     currentProgramme: 'bda',
-    isModerator: false,
     timerStart: null,
     timerInterval: null,
     pollInterval: null,
     countdownInterval: null,
-    timerPaused: false,
-    timerPauseAt: null,
     participantsCache: {}
   };
 
@@ -337,21 +334,7 @@
                   Participants
                   <span class="pg-gd-participants-count" id="pgGdParticipantCount">0/11</span>
                 </div>
-                <div class="pg-gd-participant-list" id="pgGdParticipantList">
-                  <div class="pg-gd-participant-item">
-                    <div class="pg-gd-participant-avatar">Y</div>
-                    <span class="pg-gd-participant-name">You</span>
-                    <span id="pgGdYourRole" style="font-size:11px;color:#9aa5b1"></span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="pg-gd-mod-panel" id="pgGdModPanel" style="display:none">
-                <div class="pg-gd-mod-label"><span>👑</span> Moderator Controls</div>
-                <div class="pg-gd-mod-actions">
-                  <button class="pg-gd-mod-btn" id="pgGdTimerToggleBtn">⏸ Pause Timer</button>
-                  <button class="pg-gd-mod-btn danger" id="pgGdEndSessionBtn">End Session for All</button>
-                </div>
+                <div class="pg-gd-participant-list" id="pgGdParticipantList"></div>
               </div>
 
               <div class="pg-gd-session-actions">
@@ -440,10 +423,6 @@
   const timerDisplay     = document.getElementById('pgGdTimerDisplay');
   const participantCount = document.getElementById('pgGdParticipantCount');
   const participantList  = document.getElementById('pgGdParticipantList');
-  const yourRoleEl       = document.getElementById('pgGdYourRole');
-  const modPanel         = document.getElementById('pgGdModPanel');
-  const timerToggleBtn   = document.getElementById('pgGdTimerToggleBtn');
-  const endSessionBtn    = document.getElementById('pgGdEndSessionBtn');
   const leaveBtn         = document.getElementById('pgGdLeaveBtn');
   const backToLobbyBtn   = document.getElementById('pgGdBackToLobbyBtn');
   const feedbackDuration = document.getElementById('pgGdFeedbackDuration');
@@ -794,15 +773,12 @@
   // ── Enter session view ────────────────────────────────────
   function enterSessionView(session) {
     state.currentSession = session;
-    state.isModerator = session.moderator_id === getCurrentUserId() || !!session.isCreator;
 
     enterView('session');
 
     sessionTopicEl.textContent = session.topic;
     sessionSlotEl.textContent  = session.slot_number ? `GD SLOT-${session.slot_number}` : 'GD Session';
     participantCount.textContent = `${session.participant_count}/${session.max_participants}`;
-    modPanel.style.display = state.isModerator ? '' : 'none';
-    yourRoleEl.textContent = state.isModerator ? '👑 Moderator' : 'Participant';
 
     // Embed Jitsi Meet — free, no API key required
     if (session.room_url) {
@@ -827,8 +803,7 @@
       `;
     }
 
-    state.timerStart  = session.started_at ? new Date(session.started_at).getTime() : Date.now();
-    state.timerPaused = false;
+    state.timerStart = session.started_at ? new Date(session.started_at).getTime() : Date.now();
     startTimer();
     state.pollInterval = setInterval(() => refreshParticipantCount(session.id), 15000);
   }
@@ -847,20 +822,20 @@
   function startTimer() {
     clearTimerInterval();
     state.timerInterval = setInterval(() => {
-      if (!state.timerPaused) timerDisplay.textContent = formatDuration(Date.now() - state.timerStart);
+      timerDisplay.textContent = formatDuration(Date.now() - state.timerStart);
     }, 1000);
   }
   function clearTimerInterval() { if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; } }
   function clearPollInterval()  { if (state.pollInterval)  { clearInterval(state.pollInterval);  state.pollInterval  = null; } }
 
-  // ── Leave / End session ───────────────────────────────────
-  async function leaveSession(endForAll = false) {
+  // ── Leave session ─────────────────────────────────────────
+  async function leaveSession() {
     if (!state.currentSession) return;
-    showStatus(sessionStatus, 'loading', endForAll ? 'Ending session…' : 'Leaving session…');
+    showStatus(sessionStatus, 'loading', 'Leaving session…');
     const sessionId = state.currentSession.id;
     const elapsed   = Date.now() - state.timerStart;
     try {
-      await apiPost('/api/gd/sessions', { action: 'leave', sessionId, endSession: endForAll });
+      await apiPost('/api/gd/sessions', { action: 'leave', sessionId });
       clearTimerInterval();
       clearPollInterval();
       state.currentSession = null;
@@ -987,21 +962,7 @@
   descInput.addEventListener('input',  () => { descChars.textContent  = descInput.value.length;  });
 
   leaveBtn.addEventListener('click', () => {
-    if (confirm('Leave the discussion session?')) leaveSession(false);
-  });
-  endSessionBtn.addEventListener('click', () => {
-    if (confirm('End the session for all participants? This cannot be undone.')) leaveSession(true);
-  });
-
-  timerToggleBtn.addEventListener('click', () => {
-    state.timerPaused = !state.timerPaused;
-    if (state.timerPaused) {
-      state.timerPauseAt = Date.now();
-      timerToggleBtn.textContent = '▶ Resume Timer';
-    } else {
-      state.timerStart += (Date.now() - (state.timerPauseAt || Date.now()));
-      timerToggleBtn.textContent = '⏸ Pause Timer';
-    }
+    if (confirm('Leave the discussion session?')) leaveSession();
   });
 
   backToLobbyBtn.addEventListener('click', () => { enterView('lobby'); loadSessions(); });

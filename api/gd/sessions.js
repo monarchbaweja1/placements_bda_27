@@ -126,7 +126,6 @@ async function createSession(req, res) {
         scheduled_at:     scheduledAt,
         status:           'waiting',
         created_by:       auth.user.id,
-        moderator_id:     auth.user.id,
         room_url:         roomUrl,
         room_name:        roomName,
         max_participants: MAX_PARTICIPANTS,
@@ -185,16 +184,13 @@ async function bookSession(req, res) {
 
     if (existing && !existing.left_at) return sendJson(res, 200, { ok: true, alreadyBooked: true });
 
-    const isCreator = auth.user.id === session.created_by;
-    const role = isCreator ? 'moderator' : 'participant';
-
     if (existing) {
       await supabase.from('gd_participants')
-        .update({ left_at: null, joined_at: new Date().toISOString(), role, participant_name: participantName, participant_roll: participantRoll, participant_programme: participantProg || null })
+        .update({ left_at: null, joined_at: new Date().toISOString(), role: 'participant', participant_name: participantName, participant_roll: participantRoll, participant_programme: participantProg || null })
         .eq('id', existing.id);
     } else {
       await supabase.from('gd_participants').insert({
-        session_id: sessionId, user_id: auth.user.id, role,
+        session_id: sessionId, user_id: auth.user.id, role: 'participant',
         participant_name: participantName,
         participant_roll: participantRoll,
         participant_programme: participantProg || null
@@ -272,15 +268,7 @@ async function leaveSession(req, res) {
     if (shouldEnd) {
       await supabase.from('gd_sessions').update({ status: 'ended', participant_count: newCount, ended_at: new Date().toISOString() }).eq('id', sessionId);
     } else {
-      const updates = { participant_count: newCount };
-      if (session.moderator_id === auth.user.id) {
-        const { data: remaining } = await supabase
-          .from('gd_participants').select('user_id')
-          .eq('session_id', sessionId).neq('user_id', auth.user.id).is('left_at', null)
-          .order('joined_at').limit(1);
-        if (remaining?.length > 0) updates.moderator_id = remaining[0].user_id;
-      }
-      await supabase.from('gd_sessions').update(updates).eq('id', sessionId);
+      await supabase.from('gd_sessions').update({ participant_count: newCount }).eq('id', sessionId);
     }
 
     logInfo('gd_participant_left', { userId: auth.user.id, sessionId, newCount, ended: shouldEnd });
