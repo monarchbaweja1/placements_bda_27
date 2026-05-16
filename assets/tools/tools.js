@@ -455,16 +455,34 @@
   }
 
   /* ════════════════════════════════════════════
-     2. PYTHON COMPILER — Piston API (free, no key)
+     2. PYTHON COMPILER — Pyodide (runs in browser, no API key)
   ════════════════════════════════════════════ */
   let pyModal = null;
+  let pyodideInstance = null;
+  let pyodideLoading = false;
+
+  const PYODIDE_CDN = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js';
+  const PYODIDE_INDEX = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
+
+  async function getPyodide(status) {
+    if (pyodideInstance) return pyodideInstance;
+    while (pyodideLoading) await new Promise(r => setTimeout(r, 150));
+    if (pyodideInstance) return pyodideInstance;
+    pyodideLoading = true;
+    status.innerHTML = '<span class="tool-spinner dark"></span> Loading Python runtime — first run only, please wait…';
+    await loadScript(PYODIDE_CDN);
+    pyodideInstance = await window.loadPyodide({ indexURL: PYODIDE_INDEX });
+    pyodideLoading = false;
+    return pyodideInstance;
+  }
+
   function initPython() {
     pyModal = createModal(
       'toolPyModal',
       'tool-card-icon py',
       '🐍',
       'Python Compiler',
-      'Run Python 3 code directly in your browser — powered by Piston',
+      'Run Python 3 code directly in your browser — powered by Pyodide',
       '',
       `
       <div class="tool-modal-body">
@@ -500,7 +518,6 @@ print(math.pi)
     const output = document.getElementById('pyOutput');
     const status = document.getElementById('pyRunStatus');
 
-    // Tab key in editor
     editor.addEventListener('keydown', e => {
       if (e.key === 'Tab') {
         e.preventDefault();
@@ -510,7 +527,6 @@ print(math.pi)
       }
     });
 
-    // Ctrl/Cmd+Enter to run
     editor.addEventListener('keydown', e => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runPython(); }
     });
@@ -520,31 +536,31 @@ print(math.pi)
       const code = editor.value.trim();
       if (!code) return;
       runBtn.disabled = true;
-      status.innerHTML = '<span class="tool-spinner dark"></span> Running…';
       output.className = 'code-output';
       output.textContent = '';
 
       try {
-        const r = await fetch('https://emkc.org/api/v2/piston/execute', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            language: 'python',
-            version: '3.10.0',
-            files: [{ name: 'main.py', content: code }],
-            stdin: ''
-          })
-        });
-        if (!r.ok) throw new Error('Piston API error: ' + r.status);
-        const data = await r.json();
-        const run = data.run || {};
-        const out = (run.stdout || '') + (run.stderr ? '\n[stderr]\n' + run.stderr : '');
-        if (run.stderr) output.classList.add('has-error');
-        output.textContent = out || '(no output)';
-        status.textContent = run.code !== null ? `Exited with code ${run.code}` : '';
+        const py = await getPyodide(status);
+        status.innerHTML = '<span class="tool-spinner dark"></span> Running…';
+
+        let stdout = '';
+        let stderr = '';
+        py.setStdout({ batched: t => { stdout += t + '\n'; } });
+        py.setStderr({ batched: t => { stderr += t + '\n'; } });
+
+        try {
+          await py.runPythonAsync(code);
+        } catch (pyErr) {
+          stderr += pyErr.message || String(pyErr);
+        }
+
+        const combined = (stdout + (stderr ? '\n[stderr]\n' + stderr : '')).trim();
+        output.textContent = combined || '(no output)';
+        if (stderr) output.classList.add('has-error');
+        status.textContent = stderr ? 'Finished with errors' : 'Done';
       } catch (e) {
         output.classList.add('has-error');
-        output.textContent = 'Error: ' + (e.message || 'Could not reach Piston API');
+        output.textContent = 'Error: ' + (e.message || 'Failed to load Python runtime');
         status.textContent = '';
       } finally {
         runBtn.disabled = false;
