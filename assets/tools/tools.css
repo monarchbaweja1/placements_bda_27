@@ -199,15 +199,26 @@
 .wb-canvas-wrap {
   flex: 1;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: #fff;
   cursor: crosshair;
+  /* show scrollbar so user knows they can scroll */
+  scrollbar-width: thin;
+  scrollbar-color: #d7cdbc transparent;
 }
+.wb-canvas-wrap::-webkit-scrollbar { width: 6px; }
+.wb-canvas-wrap::-webkit-scrollbar-thumb { background: #d7cdbc; border-radius: 3px; }
 #wbCanvas {
   display: block;
   touch-action: none;
-  width: 100%;
-  height: 100%;
+}
+.wb-saved-indicator {
+  font-size: 11px;
+  font-weight: 600;
+  color: #059669;
+  min-width: 60px;
+  transition: opacity 0.3s;
 }
 
 .wb-modal .tool-modal {

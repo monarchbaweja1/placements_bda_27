@@ -112,13 +112,23 @@
      1. WHITEBOARD
   ════════════════════════════════════════════ */
   let wbModal = null;
+  const WB_HEIGHT = 3000; // tall scrollable canvas
+
+  function wbStorageKey() {
+    return 'gim_wb_' + (window._verifiedUid || 'guest');
+  }
+
+  function debounce(fn, ms) {
+    let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+  }
+
   function initWhiteboard() {
     wbModal = createModal(
       'toolWbModal',
       'tool-card-icon wb',
       '✏️',
       'Digital Whiteboard',
-      'Draw, sketch and annotate — stylus & touch supported',
+      'Draw, sketch and annotate — scrollable · auto-saved · stylus supported',
       'wb-modal',
       `
       <div class="wb-toolbar" id="wbToolbar">
@@ -138,46 +148,74 @@
         <div class="wb-sep"></div>
         <button class="wb-btn" id="wbUndoBtn">↩ Undo</button>
         <button class="wb-btn" id="wbClearBtn">🗑 Clear</button>
+        <span class="wb-saved-indicator" id="wbSavedIndicator"></span>
         <button class="wb-btn" id="wbDownloadBtn" style="margin-left:auto">⬇ Save PNG</button>
       </div>
-      <div class="tool-modal-body" style="padding:0">
+      <div class="tool-modal-body" style="padding:0;overflow:hidden">
         <div class="wb-canvas-wrap" id="wbCanvasWrap">
           <canvas id="wbCanvas"></canvas>
         </div>
       </div>`
     );
 
-    const canvas = document.getElementById('wbCanvas');
-    const ctx = canvas.getContext('2d');
-    const wrap = document.getElementById('wbCanvasWrap');
+    const canvas    = document.getElementById('wbCanvas');
+    const ctx       = canvas.getContext('2d');
+    const wrap      = document.getElementById('wbCanvasWrap');
+    const savedInd  = document.getElementById('wbSavedIndicator');
 
-    let drawing = false;
-    let color = '#1f2933';
-    let size = 3;
-    let erasing = false;
+    let drawing = false, color = '#1f2933', size = 3, erasing = false;
     const history = [];
+    let boardLoaded = false;
 
+    // ── Storage ──────────────────────────────────────────────────
+    const debouncedSave = debounce(() => {
+      try {
+        // Composite white bg + drawing onto temp canvas for compact JPEG storage
+        const tmp = document.createElement('canvas');
+        tmp.width = canvas.width; tmp.height = WB_HEIGHT;
+        const tc = tmp.getContext('2d');
+        tc.fillStyle = '#fff';
+        tc.fillRect(0, 0, tmp.width, tmp.height);
+        tc.drawImage(canvas, 0, 0);
+        localStorage.setItem(wbStorageKey(), tmp.toDataURL('image/jpeg', 0.82));
+        savedInd.textContent = '✓ Saved';
+        setTimeout(() => { savedInd.textContent = ''; }, 2000);
+      } catch { savedInd.textContent = ''; }
+    }, 1500);
+
+    function loadFromStorage() {
+      const data = localStorage.getItem(wbStorageKey());
+      if (!data) return;
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0);
+      img.src = data;
+    }
+
+    // ── Resize (width only — height is fixed WB_HEIGHT) ─────────
     function resize() {
       const w = wrap.clientWidth || 900;
-      const h = wrap.clientHeight || 520;
-      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      canvas.width = w;
-      canvas.height = h;
-      canvas.style.width = w + 'px';
-      canvas.style.height = h + 'px';
-      ctx.putImageData(img, 0, 0);
+      if (canvas.width === w && canvas.height === WB_HEIGHT) return;
+      const img = canvas.width > 0 ? ctx.getImageData(0, 0, canvas.width, Math.min(canvas.height, WB_HEIGHT)) : null;
+      canvas.width        = w;
+      canvas.height       = WB_HEIGHT;
+      canvas.style.width  = w + 'px';
+      canvas.style.height = WB_HEIGHT + 'px';
+      if (img) ctx.putImageData(img, 0, 0);
+      if (!boardLoaded) { boardLoaded = true; loadFromStorage(); }
     }
     new ResizeObserver(resize).observe(wrap);
     setTimeout(resize, 50);
 
+    // ── Drawing ──────────────────────────────────────────────────
     function saveHistory() {
       history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
-      if (history.length > 40) history.shift();
+      if (history.length > 30) history.shift();
     }
 
     function getPos(e) {
-      const r = canvas.getBoundingClientRect();
+      const r   = canvas.getBoundingClientRect();
       const src = e.touches ? e.touches[0] : e;
+      // getBoundingClientRect accounts for scroll so clientX/Y - rect gives canvas coords
       return { x: src.clientX - r.left, y: src.clientY - r.top };
     }
 
@@ -194,7 +232,6 @@
       } else {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = color;
-        ctx.lineWidth = size;
         const pressure = e.pressure ?? 0.5;
         ctx.lineWidth = size * (0.5 + pressure);
       }
@@ -211,15 +248,21 @@
       ctx.beginPath();
       ctx.moveTo(x, y);
     }
-    function endDraw(e) { e.preventDefault(); drawing = false; ctx.beginPath(); }
+    function endDraw(e) {
+      e.preventDefault();
+      if (!drawing) return;
+      drawing = false;
+      ctx.beginPath();
+      debouncedSave();
+    }
 
     canvas.addEventListener('pointerdown', startDraw);
     canvas.addEventListener('pointermove', moveDraw);
-    canvas.addEventListener('pointerup', endDraw);
+    canvas.addEventListener('pointerup',   endDraw);
     canvas.addEventListener('pointercancel', endDraw);
     canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
 
-    // Toolbar bindings
+    // ── Toolbar ──────────────────────────────────────────────────
     document.getElementById('wbPenBtn').addEventListener('click', () => {
       erasing = false;
       document.getElementById('wbPenBtn').classList.add('active');
@@ -253,15 +296,18 @@
     document.getElementById('wbUndoBtn').addEventListener('click', () => {
       if (!history.length) return;
       ctx.putImageData(history.pop(), 0, 0);
+      debouncedSave();
     });
     document.getElementById('wbClearBtn').addEventListener('click', () => {
+      if (!confirm('Clear the entire whiteboard? This cannot be undone.')) return;
       saveHistory();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      try { localStorage.removeItem(wbStorageKey()); } catch {}
+      savedInd.textContent = '';
     });
     document.getElementById('wbDownloadBtn').addEventListener('click', () => {
       const tmp = document.createElement('canvas');
-      tmp.width = canvas.width;
-      tmp.height = canvas.height;
+      tmp.width = canvas.width; tmp.height = WB_HEIGHT;
       const tc = tmp.getContext('2d');
       tc.fillStyle = '#fff';
       tc.fillRect(0, 0, tmp.width, tmp.height);
