@@ -6733,11 +6733,10 @@ window.saveRegistration = async function() {
   if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 
   try {
-    // Always confirm session is active before hitting DB (prevents RLS hang)
-    const { data: { session: liveSess } } = await withTimeout(sbIndex.auth.getSession(), 6000, 'session');
-    if (!liveSess?.user) throw new Error('Session expired — please sign in again.');
-    const uid = liveSess.user.id;
-    window._verifiedUid = uid; // keep in sync
+    // Use UID from OTP verification — session is already stored in Supabase client
+    // via setSession called in verifyOTP; no network round-trip needed here.
+    const uid = window._verifiedUid;
+    if (!uid) throw new Error('Session expired — please sign in again.');
 
     const { error: profErr } = await withTimeout(
       sbIndex.from('profiles').upsert({
@@ -6746,8 +6745,8 @@ window.saveRegistration = async function() {
         resume_link: resume || null,
         target_roles: [], target_companies: [],
         updated_at: new Date().toISOString()
-      }),
-      12000, 'profile save'
+      }).select('id'),
+      20000, 'profile save'
     );
     if (profErr) throw profErr;
 
