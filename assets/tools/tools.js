@@ -554,10 +554,10 @@ ORDER BY e.salary DESC;`;
       resultEl.classList.remove('visible');
 
       try {
-        const r = await fetch('/api/tools/ai-check', {
+        const r = await fetch('/api/tools', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ text })
+          body: JSON.stringify({ action: 'ai-check', text })
         });
         const data = await r.json();
         if (!r.ok || !data.ok) throw new Error(data?.error?.message || 'Analysis failed.');
@@ -682,10 +682,10 @@ ORDER BY e.salary DESC;`;
       resultEl.classList.remove('visible');
 
       try {
-        const r = await fetch('/api/tools/rephrase', {
+        const r = await fetch('/api/tools', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ text, mode: modeEl.value })
+          body: JSON.stringify({ action: 'rephrase', text, mode: modeEl.value })
         });
         const data = await r.json();
         if (!r.ok || !data.ok) throw new Error(data?.error?.message || 'Rephrase failed.');
