@@ -6424,7 +6424,7 @@ const SB_URL = 'https://dsrwktqgpngrviavceal.supabase.co';
 const SB_KEY = 'sb_publishable_bLUTa913DWCoVFTt9r_vew_Wa_hjEbV';
 const { createClient: createSbClient } = supabase;
 const sbIndex = createSbClient(SB_URL, SB_KEY, {
-  auth: { flowType: 'implicit', detectSessionInUrl: true, persistSession: true }
+  auth: { flowType: 'implicit', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true }
 });
 window.sbIndex = sbIndex;
 
@@ -6460,17 +6460,28 @@ window.signInWithGoogle = async function() {
   }
 };
 
-// ── On load: check existing session
-sbIndex.auth.getSession().then(({ data: { session } }) => {
-  if (session?.user) {
-    enterHub();
-  } else {
-    showScreen('screen-email');
-  }
-});
-
+// ── Session management — single source of truth
+// INITIAL_SESSION fires instantly from localStorage (no network) on every page load.
+// TOKEN_REFRESHED fires silently in background when Supabase auto-renews the token.
+// Both keep window._accessToken current so DB fetch calls always have a valid JWT.
 sbIndex.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_OUT') {
+  if (event === 'INITIAL_SESSION') {
+    if (session?.user) {
+      // Returning user — restore tokens and go straight to hub
+      window._accessToken   = session.access_token  || '';
+      window._refreshToken  = session.refresh_token || '';
+      window._verifiedUid   = session.user.id;
+      window._verifiedEmail = session.user.email || '';
+      enterHub();
+    } else {
+      showScreen('screen-email');
+    }
+  } else if (event === 'TOKEN_REFRESHED' && session) {
+    // Silently keep token current for ongoing DB calls
+    window._accessToken  = session.access_token  || '';
+    window._refreshToken = session.refresh_token || '';
+  } else if (event === 'SIGNED_OUT') {
+    window._accessToken = window._refreshToken = window._verifiedUid = '';
     showScreen('screen-email');
   }
 });
