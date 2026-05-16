@@ -6460,41 +6460,17 @@ window.signInWithGoogle = async function() {
   }
 };
 
-// ── Smart sign-in handler (Google OAuth → domain check → profile check)
-let _authHandling = false;
-async function handleSignedIn(session) {
-  if (_authHandling) return;
-  _authHandling = true;
-  try {
-    const email = session.user.email || '';
-    _authEmail = email;
-    const { data: prof } = await sbIndex.from('profiles').select('id').eq('id', session.user.id).maybeSingle();
-    if (prof) {
-      enterHub();
-    } else {
-      const badge = document.getElementById('regEmailBadge');
-      if (badge) badge.textContent = email;
-      showScreen('screen-register');
-    }
-  } finally {
-    _authHandling = false;
-  }
-}
-
 // ── On load: check existing session
 sbIndex.auth.getSession().then(({ data: { session } }) => {
   if (session?.user) {
-    enterHub(); // returning user — already validated previously
+    enterHub();
   } else {
     showScreen('screen-email');
   }
 });
 
 sbIndex.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN' && session?.user) {
-    handleSignedIn(session);
-  } else if (event === 'SIGNED_OUT') {
-    _authHandling = false;
+  if (event === 'SIGNED_OUT') {
     showScreen('screen-email');
   }
 });
@@ -6625,28 +6601,23 @@ window.verifyOTP = async function() {
       window._verifiedUid = uid; // store for saveRegistration
 
       // Explicitly set the session so subsequent DB calls have auth token
-      if (response.data.session) {
-        await sbIndex.auth.setSession({
-          access_token: response.data.session.access_token,
-          refresh_token: response.data.session.refresh_token
-        });
-      }
-
+      // verifyOtp already stores the session internally — no need to call setSession.
+      // Check if profile exists; timeout prevents hanging on slow Supabase connections.
       let existingProfile = null;
       try {
         const { data } = await withTimeout(
           sbIndex.from('profiles').select('id').eq('id', uid).maybeSingle(),
-          6000, 'profile check'
+          8000, 'profile check'
         );
         existingProfile = data;
       } catch (_) { existingProfile = null; }
 
       if (existingProfile) {
-        setTimeout(() => enterHub(), 400);
+        enterHub();
       } else {
         const badge = document.getElementById('regEmailBadge');
         if (badge) badge.textContent = _authEmail;
-        setTimeout(() => showScreen('screen-register'), 300);
+        showScreen('screen-register');
       }
     } else {
       throw new Error('Verification completed but no session was returned.');
