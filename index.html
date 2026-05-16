@@ -6603,6 +6603,16 @@ window.verifyOTP = async function() {
     if (response.data?.user) {
       showAuthStatus('✅ Verified! Loading your hub…', 'ok');
       const uid = response.data.user.id;
+      window._verifiedUid = uid; // store for saveRegistration
+
+      // Explicitly set the session so subsequent DB calls have auth token
+      if (response.data.session) {
+        await sbIndex.auth.setSession({
+          access_token: response.data.session.access_token,
+          refresh_token: response.data.session.refresh_token
+        });
+      }
+
       let existingProfile = null;
       try {
         const { data } = await withTimeout(
@@ -6761,23 +6771,34 @@ window.saveRegistration = async function() {
   if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 
   try {
-    const { data: { session } } = await sbIndex.auth.getSession();
-    if (!session?.user) throw new Error('No active session');
-    const uid = session.user.id;
+    // Use UID stored during OTP verification — avoids another getSession() round-trip
+    let uid = window._verifiedUid;
+    if (!uid) {
+      const { data: { session } } = await withTimeout(sbIndex.auth.getSession(), 8000, 'session');
+      if (!session?.user) throw new Error('Session expired — please sign in again.');
+      uid = session.user.id;
+    }
 
-    const { error: profErr } = await sbIndex.from('profiles').upsert({
-      id: uid, name, roll_no: roll, email: _authEmail,
-      programme, batch, section,
-      resume_link: resume || null,
-      target_roles: [], target_companies: [],
-      updated_at: new Date().toISOString()
-    });
+    const { error: profErr } = await withTimeout(
+      sbIndex.from('profiles').upsert({
+        id: uid, name, roll_no: roll, email: _authEmail,
+        programme, batch, section,
+        resume_link: resume || null,
+        target_roles: [], target_companies: [],
+        updated_at: new Date().toISOString()
+      }),
+      12000, 'profile save'
+    );
     if (profErr) throw profErr;
 
-    await sbIndex.from('placements').upsert({
-      id: uid, status: 'searching', interviews: [],
-      updated_at: new Date().toISOString()
-    });
+    // placements row — best effort, don't block on failure
+    withTimeout(
+      sbIndex.from('placements').upsert({
+        id: uid, status: 'searching', interviews: [],
+        updated_at: new Date().toISOString()
+      }),
+      8000, 'placements init'
+    ).catch(() => {});
 
     showRegStatus('Profile saved! Entering hub…', 'ok');
     setTimeout(() => enterHub(), 600);
