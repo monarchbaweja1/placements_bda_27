@@ -844,22 +844,33 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCustomChip(inp, cont, cls); } });
   });
 
-  // OTP boxes: auto-advance, backspace, paste
+  // OTP boxes: auto-advance, backspace, paste, auto-submit
+  let _appOtpSubmitting = false;
+  function _appAutoVerify() {
+    if (_appOtpSubmitting) return;
+    _appOtpSubmitting = true;
+    verifyOTP().finally(() => { _appOtpSubmitting = false; });
+  }
   const boxes = [...document.querySelectorAll('.otp-box')];
   boxes.forEach((box, i) => {
     box.addEventListener('input', () => {
       box.value = box.value.replace(/\D/g, '').slice(-1);
-      if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+      if (box.value && i < boxes.length - 1) {
+        boxes[i + 1].focus();
+      } else if (box.value && i === boxes.length - 1) {
+        if (boxes.every(b => b.value)) setTimeout(_appAutoVerify, 80);
+      }
     });
     box.addEventListener('keydown', e => {
       if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus();
-      if (e.key === 'Enter') verifyOTP();
+      if (e.key === 'Enter') _appAutoVerify();
     });
     box.addEventListener('paste', e => {
       e.preventDefault();
       const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
       [...text].forEach((ch, j) => { if (boxes[j]) boxes[j].value = ch; });
       boxes[Math.min(text.length, boxes.length - 1)]?.focus();
+      if (text.length === 6) setTimeout(_appAutoVerify, 80);
     });
   });
 

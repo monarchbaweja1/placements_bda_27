@@ -2104,23 +2104,35 @@ function startOtpTimer() {
 function clearOtpTimer() { clearInterval(_timerInterval); }
 
 // ── OTP box keyboard nav ──────────────────
+let _otpSubmitting = false;
+function _autoVerify() {
+  if (_otpSubmitting) return;
+  _otpSubmitting = true;
+  verifyOTP().finally(() => { _otpSubmitting = false; });
+}
+
 document.querySelectorAll('.otp-box').forEach((box, i, all) => {
   box.addEventListener('input', () => {
     box.value = box.value.replace(/\D/g,'').slice(-1);
     box.classList.toggle('filled', !!box.value);
-    if(box.value && all[i+1]) all[i+1].focus();
-    // no auto-submit — user must click Verify button
+    if (box.value && all[i+1]) {
+      all[i+1].focus();
+    } else if (box.value && !all[i+1]) {
+      // last box filled — auto-submit after brief paint delay
+      const allFilled = [...all].every(b => b.value);
+      if (allFilled) setTimeout(_autoVerify, 80);
+    }
   });
   box.addEventListener('keydown', e => {
     if(e.key==='Backspace' && !box.value && all[i-1]) { all[i-1].focus(); all[i-1].classList.remove('filled'); }
-    if(e.key==='Enter') verifyOTP();
+    if(e.key==='Enter') _autoVerify();
   });
   box.addEventListener('paste', e => {
     const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
     all.forEach((b,j) => { b.value = pasted[j]||''; b.classList.toggle('filled', !!pasted[j]); });
     all[Math.min(pasted.length, all.length-1)]?.focus();
     e.preventDefault();
-    // no auto-submit on paste either
+    if (pasted.length === 6) setTimeout(_autoVerify, 80);
   });
 });
 
