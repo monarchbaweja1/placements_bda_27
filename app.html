@@ -731,16 +731,18 @@ let CU = null, CP = null, CPlac = null;
 window.addEventListener('DOMContentLoaded', () => {
   buildChips();
 
-  // Is this an OAuth redirect? Check BEFORE anything touches the hash.
-  const isOAuthCallback = window.location.hash.includes('access_token=');
+  // Detect OAuth redirect: implicit flow = hash, PKCE flow (Supabase v2 default) = ?code= query param
+  const isOAuthCallback = window.location.hash.includes('access_token=') ||
+                          window.location.search.includes('code=');
 
   let _done = false;
   function go(session) {
     if (_done) return;
     _done = true;
     CU = session.user;
-    // Strip hash NOW that Supabase has already read it
-    if (window.location.hash) window.history.replaceState(null, '', window.location.pathname);
+    // Strip OAuth params from URL now that Supabase has read them
+    if (window.location.hash || window.location.search)
+      window.history.replaceState(null, '', window.location.pathname);
     loadAll();
   }
 
