@@ -6598,32 +6598,34 @@ window.verifyOTP = async function() {
     if (response.data?.user) {
       showAuthStatus('✅ Verified! Loading your hub…', 'ok');
       const uid = response.data.user.id;
-      window._verifiedUid = uid; // store for saveRegistration
+      window._verifiedUid   = uid;
+      window._accessToken   = response.data.session?.access_token   || '';
+      window._refreshToken  = response.data.session?.refresh_token  || '';
+      window._verifiedEmail = response.data.user?.email || _authEmail || '';
 
-      // Explicitly attach session so all subsequent DB calls carry the JWT.
-      // onAuthStateChange now only handles SIGNED_OUT so this won't cause double routing.
+      // Fire-and-forget setSession so Supabase client stays in sync for other uses
       if (response.data.session) {
-        try {
-          await Promise.race([
-            sbIndex.auth.setSession({
-              access_token:  response.data.session.access_token,
-              refresh_token: response.data.session.refresh_token
-            }),
-            new Promise(r => setTimeout(r, 3000))
-          ]);
-        } catch (_) {}
+        sbIndex.auth.setSession({
+          access_token:  window._accessToken,
+          refresh_token: window._refreshToken
+        }).catch(() => {});
       }
 
-      let existingProfile = null;
+      // Profile check via raw fetch — bypasses client session state entirely
+      let hasProfile = false;
       try {
-        const { data } = await withTimeout(
-          sbIndex.from('profiles').select('id').eq('id', uid).maybeSingle(),
-          8000, 'profile check'
+        const ctrl = new AbortController();
+        const tid  = setTimeout(() => ctrl.abort(), 6000);
+        const r = await fetch(
+          `${SB_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(uid)}&select=id&limit=1`,
+          { signal: ctrl.signal,
+            headers: { 'Authorization': `Bearer ${window._accessToken}`, 'apikey': SB_KEY } }
         );
-        existingProfile = data;
-      } catch (_) { existingProfile = null; }
+        clearTimeout(tid);
+        if (r.ok) { const d = await r.json(); hasProfile = Array.isArray(d) && d.length > 0; }
+      } catch (_) { hasProfile = false; }
 
-      if (existingProfile) {
+      if (hasProfile) {
         enterHub();
       } else {
         const badge = document.getElementById('regEmailBadge');
@@ -6733,33 +6735,69 @@ window.saveRegistration = async function() {
   if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 
   try {
-    // Use UID from OTP verification — session is already stored in Supabase client
-    // via setSession called in verifyOTP; no network round-trip needed here.
-    const uid = window._verifiedUid;
+    const uid   = window._verifiedUid;
+    const token = window._accessToken || '';
     if (!uid) throw new Error('Session expired — please sign in again.');
 
-    const { error: profErr } = await withTimeout(
-      sbIndex.from('profiles').upsert({
-        id: uid, name, roll_no: roll, email: _authEmail,
-        programme, batch, section,
-        resume_link: resume || null,
-        target_roles: [], target_companies: [],
-        updated_at: new Date().toISOString()
-      }).select('id'),
-      20000, 'profile save'
-    );
-    if (profErr) throw profErr;
+    const profilePayload = {
+      id: uid,
+      name,
+      roll_no: roll,
+      email: window._verifiedEmail || _authEmail || '',
+      programme, batch, section,
+      resume_link: resume || null,
+      target_roles: [], target_companies: [],
+      updated_at: new Date().toISOString()
+    };
 
-    // placements row — best effort, don't block on failure
-    withTimeout(
-      sbIndex.from('placements').upsert({
-        id: uid, status: 'searching', interviews: [],
-        updated_at: new Date().toISOString()
-      }),
-      8000, 'placements init'
-    ).catch(() => {});
+    // Use raw fetch with AbortController — avoids all Supabase client session issues
+    let dbSaved = false;
+    try {
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), 12000);
+      const r = await fetch(`${SB_URL}/rest/v1/profiles?on_conflict=id`, {
+        method: 'POST',
+        signal: ctrl.signal,
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${token}`,
+          'apikey':        SB_KEY,
+          'Prefer':        'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify(profilePayload)
+      });
+      clearTimeout(tid);
 
-    showRegStatus('Profile saved! Entering hub…', 'ok');
+      if (r.ok || r.status === 201 || r.status === 204) {
+        dbSaved = true;
+      } else {
+        const e = await r.json().catch(() => ({}));
+        throw new Error(e.message || e.hint || `DB error (${r.status})`);
+      }
+    } catch (fetchErr) {
+      if (fetchErr.name === 'AbortError' || fetchErr.message === 'Failed to fetch') {
+        // DB unreachable — save locally so nothing is lost
+        try { localStorage.setItem(`gim_pending_${uid}`, JSON.stringify(profilePayload)); } catch (_) {}
+        // Still enter hub — don't block the user
+      } else {
+        throw fetchErr; // real server error — surface it
+      }
+    }
+
+    // Fire-and-forget placements row (best effort)
+    fetch(`${SB_URL}/rest/v1/placements?on_conflict=id`, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${token}`,
+        'apikey':        SB_KEY,
+        'Prefer':        'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify({ id: uid, status: 'searching', interviews: [],
+                             updated_at: new Date().toISOString() })
+    }).catch(() => {});
+
+    showRegStatus(dbSaved ? 'Profile saved! Entering hub…' : 'Details saved — entering hub…', 'ok');
     setTimeout(() => enterHub(), 600);
   } catch (err) {
     showRegStatus('Error: ' + (err?.message || 'Please try again.'), 'err');
