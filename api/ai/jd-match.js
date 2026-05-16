@@ -116,21 +116,23 @@ export default async function handler(req, res) {
 async function analyzeMatch({ jdText, cvText, programme }) {
   const ctx = PROGRAMME_CONTEXT[programme] || PROGRAMME_CONTEXT.bda;
 
-  const systemInstruction = `You are a senior placement consultant and ATS specialist with 15+ years experience in Indian MBA campus recruiting for ${ctx.name}.
+  const systemInstruction = `You are a senior placement consultant and ATS specialist with 15+ years experience in Indian MBA campus recruiting at top B-schools (IIMs, XLRI, NMIMS, SP Jain, GIM, etc.).
 
-You have deep familiarity with:
-- Typical roles recruited for this programme: ${ctx.roles}
-- Companies that actively recruit: ${ctx.companies}
-- Core technical skills evaluated: ${ctx.coreSkills.join(', ')}
-- Domain focus: ${ctx.focus}
-- Shortlisting weighting for this programme: ${ctx.weightings}
+CRITICAL RULE: The JOB DESCRIPTION is the sole authority on what skills, experience, and qualifications are required for this role. Evaluate the CV STRICTLY against what the JD asks for — not against any programme's generic curriculum.
+- If the JD asks for SQL, Python, and machine learning → evaluate those. Do NOT penalize for missing marketing, brand management, or supply chain if the JD does not require them.
+- If the JD asks for marketing strategy and consumer insights → evaluate those. Do NOT penalize for missing data science skills if the JD does not require them.
+- weakPoints must cite SPECIFIC JD requirements not met — not generic programme expectations.
+- keywordsToAdd must be VERBATIM phrases from the actual JD text that are missing from the CV.
+
+Candidate background: ${ctx.name} (${ctx.focus}).
+This context informs who the candidate is, not what the role requires.
 
 Your analysis must be:
 - STRICTLY ACCURATE: scores must reflect real, observable overlap between the JD and CV text
-- PROGRAMME-SPECIFIC: factor in what matters specifically for ${ctx.name} campus recruiters
-- EVIDENCE-BASED: every strength and gap must cite exact text or absence from the documents
-- CALIBRATED: scoring should reflect real shortlisting thresholds at Indian B-schools like IIM, XLRI, NMIMS, SP Jain, GIM
-- Never inflate scores — a 70+ means the candidate is genuinely competitive for shortlisting`;
+- JD-DRIVEN: every strength and gap must trace back to a specific JD requirement
+- EVIDENCE-BASED: cite exact text or absence from the documents
+- CALIBRATED: scoring should reflect real shortlisting thresholds; 70+ means genuinely competitive
+- Never inflate scores — inaccurate high scores hurt the student's placement chances`;
 
   const prompt = `Perform a precise JD-CV match analysis for a ${ctx.name} MBA candidate.
 
@@ -148,7 +150,7 @@ Return ONLY a valid JSON object (no markdown, no code fences, no explanation tex
     "experienceMatch":  <integer 0-100, relevance of candidate's projects/internships to JD requirements>,
     "keywordsMatch":    <integer 0-100, exact+synonym keyword overlap between JD and CV>,
     "roleAlignment":    <integer 0-100, how well candidate's background maps to this specific role>,
-    "educationFit":     <integer 0-100, academic background and ${ctx.name} programme fit>
+    "educationFit":     <integer 0-100, academic background relevance to this specific role>
   },
   "strongPoints": [
     "<Strength citing specific CV evidence — e.g., 'Python + Pandas project at XYZ directly matches JD requirement for data wrangling'>",
@@ -174,7 +176,7 @@ Return ONLY a valid JSON object (no markdown, no code fences, no explanation tex
     "...5 to 12 items"
   ],
   "shortlistVerdict": "<one of exactly: Strong Fit | Good Fit | Borderline | Weak Fit>",
-  "verdictReason": "<1-2 sentences explaining the shortlist verdict using ${ctx.name} recruiter standards and specific evidence from the documents>",
+  "verdictReason": "<1-2 sentences explaining the shortlist verdict based on how well the CV meets the JD's specific requirements, with evidence from both documents>",
   "topPriorityAction": "<the single most impactful change the candidate must make — be specific and actionable, not generic>"
 }
 

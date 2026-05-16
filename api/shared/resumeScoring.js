@@ -224,7 +224,7 @@ const UNIVERSAL_DOMAIN_SIGNALS = {
 
 const STOP_WORDS = new Set(['and', 'the', 'for', 'with', 'that', 'this', 'from', 'are', 'was', 'has', 'have', 'will', 'can', 'its', 'senior', 'junior', 'lead', 'associate', 'deputy', 'vice', 'assistant']);
 
-function getRoleSpecificSkills(programmeCode, targetRole, taxonomy) {
+export function getRoleSpecificSkills(programmeCode, targetRole, taxonomy) {
   if (!targetRole) return taxonomy.coreSkills;
 
   const roleLower = String(targetRole).toLowerCase().trim();
@@ -436,8 +436,11 @@ function buildRecommendations({ programmeCode, targetRole, scores, missingSkills
     recs.push('Add a project section with 2-3 role-relevant projects and measurable business context.');
   }
 
-  if (programmeCode === 'bda' && scores.projects < 65) {
-    recs.push('For BDA roles, add analytics project signals such as SQL analysis, dashboarding, predictive modeling, segmentation, or A/B testing.');
+  if (scores.projects < 65) {
+    const roleSuffix = targetRole
+      ? `"${targetRole}" role`
+      : `${programmeCode.toUpperCase()} roles`;
+    recs.push(`Add role-relevant project signals for ${roleSuffix} with specific tools used, tasks completed, and measurable business outcomes.`);
   }
 
   return recs.slice(0, 6);

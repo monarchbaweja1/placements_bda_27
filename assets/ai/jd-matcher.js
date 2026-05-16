@@ -40,7 +40,7 @@
         </div>
         <div class="pg-jd-head-text">
           <strong>JD Match Analyzer</strong>
-          <span id="pgJdScope">Programme-aware JD vs CV scoring &amp; gap analysis</span>
+          <span id="pgJdScope">Role-driven JD vs CV match &amp; gap analysis</span>
         </div>
         <button class="pg-jd-close-btn" type="button" aria-label="Close">&#215;</button>
       </div>
@@ -221,10 +221,7 @@
       if (scopeEl) scopeEl.textContent = 'Select a programme to enable JD matching';
       return;
     }
-    const code = getProgrammeCode();
-    if (scopeEl) scopeEl.textContent = code
-      ? `${code.toUpperCase()} scoped JD vs CV scoring & gap analysis`
-      : 'Select a programme to enable JD matching';
+    if (scopeEl) scopeEl.textContent = 'Role-driven JD vs CV match & gap analysis';
   }
 
   // ── Analysis ───────────────────────────────────────────────────
@@ -340,8 +337,6 @@
       `<span class="pg-jd-tag matched">${esc(k)}</span>`
     ).join('');
 
-    const progLabel = (data.programme || 'MBA').toUpperCase();
-
     resView.innerHTML = `
       <!-- Match score hero -->
       <div class="pg-jd-hero">
@@ -359,7 +354,7 @@
         </div>
         <div class="pg-jd-score-block">
           <div class="pg-jd-score-num" style="color:${color}">${score}<span style="font-size:16px;font-weight:500;color:#7b8794">%</span></div>
-          <div class="pg-jd-score-sub">JD-CV Match Score — ${progLabel} scoped</div>
+          <div class="pg-jd-score-sub">JD-CV Match Score</div>
           <div class="pg-jd-verdict-badge ${verdictClass}">
             <span>${verdictIcon}</span> ${esc(data.shortlistVerdict)}
           </div>

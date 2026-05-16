@@ -126,6 +126,8 @@
   textarea.addEventListener('input', () => {
     updateTextState();
   });
+  roleInput.addEventListener('input', updateScope);
+  compInput.addEventListener('input', updateScope);
   fileInput.addEventListener('change', handleFileUpload);
 
   submitBtn.addEventListener('click', runAnalysis);
@@ -185,10 +187,17 @@
       return;
     }
 
-    const code = getProgrammeCode();
-    if (scopeEl) scopeEl.textContent = code
-      ? `${code.toUpperCase()} scoped ATS scoring & recommendations`
-      : 'Select a programme before analyzing';
+    const role = roleInput?.value.trim();
+    const company = compInput?.value.trim();
+    if (scopeEl) {
+      if (role && company) {
+        scopeEl.textContent = `Analyzing for: ${role} @ ${company}`;
+      } else if (role) {
+        scopeEl.textContent = `Analyzing for: ${role}`;
+      } else {
+        scopeEl.textContent = 'Role-aware ATS scoring & recommendations';
+      }
+    }
   }
 
   // ── Analysis request ───────────────────────────────────────────

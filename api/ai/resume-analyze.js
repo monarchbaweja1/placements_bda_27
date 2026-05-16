@@ -143,46 +143,49 @@ export default async function handler(req, res) {
 
 async function analyzeResumeWithAI({ resumeText, programme, targetRole, targetCompany }) {
   const ctx = PROGRAMME_CONTEXT[programme] || PROGRAMME_CONTEXT.bda;
+  const hasRole    = Boolean(targetRole);
+  const hasCompany = Boolean(targetCompany);
 
-  const roleContext = targetRole
-    ? `The candidate is targeting the role: "${targetRole}".`
-    : `Score against general ${ctx.name} placement roles: ${ctx.roles}.`;
+  // Role-first mode: when the user specifies a target role, evaluate strictly against
+  // that role's requirements — never the programme's generic skill list.
+  const systemInstruction = hasRole
+    ? buildRoleFirstInstruction(targetRole, targetCompany, ctx)
+    : buildProgrammeFirstInstruction(ctx);
 
-  const companyContext = targetCompany
-    ? `Target company: "${targetCompany}" — factor in this company's known hiring standards.`
-    : `Score against typical ${ctx.name} recruiters: ${ctx.companies}.`;
+  const skillsScoreDesc = hasRole
+    ? `skills specifically required for "${targetRole}" explicitly present in the resume`
+    : `core domain skills for ${ctx.name} explicitly present in the resume`;
 
-  const systemInstruction = `You are a senior ATS specialist and placement consultant with 15+ years of experience evaluating Indian MBA/PGDM resumes for campus placements at top B-schools (IIMs, XLRI, NMIMS, SP Jain, GIM, etc.).
+  const toolsScoreDesc = hasRole
+    ? `tools specifically used in "${targetRole}" demonstrated with evidence`
+    : `technical tools/software demonstrated with evidence of use`;
 
-You are evaluating for: ${ctx.name}
-Programme focus: ${ctx.focus}
-Typical hiring companies: ${ctx.companies}
-Core skills expected: ${ctx.coreSkills.join(', ')}
-Key tools expected: ${ctx.tools.join(', ')}
-ATS keywords that matter: ${ctx.atsKeywords.join(', ')}
-Scoring weights: ${ctx.weights}
+  const missingSkillsDesc = hasRole
+    ? `"<skill genuinely required for the "${targetRole}" role that is completely absent from the resume — ONLY list skills relevant to this specific role, never skills from unrelated domains>",`
+    : `"<important ${ctx.name} skill completely absent from the resume>",`;
 
-Your analysis must be:
-- STRICTLY ACCURATE: read the actual resume text, do not hallucinate skills not present
-- EVIDENCE-BASED: cite specific lines or sections from the resume when making observations
-- CALIBRATED: 80+ means genuinely shortlist-ready at the above companies; below 50 means significant gaps
-- PROGRAMME-SPECIFIC: evaluate only what matters for ${ctx.name} recruiters, not generic job market standards`;
+  const missingToolsDesc = hasRole
+    ? `"<tool specifically used in "${targetRole}" roles not evidenced in resume>",`
+    : `"<tool commonly expected for ${ctx.name} not evidenced in resume>",`;
 
-  const prompt = `Analyze this resume for a ${ctx.name} MBA/PGDM student at an Indian B-school.
-${roleContext}
-${companyContext}
+  const roleAlignDesc = hasRole
+    ? `how well the candidate's experience aligns to the "${targetRole}" role`
+    : `how well the candidate's experience aligns to the target role`;
+
+  const prompt = `Analyze this resume for a candidate${hasRole ? ` targeting the "${targetRole}" role` : ` in the ${ctx.name} programme`} at an Indian B-school.
+${hasCompany ? `Target company: "${targetCompany}"` : ''}
 
 ---RESUME---
 ${resumeText.slice(0, 60_000)}
 
 Return ONLY a valid JSON object (no markdown, no code fences, no text before or after):
 {
-  "overallScore": <integer 0-100, weighted composite per the programme weights above>,
+  "overallScore": <integer 0-100, weighted composite>,
   "scores": {
     "ats":           <integer 0-100, ATS structure: clear sections, proper headings, no tables/columns, scannable format>,
-    "skills":        <integer 0-100, core domain skills for ${ctx.name} explicitly present in the resume>,
-    "tools":         <integer 0-100, technical tools/software demonstrated with evidence of use>,
-    "roleAlignment": <integer 0-100, how well the candidate's experience aligns to the target role>,
+    "skills":        <integer 0-100, ${skillsScoreDesc}>,
+    "tools":         <integer 0-100, ${toolsScoreDesc}>,
+    "roleAlignment": <integer 0-100, ${roleAlignDesc}>,
     "impact":        <integer 0-100, quantified results, metrics, % improvements, revenue/cost numbers>,
     "projects":      <integer 0-100, relevance, depth, and business impact of projects and internships>
   },
@@ -194,11 +197,11 @@ Return ONLY a valid JSON object (no markdown, no code fences, no text before or 
   },
   "missing": {
     "prioritySkills": [
-      "<important ${ctx.name} skill completely absent from the resume>",
+      ${missingSkillsDesc}
       "...up to 8 items"
     ],
     "tools": [
-      "<tool commonly expected for ${ctx.name} not evidenced in resume>",
+      ${missingToolsDesc}
       "...up to 6 items"
     ]
   },
@@ -213,11 +216,11 @@ Return ONLY a valid JSON object (no markdown, no code fences, no text before or 
 }
 
 Scoring anchors:
-- 85-100: Strong ATS pass + likely shortlisted by top recruiters with no major changes
+- 85-100: Strong ATS pass + likely shortlisted with no major changes
 - 70-84: Good profile, minor gaps, competitive with targeted improvements
 - 55-69: Moderate, needs deliberate skill/language upgrades to compete
 - 40-54: Significant gaps in skills or impact evidence, needs major overhaul
-- Below 40: Resume is unlikely to pass ATS filters for ${ctx.name} roles without fundamental restructuring
+- Below 40: Unlikely to pass ATS filters without fundamental restructuring
 - NEVER inflate scores to be encouraging — inaccurate high scores hurt the student's placement chances`;
 
   const { answer } = await generateChatCompletion({
@@ -259,6 +262,54 @@ Scoring anchors:
     targetRole:      targetRole || '',
     targetCompany:   targetCompany || ''
   };
+}
+
+function buildRoleFirstInstruction(targetRole, targetCompany, ctx) {
+  const companyLine = targetCompany
+    ? `Target company: "${targetCompany}" — factor in this company's known hiring standards for "${targetRole}" candidates.`
+    : `No specific company targeted. Evaluate against typical Indian company standards for "${targetRole}" positions.`;
+
+  return `You are a senior ATS specialist and placement consultant with 15+ years of experience evaluating Indian MBA/PGDM resumes for campus placements at top B-schools (IIMs, XLRI, NMIMS, SP Jain, GIM, etc.).
+
+EVALUATION MODE: ROLE-SPECIFIC
+You are evaluating this resume STRICTLY for the role: "${targetRole}"
+${companyLine}
+
+ABSOLUTE RULES — violating these makes the analysis useless to the student:
+1. List as "missing prioritySkills" ONLY skills that are genuinely required for "${targetRole}" — nothing else.
+2. Do NOT list skills from unrelated domains as missing, regardless of the student's academic programme.
+3. Concrete examples of what NOT to list as missing:
+   - If role is "Data Analyst" → do NOT list marketing strategy, sales management, brand management, supply chain, operations, P&L, go-to-market
+   - If role is "Sales Manager" → do NOT list machine learning, SQL, Python, data visualization, statistics
+   - If role is "Brand Manager" → do NOT list SQL, programming, financial modeling, data engineering
+   - If role is "Software Engineer" → do NOT list marketing, brand, sales, operations
+4. Missing skills must be what a recruiter hiring for "${targetRole}" at an Indian company would actually look for.
+5. Score "roleAlignment" based on how closely the candidate's background matches "${targetRole}" requirements.
+6. Score "skills" and "tools" only against what "${targetRole}" requires.
+
+Your analysis must be:
+- STRICTLY ACCURATE: read the actual resume text, do not hallucinate skills not present
+- EVIDENCE-BASED: cite specific lines or sections from the resume when making observations
+- CALIBRATED: 80+ means genuinely shortlist-ready for "${targetRole}"; below 50 means significant gaps`;
+}
+
+function buildProgrammeFirstInstruction(ctx) {
+  return `You are a senior ATS specialist and placement consultant with 15+ years of experience evaluating Indian MBA/PGDM resumes for campus placements at top B-schools (IIMs, XLRI, NMIMS, SP Jain, GIM, etc.).
+
+EVALUATION MODE: PROGRAMME-GENERAL
+You are evaluating for: ${ctx.name}
+Programme focus: ${ctx.focus}
+Typical hiring companies: ${ctx.companies}
+Core skills expected: ${ctx.coreSkills.join(', ')}
+Key tools expected: ${ctx.tools.join(', ')}
+ATS keywords that matter: ${ctx.atsKeywords.join(', ')}
+Scoring weights: ${ctx.weights}
+
+Your analysis must be:
+- STRICTLY ACCURATE: read the actual resume text, do not hallucinate skills not present
+- EVIDENCE-BASED: cite specific lines or sections from the resume when making observations
+- CALIBRATED: 80+ means genuinely shortlist-ready at the above companies; below 50 means significant gaps
+- PROGRAMME-SPECIFIC: evaluate only what matters for ${ctx.name} recruiters, not generic job market standards`;
 }
 
 async function resolveResumeAnalysisAccess({ userId, requestedProgramme }) {

@@ -123,6 +123,7 @@ export default async function handler(req, res) {
     const skills     = String(body.skills     || '').trim().slice(0, 4000);
     const projects   = String(body.projects   || '').trim().slice(0, 4000);
     const resumeText = String(body.resumeText || '').trim().slice(0, 40_000);
+    const targetRole = String(body.targetRole || '').trim().slice(0, 120);
 
     const rawCompanies = Array.isArray(body.targetCompanies) ? body.targetCompanies : [];
     const targetCompanies = rawCompanies
@@ -143,7 +144,7 @@ export default async function handler(req, res) {
     // Run all companies through Gemini in parallel
     const results = await Promise.allSettled(
       targetCompanies.map(company =>
-        scoreCompanyWithAI({ company, programme, cgpa, cgpa10, skills, projects, resumeText })
+        scoreCompanyWithAI({ company, programme, cgpa, cgpa10, skills, projects, resumeText, targetRole })
       )
     );
 
@@ -204,7 +205,7 @@ export default async function handler(req, res) {
   }
 }
 
-async function scoreCompanyWithAI({ company, programme, cgpa, cgpa10, skills, projects, resumeText }) {
+async function scoreCompanyWithAI({ company, programme, cgpa, cgpa10, skills, projects, resumeText, targetRole }) {
   const progDesc    = PROGRAMME_CONTEXT[programme] || programme.toUpperCase();
   const groundingDB = COMPANY_GROUNDING[programme] || [];
   const groundEntry = groundingDB.find(c => c.name.toLowerCase() === company.toLowerCase().trim());
@@ -214,22 +215,29 @@ async function scoreCompanyWithAI({ company, programme, cgpa, cgpa10, skills, pr
   - Sector: ${groundEntry.sector}
   - Minimum CGPA expected (10-point scale): ${groundEntry.cgpaMin} | Competitive CGPA: ${groundEntry.cgpaStrong}
   - Core skills expected: ${groundEntry.skills.join(', ')}
-  - Typical roles recruited for this programme: ${groundEntry.roles}`
+  - Typical roles recruited: ${groundEntry.roles}`
     : `No pre-loaded data for "${company}". Use your training knowledge about this company's MBA campus hiring patterns at Indian B-schools.`;
 
-  const systemInstruction = `You are an expert Indian MBA placement consultant specializing in ${progDesc} campus placements at top B-schools (IIMs, XLRI, NMIMS, SP Jain, GIM, etc.).
+  const roleContext = targetRole
+    ? `The candidate is specifically targeting the "${targetRole}" role at ${company}. Evaluate their profile against what ${company} requires for "${targetRole}" candidates — not against the programme's generic skill list. If the candidate's skills match what "${targetRole}" needs, that should be reflected positively regardless of their academic programme.`
+    : `No specific role specified. Evaluate fit based on the company's typical campus recruitment roles and the candidate's overall profile.`;
+
+  const systemInstruction = `You are an expert Indian MBA placement consultant at top B-schools (IIMs, XLRI, NMIMS, SP Jain, GIM, etc.).
 
 You give brutally honest, accurate shortlist probability assessments based on:
-1. The candidate's actual academic profile (CGPA, skills, projects)
-2. The company's real hiring standards and selection criteria
-3. ${progDesc} programme-specific fit
+1. The candidate's actual skills, projects, and CGPA
+2. The company's real hiring standards for the target role
+3. Evidence from the candidate's profile — not programme defaults
 
-You NEVER inflate scores. A 70%+ probability means the candidate is genuinely competitive for shortlisting at this company. A 30-50% means significant gaps exist. Never give 80%+ unless the profile truly meets or exceeds the company's typical shortlisting bar.`;
+IMPORTANT: If a target role is specified, evaluate the candidate's skills against THAT ROLE's requirements at the company. A strong data analytics skill set is relevant for a Data Analyst role at any company, regardless of the candidate's MBA programme. Do not penalize skills that match the role just because they differ from the programme's typical curriculum.
 
-  const prompt = `Assess the shortlist probability for this ${programme.toUpperCase()} candidate at ${company}.
+You NEVER inflate scores. 70%+ means genuinely competitive. 30-50% means significant gaps. Never give 80%+ unless the profile truly meets or exceeds the company's bar.`;
+
+  const prompt = `Assess the shortlist probability for this candidate at ${company}.
 
 CANDIDATE PROFILE:
 - CGPA: ${cgpa.toFixed(2)} / 8.0  (equivalent to ${cgpa10.toFixed(1)} / 10.0)
+- Programme: ${progDesc}
 - Skills & Tools: ${skills || 'Not specified'}
 - Projects & Internships: ${projects || 'Not specified'}
 ${resumeText ? `- Resume summary (first 1500 chars): ${resumeText.slice(0, 1500)}` : ''}
@@ -237,7 +245,7 @@ ${resumeText ? `- Resume summary (first 1500 chars): ${resumeText.slice(0, 1500)
 TARGET COMPANY: ${company}
 ${groundingText}
 
-PROGRAMME: ${progDesc}
+ROLE TARGETING: ${roleContext}
 
 Return ONLY a valid JSON object (no markdown, no code fences):
 {
