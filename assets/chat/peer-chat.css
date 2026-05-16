@@ -1,0 +1,381 @@
+/* ══════════════════════════════════════════════
+   PEER CHAT — Online Panel & Chat Windows
+   ══════════════════════════════════════════════ */
+
+/* ── Online Users Panel (bottom-left) ─────────────────────── */
+.pg-pc-panel {
+  position: fixed;
+  bottom: 0;
+  left: 16px;
+  width: 236px;
+  background: #1c2636;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.28);
+  z-index: 9100;
+  font-family: inherit;
+  user-select: none;
+}
+.pg-pc-panel[hidden] { display: none !important; }
+
+.pg-pc-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.pg-pc-online-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  animation: pgPcPulse 2s ease infinite;
+}
+@keyframes pgPcPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+  50%      { box-shadow: 0 0 0 4px rgba(34,197,94,0); }
+}
+
+.pg-pc-panel-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #e2e8f0;
+  flex: 1;
+}
+
+.pg-pc-panel-badge {
+  background: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+.pg-pc-panel-badge.show { display: flex; }
+
+.pg-pc-panel-chevron {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.pg-pc-panel-chevron:hover { color: #e2e8f0; }
+
+/* Panel body */
+.pg-pc-panel-body {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  max-height: 264px;
+  overflow-y: auto;
+  transition: max-height 0.2s ease;
+}
+.pg-pc-panel-body.collapsed { max-height: 0; overflow: hidden; }
+
+.pg-pc-panel-body::-webkit-scrollbar { width: 3px; }
+.pg-pc-panel-body::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+}
+
+.pg-pc-empty {
+  padding: 14px 12px;
+  font-size: 11.5px;
+  color: #475569;
+  text-align: center;
+}
+
+/* User row */
+.pg-pc-user-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.pg-pc-user-row:hover { background: rgba(255,255,255,0.05); }
+.pg-pc-user-row.active { background: rgba(99,102,241,0.12); }
+
+.pg-pc-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  position: relative;
+}
+.pg-pc-avatar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 9px;
+  height: 9px;
+  background: #22c55e;
+  border-radius: 50%;
+  border: 2px solid #1c2636;
+}
+
+.pg-pc-user-info { flex: 1; min-width: 0; }
+.pg-pc-user-name {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pg-pc-user-sub {
+  font-size: 10px;
+  color: #22c55e;
+}
+
+.pg-pc-unread {
+  background: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 17px;
+  height: 17px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+/* ── Chat Windows Container ────────────────────────────────── */
+.pg-pc-windows {
+  position: fixed;
+  bottom: 0;
+  left: 260px;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  z-index: 9099;
+  pointer-events: none;
+}
+.pg-pc-windows[hidden] { display: none !important; }
+
+/* ── Individual Chat Window ────────────────────────────────── */
+.pg-pc-window {
+  width: 286px;
+  background: #1c2636;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.28);
+  display: flex;
+  flex-direction: column;
+  pointer-events: all;
+  animation: pgPcSlide 0.18s ease;
+}
+@keyframes pgPcSlide {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes pgPcFlash {
+  0%,100% { background: #1c2636; }
+  40%     { background: #263347; }
+}
+.pg-pc-window.flash { animation: pgPcFlash 0.45s ease; }
+
+/* Window header */
+.pg-pc-win-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.pg-pc-win-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.pg-pc-win-info { flex: 1; min-width: 0; }
+.pg-pc-win-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pg-pc-win-status { font-size: 10px; color: #22c55e; }
+
+.pg-pc-win-close {
+  background: none;
+  border: none;
+  color: #475569;
+  font-size: 17px;
+  cursor: pointer;
+  padding: 2px 5px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.pg-pc-win-close:hover {
+  color: #ef4444;
+  background: rgba(239,68,68,0.1);
+}
+
+/* Messages area */
+.pg-pc-messages {
+  height: 288px;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pg-pc-messages::-webkit-scrollbar { width: 3px; }
+.pg-pc-messages::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+}
+.pg-pc-msgs-hint {
+  font-size: 11px;
+  color: #475569;
+  text-align: center;
+  margin: auto;
+}
+
+/* Message bubbles */
+.pg-pc-msg { display: flex; flex-direction: column; gap: 2px; }
+.pg-pc-msg.mine   { align-items: flex-end; }
+.pg-pc-msg.theirs { align-items: flex-start; }
+
+.pg-pc-bubble {
+  max-width: 82%;
+  border-radius: 12px;
+  padding: 7px 11px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+.pg-pc-msg.mine   .pg-pc-bubble {
+  background: #6366f1;
+  color: #fff;
+  border-bottom-right-radius: 3px;
+}
+.pg-pc-msg.theirs .pg-pc-bubble {
+  background: #263347;
+  color: #e2e8f0;
+  border-bottom-left-radius: 3px;
+}
+
+.pg-pc-msg-img {
+  max-width: 100%;
+  max-height: 180px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  cursor: pointer;
+}
+.pg-pc-msg-file {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: inherit;
+  text-decoration: none;
+  background: rgba(0,0,0,0.18);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.pg-pc-msg-file:hover { text-decoration: underline; }
+.pg-pc-msg-caption { margin-top: 4px; }
+.pg-pc-msg-time {
+  font-size: 9.5px;
+  color: #475569;
+  padding: 0 2px;
+}
+.pg-pc-uploading {
+  font-size: 11px;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Input row */
+.pg-pc-win-foot {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 8px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.pg-pc-attach-label {
+  color: #475569;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+.pg-pc-attach-label:hover {
+  color: #94a3b8;
+  background: rgba(255,255,255,0.06);
+}
+.pg-pc-win-input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 12px;
+  color: #e2e8f0;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+  resize: none;
+  height: 30px;
+  line-height: 1.4;
+  overflow: hidden;
+}
+.pg-pc-win-input:focus { border-color: #6366f1; }
+.pg-pc-win-input::placeholder { color: #334155; }
+.pg-pc-win-send {
+  background: #6366f1;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.pg-pc-win-send:hover { background: #4f46e5; }
+.pg-pc-win-send:disabled { background: #334155; cursor: not-allowed; }
