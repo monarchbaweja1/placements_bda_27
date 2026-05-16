@@ -376,9 +376,7 @@
       const { data: { publicUrl } } = window.sbIndex.storage.from('avatars').getPublicUrl(path);
       const urlWithBust = publicUrl + (publicUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
       setAvatarDisplay(urlWithBust, nameIn.value);
-      const { error: dbErr } = await window.sbIndex.from('profiles')
-        .update({ avatar_url: publicUrl }).eq('id', session.user.id);
-      if (dbErr) console.warn('avatar db save:', dbErr);
+      await apiPost('/api/profile', { action: 'save-avatar', avatarUrl: publicUrl });
       avatarStatus.textContent = '✓ Photo saved';
       avatarStatus.style.color = '#059669';
       setTimeout(() => { if (avatarStatus) avatarStatus.textContent = ''; }, 2500);

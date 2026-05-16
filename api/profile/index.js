@@ -96,6 +96,7 @@ async function postProfile(req, res) {
     const { action } = req.body || {};
 
     if (action === 'save-profile') return saveProfile({ req, res, auth, supabase });
+    if (action === 'save-avatar') return saveAvatar({ req, res, auth, supabase });
     if (action === 'save-placement') return savePlacement({ req, res, auth, supabase });
     if (action === 'add-interview') return addInterview({ req, res, auth, supabase });
     if (action === 'remove-interview') return removeInterview({ req, res, auth, supabase });
@@ -105,6 +106,21 @@ async function postProfile(req, res) {
     logError('profile_post_failed', { message: error?.message || String(error) });
     return sendJson(res, 500, { ok: false, error: { code: 'save_failed', message: 'Unable to save. Please try again.' } });
   }
+}
+
+async function saveAvatar({ req, res, auth, supabase }) {
+  const avatarUrl = String(req.body?.avatarUrl || '').trim().slice(0, 1000);
+  if (!avatarUrl) return sendJson(res, 400, { ok: false, error: { code: 'url_required', message: 'Avatar URL required.' } });
+
+  const { data, error } = await supabase.from('profiles').upsert({
+    id: auth.user.id,
+    avatar_url: avatarUrl,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'id' }).select().single();
+
+  if (error) throw error;
+  logInfo('avatar_saved', { userId: auth.user.id });
+  return sendJson(res, 200, { ok: true, profile: data });
 }
 
 async function saveProfile({ req, res, auth, supabase }) {
