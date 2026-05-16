@@ -112,7 +112,9 @@
      1. WHITEBOARD
   ════════════════════════════════════════════ */
   let wbModal = null;
-  const WB_HEIGHT = 3000; // tall scrollable canvas
+  const WB_INIT_HEIGHT  = 2000;  // starting height
+  const WB_EXPAND_BY    = 1500;  // pixels added each expansion
+  const WB_EXPAND_AHEAD = 300;   // expand when this many px remain at bottom
 
   function wbStorageKey() {
     return 'gim_wb_' + (window._verifiedUid || 'guest');
@@ -172,7 +174,7 @@
       try {
         // Composite white bg + drawing onto temp canvas for compact JPEG storage
         const tmp = document.createElement('canvas');
-        tmp.width = canvas.width; tmp.height = WB_HEIGHT;
+        tmp.width = canvas.width; tmp.height = canvas.height;
         const tc = tmp.getContext('2d');
         tc.fillStyle = '#fff';
         tc.fillRect(0, 0, tmp.width, tmp.height);
@@ -191,19 +193,34 @@
       img.src = data;
     }
 
-    // ── Resize (width only — height is fixed WB_HEIGHT) ─────────
+    // ── Resize (width only — height grows dynamically) ──────────
     function resize() {
       const w = wrap.clientWidth || 900;
-      if (canvas.width === w && canvas.height === WB_HEIGHT) return;
-      const img = canvas.width > 0 ? ctx.getImageData(0, 0, canvas.width, Math.min(canvas.height, WB_HEIGHT)) : null;
+      if (canvas.width === w) return;  // height never reset by resize
+      const currentH = canvas.height || WB_INIT_HEIGHT;
+      const img = canvas.width > 0 ? ctx.getImageData(0, 0, canvas.width, currentH) : null;
       canvas.width        = w;
-      canvas.height       = WB_HEIGHT;
+      canvas.height       = currentH;
       canvas.style.width  = w + 'px';
-      canvas.style.height = WB_HEIGHT + 'px';
+      canvas.style.height = currentH + 'px';
       if (img) ctx.putImageData(img, 0, 0);
       if (!boardLoaded) { boardLoaded = true; loadFromStorage(); }
     }
+
+    // ── Auto-expand when drawing near bottom ─────────────────────
+    function expandIfNeeded(y) {
+      if (y < canvas.height - WB_EXPAND_AHEAD) return;
+      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const newH = canvas.height + WB_EXPAND_BY;
+      canvas.height       = newH;
+      canvas.style.height = newH + 'px';
+      ctx.putImageData(img, 0, 0);
+    }
+
     new ResizeObserver(resize).observe(wrap);
+    // Init with starting height
+    canvas.height       = WB_INIT_HEIGHT;
+    canvas.style.height = WB_INIT_HEIGHT + 'px';
     setTimeout(resize, 50);
 
     // ── Drawing ──────────────────────────────────────────────────
@@ -242,6 +259,7 @@
       e.preventDefault();
       if (!drawing) return;
       const { x, y } = getPos(e);
+      expandIfNeeded(y);  // grow canvas if near bottom
       if (e.pressure !== undefined && !erasing) ctx.lineWidth = size * (0.5 + Math.min(e.pressure, 1));
       ctx.lineTo(x, y);
       ctx.stroke();
@@ -307,7 +325,7 @@
     });
     document.getElementById('wbDownloadBtn').addEventListener('click', () => {
       const tmp = document.createElement('canvas');
-      tmp.width = canvas.width; tmp.height = WB_HEIGHT;
+      tmp.width = canvas.width; tmp.height = canvas.height;
       const tc = tmp.getContext('2d');
       tc.fillStyle = '#fff';
       tc.fillRect(0, 0, tmp.width, tmp.height);
