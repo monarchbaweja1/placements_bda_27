@@ -366,3 +366,128 @@
 @media (max-width: 420px) {
   .pg-prf-wrap { right: 12px; }
 }
+
+/* ── Avatar upload section ──────────────────────────────── */
+.pg-prf-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(31,41,51,0.08);
+  margin-bottom: 20px;
+}
+
+.pg-prf-avatar-circle {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(37,99,235,0.28);
+  transition: box-shadow 0.2s;
+  flex-shrink: 0;
+}
+.pg-prf-avatar-circle:hover { box-shadow: 0 6px 22px rgba(37,99,235,0.38); }
+.pg-prf-avatar-circle:focus { outline: 2px solid #2563eb; outline-offset: 3px; }
+
+.pg-prf-avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+#pgPrfAvatarInitials {
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.pg-prf-avatar-cam {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.18s;
+  pointer-events: none;
+}
+.pg-prf-avatar-cam svg { width: 22px; height: 22px; color: #fff; }
+.pg-prf-avatar-circle:hover .pg-prf-avatar-cam { opacity: 1; }
+
+/* ── Blocked users section ──────────────────────────────── */
+.pg-prf-blocked-section {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(31,41,51,0.08);
+}
+
+.pg-prf-blocked-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: #52616f;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 10px;
+}
+
+.pg-prf-blocked-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(31,41,51,0.1);
+  border-radius: 10px;
+  padding: 10px 13px;
+  background: #fafafa;
+  margin-bottom: 7px;
+}
+
+.pg-prf-blocked-info { flex: 1; min-width: 0; }
+
+.pg-prf-blocked-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2933;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pg-prf-blocked-email {
+  font-size: 11px;
+  color: #7b8794;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pg-prf-unblock-btn {
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: 1.5px solid rgba(5,150,105,0.3);
+  background: rgba(5,150,105,0.06);
+  color: #059669;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.pg-prf-unblock-btn:hover {
+  background: rgba(5,150,105,0.14);
+  border-color: rgba(5,150,105,0.5);
+}

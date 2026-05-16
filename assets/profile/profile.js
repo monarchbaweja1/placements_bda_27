@@ -1,6 +1,8 @@
 (function initProfile() {
   'use strict';
 
+  let currentAvatarUrl = null;
+
   let state = {
     profile: null,
     placement: null,
@@ -84,6 +86,23 @@
 
         <!-- ── Profile Tab ── -->
         <div id="pgPrfProfileTab">
+
+          <div class="pg-prf-avatar-section">
+            <div class="pg-prf-avatar-circle" id="pgPrfAvatarCircle" tabindex="0" role="button" aria-label="Upload profile photo">
+              <img id="pgPrfAvatarImg" style="display:none" alt="">
+              <span id="pgPrfAvatarInitials">?</span>
+              <div class="pg-prf-avatar-cam" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+              </div>
+            </div>
+            <input type="file" id="pgPrfAvatarInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none">
+            <div style="font-size:11px;color:#9aa5b1;margin-top:7px">Click to upload profile photo</div>
+            <div id="pgPrfAvatarStatus" style="font-size:11px;min-height:16px;margin-top:3px"></div>
+          </div>
+
           <div class="pg-prf-form-grid" style="margin-bottom:16px">
             <div class="pg-prf-form-group">
               <label class="pg-prf-label" for="pgPrfName">Full Name</label>
@@ -130,6 +149,11 @@
             Save Profile
           </button>
           <div class="pg-prf-status" id="pgPrfProfileStatus"></div>
+
+          <div class="pg-prf-blocked-section" id="pgPrfBlockedSection" style="display:none">
+            <div class="pg-prf-blocked-header">Blocked Users</div>
+            <div id="pgPrfBlockedList"></div>
+          </div>
         </div>
 
         <!-- ── Placement Journey Tab ── -->
@@ -278,6 +302,13 @@
   const compInput    = document.getElementById('pgPrfCompaniesInput');
   const saveProfileBtn    = document.getElementById('pgPrfSaveProfileBtn');
   const profileStatus     = document.getElementById('pgPrfProfileStatus');
+  const avatarCircle      = document.getElementById('pgPrfAvatarCircle');
+  const avatarImg         = document.getElementById('pgPrfAvatarImg');
+  const avatarInitials    = document.getElementById('pgPrfAvatarInitials');
+  const avatarInput       = document.getElementById('pgPrfAvatarInput');
+  const avatarStatus      = document.getElementById('pgPrfAvatarStatus');
+  const blockedSection    = document.getElementById('pgPrfBlockedSection');
+  const blockedList       = document.getElementById('pgPrfBlockedList');
 
   const statusCards       = overlay.querySelectorAll('.pg-prf-status-card');
   const offerBox          = document.getElementById('pgPrfOfferBox');
@@ -294,6 +325,116 @@
   const addCancel         = document.getElementById('pgPrfAddCancel');
   const addSubmit         = document.getElementById('pgPrfAddSubmit');
   const boardContent      = document.getElementById('pgPrfBoardContent');
+
+  // ── Avatar ──────────────────────────────────────────────────
+  function prfInitials(name) {
+    if (!name) return '?';
+    const parts = String(name).trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  function setAvatarDisplay(url, name) {
+    currentAvatarUrl = url || null;
+    if (url) {
+      avatarImg.src = url;
+      avatarImg.style.display = '';
+      avatarInitials.style.display = 'none';
+    } else {
+      avatarImg.style.display = 'none';
+      avatarInitials.style.display = '';
+      avatarInitials.textContent = prfInitials(name || '');
+    }
+  }
+
+  avatarCircle.addEventListener('click', () => avatarInput.click());
+  avatarCircle.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); avatarInput.click(); }
+  });
+
+  avatarInput.addEventListener('change', async () => {
+    const file = avatarInput.files?.[0];
+    avatarInput.value = '';
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      avatarStatus.textContent = 'Max 5 MB allowed.';
+      avatarStatus.style.color = '#dc2626';
+      return;
+    }
+    avatarStatus.textContent = 'Uploading…';
+    avatarStatus.style.color = '#9aa5b1';
+    try {
+      if (!window.sbIndex?.storage) throw new Error('Storage unavailable — check Supabase setup.');
+      const { data: { session } } = await window.sbIndex.auth.getSession();
+      if (!session) throw new Error('Not signed in.');
+      const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase().slice(0, 5);
+      const path = `${session.user.id}/avatar.${ext}`;
+      const { error: upErr } = await window.sbIndex.storage
+        .from('avatars')
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = window.sbIndex.storage.from('avatars').getPublicUrl(path);
+      const urlWithBust = publicUrl + (publicUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
+      setAvatarDisplay(urlWithBust, nameIn.value);
+      const { error: dbErr } = await window.sbIndex.from('profiles')
+        .update({ avatar_url: publicUrl }).eq('id', session.user.id);
+      if (dbErr) console.warn('avatar db save:', dbErr);
+      avatarStatus.textContent = '✓ Photo saved';
+      avatarStatus.style.color = '#059669';
+      setTimeout(() => { if (avatarStatus) avatarStatus.textContent = ''; }, 2500);
+    } catch (err) {
+      avatarStatus.textContent = err.message || 'Upload failed.';
+      avatarStatus.style.color = '#dc2626';
+    }
+  });
+
+  // ── Blocked Users ────────────────────────────────────────────
+  async function loadBlockedUsers() {
+    if (!window.sbIndex) return;
+    try {
+      const { data: { session } } = await window.sbIndex.auth.getSession();
+      if (!session) return;
+      const { data } = await window.sbIndex
+        .from('blocked_users')
+        .select('blocked_id, blocked_name, blocked_email, created_at')
+        .eq('blocker_id', session.user.id)
+        .order('created_at', { ascending: false });
+      renderBlockedUsers(data || []);
+    } catch {}
+  }
+
+  function renderBlockedUsers(list) {
+    if (!list.length) {
+      blockedSection.style.display = 'none';
+      return;
+    }
+    blockedSection.style.display = '';
+    blockedList.innerHTML = list.map(u => `
+      <div class="pg-prf-blocked-card">
+        <div class="pg-prf-blocked-info">
+          <div class="pg-prf-blocked-name">${escHtml(u.blocked_name || u.blocked_email || 'Unknown user')}</div>
+          ${u.blocked_email ? `<div class="pg-prf-blocked-email">${escHtml(u.blocked_email)}</div>` : ''}
+        </div>
+        <button class="pg-prf-unblock-btn" data-uid="${escHtml(u.blocked_id)}">Unblock</button>
+      </div>
+    `).join('');
+    blockedList.querySelectorAll('.pg-prf-unblock-btn').forEach(btn => {
+      btn.addEventListener('click', () => unblockUser(btn.dataset.uid));
+    });
+  }
+
+  async function unblockUser(uid) {
+    if (!window.sbIndex) return;
+    try {
+      const { data: { session } } = await window.sbIndex.auth.getSession();
+      if (!session) return;
+      await window.sbIndex.from('blocked_users')
+        .delete()
+        .eq('blocker_id', session.user.id)
+        .eq('blocked_id', uid);
+      loadBlockedUsers();
+    } catch (e) { alert(e.message || 'Could not unblock.'); }
+  }
 
   // ── Chip inputs ────────────────────────────────────────────
   function makeChipInput(wrap, input, maxChips, getChips, setChips) {
@@ -367,6 +508,7 @@
     targetCompanies = Array.isArray(profile.target_companies) ? profile.target_companies : [];
     rolesCtrl.render();
     compCtrl.render();
+    setAvatarDisplay(profile.avatar_url || null, profile.name);
   }
 
   function populatePlacement(placement) {
@@ -416,6 +558,7 @@
       state.placement = data.placement;
       populateProfile(data.profile);
       populatePlacement(data.placement);
+      loadBlockedUsers();
     } catch (e) {
       showStatus(profileStatus, 'error', e.message || 'Could not load profile.');
     }

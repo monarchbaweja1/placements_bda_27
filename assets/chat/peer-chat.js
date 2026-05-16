@@ -7,17 +7,21 @@
   const MAX_FILE_MB      = 10;
   const MAX_WINDOWS      = 3;
   const HISTORY_LIMIT    = 60;
+  const INVISIBLE_KEY    = 'pg-chat-invisible';
 
   // ── State ────────────────────────────────────────────────────────
   let myUid        = null;
   let myName       = null;
   let myEmail      = null;
+  let myAvatarUrl  = null;
   let presenceCh   = null;
   let msgCh        = null;
-  let onlineUsers  = {};   // uid → { user_id, name, email }
-  let openWindows  = [];   // [{ uid, name, email }] ordered
+  let onlineUsers  = {};   // uid → { user_id, name, email, avatar_url }
+  let openWindows  = [];   // [{ uid, name, email, avatar_url }]
   let msgCache     = {};   // uid → [message, ...]
   let unread       = {};   // uid → count
+  let blockedIds   = new Set();
+  let isInvisible  = false;
   let panelOpen    = true;
   let initialized  = false;
 
@@ -30,9 +34,15 @@
     const session = data?.session;
     if (!session) { setTimeout(init, 2000); return; }
 
-    myUid   = session.user.id;
-    myEmail = session.user.email;
-    myName  = await fetchMyName(session.access_token);
+    myUid       = session.user.id;
+    myEmail     = session.user.email;
+    isInvisible = localStorage.getItem(INVISIBLE_KEY) === 'true';
+
+    const profile = await fetchMyProfile(session.access_token);
+    myName      = profile.name;
+    myAvatarUrl = profile.avatar_url;
+
+    await loadBlockedUsers();
 
     initialized = true;
     buildPanelDOM();
@@ -44,16 +54,19 @@
     syncVisibility();
   }
 
-  async function fetchMyName(token) {
+  async function fetchMyProfile(token) {
     try {
       const res = await fetch('/api/profile', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error();
       const d = await res.json();
-      return d.profile?.name || emailToInitialName(myEmail);
+      return {
+        name:       d.profile?.name       || emailToInitialName(myEmail),
+        avatar_url: d.profile?.avatar_url || null
+      };
     } catch {
-      return emailToInitialName(myEmail);
+      return { name: emailToInitialName(myEmail), avatar_url: null };
     }
   }
 
@@ -61,6 +74,60 @@
     if (!email) return 'User';
     return email.split('@')[0].replace(/[._]/g, ' ')
       .replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  // ── Blocked Users ────────────────────────────────────────────────
+  async function loadBlockedUsers() {
+    if (!window.sbIndex || !myUid) return;
+    try {
+      const { data } = await window.sbIndex
+        .from('blocked_users')
+        .select('blocked_id')
+        .eq('blocker_id', myUid);
+      blockedIds = new Set((data || []).map(r => r.blocked_id));
+    } catch {}
+  }
+
+  async function blockUser(user) {
+    if (!window.sbIndex || !myUid || !user?.uid) return;
+    try {
+      await window.sbIndex.from('blocked_users').insert({
+        blocker_id:    myUid,
+        blocked_id:    user.uid,
+        blocked_name:  user.name  || null,
+        blocked_email: user.email || null
+      });
+      blockedIds.add(user.uid);
+      delete onlineUsers[user.uid];
+      closeWindow(user.uid);
+      renderPanel();
+    } catch {}
+  }
+
+  // ── Visibility Toggle ─────────────────────────────────────────────
+  function toggleVisibility() {
+    isInvisible = !isInvisible;
+    localStorage.setItem(INVISIBLE_KEY, isInvisible);
+    if (isInvisible) {
+      presenceCh?.untrack();
+    } else if (presenceCh) {
+      presenceCh.track({ user_id: myUid, name: myName, email: myEmail, avatar_url: myAvatarUrl });
+    }
+    updateVisibilityBtn();
+  }
+
+  function updateVisibilityBtn() {
+    const btn = document.getElementById('pgPcVisBtn');
+    if (!btn) return;
+    if (isInvisible) {
+      btn.innerHTML = '<span class="pg-pc-vis-dot off"></span>Appear online';
+      btn.title = 'You are invisible. Click to appear online.';
+      btn.classList.add('invisible');
+    } else {
+      btn.innerHTML = '<span class="pg-pc-vis-dot"></span>Online';
+      btn.title = 'You appear online to others. Click to go invisible.';
+      btn.classList.remove('invisible');
+    }
   }
 
   // ── Supabase Presence ────────────────────────────────────────────
@@ -77,16 +144,26 @@
         onlineUsers = {};
         Object.values(state).forEach(presences =>
           presences.forEach(p => {
-            if (p.user_id && p.user_id !== myUid)
-              onlineUsers[p.user_id] = { user_id: p.user_id, name: p.name, email: p.email };
+            if (p.user_id && p.user_id !== myUid && !blockedIds.has(p.user_id))
+              onlineUsers[p.user_id] = {
+                user_id:    p.user_id,
+                name:       p.name,
+                email:      p.email,
+                avatar_url: p.avatar_url || null
+              };
           })
         );
         renderPanel();
       })
       .on('presence', { event: 'join' }, ({ newPresences }) => {
         newPresences.forEach(p => {
-          if (p.user_id && p.user_id !== myUid)
-            onlineUsers[p.user_id] = { user_id: p.user_id, name: p.name, email: p.email };
+          if (p.user_id && p.user_id !== myUid && !blockedIds.has(p.user_id))
+            onlineUsers[p.user_id] = {
+              user_id:    p.user_id,
+              name:       p.name,
+              email:      p.email,
+              avatar_url: p.avatar_url || null
+            };
         });
         renderPanel();
       })
@@ -97,8 +174,13 @@
         renderPanel();
       })
       .subscribe(async status => {
-        if (status === 'SUBSCRIBED') {
-          await presenceCh.track({ user_id: myUid, name: myName, email: myEmail });
+        if (status === 'SUBSCRIBED' && !isInvisible) {
+          await presenceCh.track({
+            user_id:    myUid,
+            name:       myName,
+            email:      myEmail,
+            avatar_url: myAvatarUrl
+          });
         }
       });
   }
@@ -120,8 +202,9 @@
 
   function handleIncoming(msg) {
     const sid = msg.sender_id;
+    if (blockedIds.has(sid)) return;
+
     if (!msgCache[sid]) msgCache[sid] = [];
-    // Avoid duplicates
     if (!msgCache[sid].some(m => m.id === msg.id)) {
       msgCache[sid].push(msg);
     }
@@ -149,7 +232,7 @@
       unread = {};
       data.forEach(m => { unread[m.sender_id] = (unread[m.sender_id] || 0) + 1; });
       renderPanel();
-    } catch { /* table may not exist yet */ }
+    } catch {}
   }
 
   async function markRead(ids) {
@@ -190,6 +273,9 @@
       <div class="pg-pc-panel-body" id="pgPcBody">
         <div class="pg-pc-empty" id="pgPcEmpty">No one else is online right now.</div>
         <div id="pgPcList"></div>
+      </div>
+      <div class="pg-pc-panel-foot">
+        <button class="pg-pc-vis-btn" id="pgPcVisBtn" type="button"></button>
       </div>`;
     document.body.appendChild(el);
 
@@ -198,6 +284,9 @@
         togglePanel();
       }
     });
+
+    document.getElementById('pgPcVisBtn').addEventListener('click', toggleVisibility);
+    updateVisibilityBtn();
   }
 
   function buildWindowsDOM() {
@@ -218,13 +307,13 @@
 
   // ── Render Panel ─────────────────────────────────────────────────
   function renderPanel() {
-    const label   = document.getElementById('pgPcLabel');
-    const badge   = document.getElementById('pgPcBadge');
-    const empty   = document.getElementById('pgPcEmpty');
-    const list    = document.getElementById('pgPcList');
+    const label = document.getElementById('pgPcLabel');
+    const badge = document.getElementById('pgPcBadge');
+    const empty = document.getElementById('pgPcEmpty');
+    const list  = document.getElementById('pgPcList');
     if (!label || !list) return;
 
-    const users      = Object.values(onlineUsers);
+    const users       = Object.values(onlineUsers).filter(u => !blockedIds.has(u.user_id));
     const totalUnread = Object.values(unread).reduce((a, b) => a + b, 0);
 
     label.textContent = `Online (${users.length})`;
@@ -241,13 +330,19 @@
     if (empty) empty.style.display = users.length ? 'none' : '';
 
     list.innerHTML = users.map(u => {
-      const initials = makeInitials(u.name || u.email);
-      const cnt      = unread[u.user_id] || 0;
-      const isActive = openWindows.some(w => w.uid === u.user_id);
+      const initials  = makeInitials(u.name || u.email);
+      const cnt       = unread[u.user_id] || 0;
+      const isActive  = openWindows.some(w => w.uid === u.user_id);
+      const avatarInner = u.avatar_url
+        ? `<img class="pg-pc-avatar-img" src="${x(u.avatar_url)}" alt="${x(initials)}">`
+        : x(initials);
       return `
-        <div class="pg-pc-user-row${isActive ? ' active' : ''}" data-uid="${x(u.user_id)}"
-          data-name="${x(u.name || u.email)}" data-email="${x(u.email || '')}">
-          <div class="pg-pc-avatar">${x(initials)}</div>
+        <div class="pg-pc-user-row${isActive ? ' active' : ''}"
+          data-uid="${x(u.user_id)}"
+          data-name="${x(u.name || u.email)}"
+          data-email="${x(u.email || '')}"
+          data-avatar="${x(u.avatar_url || '')}">
+          <div class="pg-pc-avatar">${avatarInner}</div>
           <div class="pg-pc-user-info">
             <div class="pg-pc-user-name">${x(u.name || u.email)}</div>
             <div class="pg-pc-user-sub">Online</div>
@@ -258,7 +353,12 @@
 
     list.querySelectorAll('.pg-pc-user-row').forEach(row => {
       row.addEventListener('click', () => {
-        openChatWindow({ uid: row.dataset.uid, name: row.dataset.name, email: row.dataset.email });
+        openChatWindow({
+          uid:        row.dataset.uid,
+          name:       row.dataset.name,
+          email:      row.dataset.email,
+          avatar_url: row.dataset.avatar || null
+        });
       });
     });
   }
@@ -297,16 +397,26 @@
     const container = document.getElementById('pgPcWindows');
     if (!container) return;
 
+    const avatarInner = user.avatar_url
+      ? `<img class="pg-pc-avatar-img" src="${x(user.avatar_url)}" alt="${x(makeInitials(user.name))}">`
+      : x(makeInitials(user.name));
+
     const win = document.createElement('div');
     win.className = 'pg-pc-window';
     win.dataset.uid = user.uid;
     win.innerHTML = `
       <div class="pg-pc-win-head">
-        <div class="pg-pc-win-avatar">${x(makeInitials(user.name))}</div>
+        <div class="pg-pc-win-avatar">${avatarInner}</div>
         <div class="pg-pc-win-info">
           <div class="pg-pc-win-name">${x(user.name)}</div>
           <div class="pg-pc-win-status">Online</div>
         </div>
+        <button class="pg-pc-win-block" aria-label="Block ${x(user.name)}" title="Block ${x(user.name)}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+          </svg>
+        </button>
         <button class="pg-pc-win-close" aria-label="Close">&#215;</button>
       </div>
       <div class="pg-pc-messages" id="pgPcMsgs-${user.uid}">
@@ -335,6 +445,11 @@
     container.appendChild(win);
 
     win.querySelector('.pg-pc-win-close').addEventListener('click', () => closeWindow(user.uid));
+    win.querySelector('.pg-pc-win-block').addEventListener('click', () => {
+      if (confirm(`Block ${user.name}?\n\nYou won't see their messages or online presence. You can unblock them from your Profile.`)) {
+        blockUser(user);
+      }
+    });
 
     const input   = win.querySelector('.pg-pc-win-input');
     const sendBtn = win.querySelector('.pg-pc-win-send');
@@ -375,31 +490,33 @@
   }
 
   function renderMessages(otherUid) {
-    const box = document.getElementById(`pgPcMsgs-${otherUid}`);
+    const box  = document.getElementById(`pgPcMsgs-${otherUid}`);
     if (!box) return;
+    const user = openWindows.find(w => w.uid === otherUid);
     const msgs = msgCache[otherUid] || [];
     if (!msgs.length) {
       box.innerHTML = '<div class="pg-pc-msgs-hint">No messages yet. Say hello!</div>';
       return;
     }
-    box.innerHTML = msgs.map(m => bubbleHTML(m)).join('');
+    box.innerHTML = msgs.map(m => bubbleHTML(m, user)).join('');
     box.scrollTop = box.scrollHeight;
   }
 
   function appendBubble(otherUid, msg) {
-    const box = document.getElementById(`pgPcMsgs-${otherUid}`);
+    const box  = document.getElementById(`pgPcMsgs-${otherUid}`);
     if (!box) return;
+    const user = openWindows.find(w => w.uid === otherUid);
     box.querySelector('.pg-pc-msgs-hint')?.remove();
     const div = document.createElement('div');
-    div.innerHTML = bubbleHTML(msg);
+    div.innerHTML = bubbleHTML(msg, user);
     while (div.firstChild) box.appendChild(div.firstChild);
     box.scrollTop = box.scrollHeight;
   }
 
-  function bubbleHTML(msg) {
-    const mine  = msg.sender_id === myUid;
-    const t     = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    let body    = '';
+  function bubbleHTML(msg, otherUser) {
+    const mine = msg.sender_id === myUid;
+    const t    = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    let body   = '';
 
     if (msg.file_url) {
       const isImg = (msg.file_type || '').startsWith('image/');
@@ -420,9 +537,19 @@
       body = x(msg.content || '');
     }
 
+    let bubbleContent;
+    if (!mine && otherUser) {
+      const av = otherUser.avatar_url
+        ? `<img class="pg-pc-bubble-avatar" src="${x(otherUser.avatar_url)}" alt="">`
+        : `<div class="pg-pc-bubble-avatar-i">${x(makeInitials(otherUser.name))}</div>`;
+      bubbleContent = `<div class="pg-pc-bubble-row">${av}<div class="pg-pc-bubble">${body}</div></div>`;
+    } else {
+      bubbleContent = `<div class="pg-pc-bubble">${body}</div>`;
+    }
+
     return `
       <div class="pg-pc-msg ${mine ? 'mine' : 'theirs'}">
-        <div class="pg-pc-bubble">${body}</div>
+        ${bubbleContent}
         <div class="pg-pc-msg-time">${t}</div>
       </div>`;
   }
@@ -520,9 +647,9 @@
     }
   }
 
-  // ── Visibility ────────────────────────────────────────────────────
+  // ── DOM Visibility ────────────────────────────────────────────────
   function syncVisibility() {
-    const show = isActive();
+    const show    = isActive();
     const panel   = document.getElementById('pgPcPanel');
     const windows = document.getElementById('pgPcWindows');
     if (panel)   panel.hidden   = !show;

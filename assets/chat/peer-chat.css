@@ -379,3 +379,98 @@
 }
 .pg-pc-win-send:hover { background: #4f46e5; }
 .pg-pc-win-send:disabled { background: #334155; cursor: not-allowed; }
+
+/* ── Avatar images (panel + window header) ────────────────────── */
+.pg-pc-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Block button in chat window header ───────────────────────── */
+.pg-pc-win-block {
+  background: none;
+  border: none;
+  color: #475569;
+  cursor: pointer;
+  padding: 3px 4px;
+  line-height: 1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+.pg-pc-win-block:hover {
+  color: #f97316;
+  background: rgba(249,115,22,0.12);
+}
+
+/* ── Panel footer (visibility toggle) ────────────────────────── */
+.pg-pc-panel-foot {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+}
+
+.pg-pc-vis-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 10.5px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.pg-pc-vis-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.06); }
+.pg-pc-vis-btn.invisible { color: #475569; }
+.pg-pc-vis-btn.invisible:hover { color: #94a3b8; }
+
+.pg-pc-vis-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+}
+.pg-pc-vis-dot.off { background: #475569; }
+
+/* ── Message bubble row with avatar ──────────────────────────── */
+.pg-pc-bubble-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+/* Small avatar next to "theirs" bubbles */
+.pg-pc-bubble-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: block;
+}
+.pg-pc-bubble-avatar-i {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
