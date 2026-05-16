@@ -731,30 +731,39 @@ let CU = null, CP = null, CPlac = null;
 window.addEventListener('DOMContentLoaded', () => {
   buildChips();
 
-  // Always hide loader after 2.5s — fallback to login if nothing loaded
-  setTimeout(() => {
-    const ld = document.getElementById('loader');
-    if (ld) { ld.style.opacity='0'; setTimeout(()=>{ if(ld) ld.style.display='none'; },400); }
-    setTimeout(() => {
-      if (!document.querySelector('.screen.on')) showScreen('s-login');
-    }, 500);
-  }, 2500);
+  // Detect OAuth callback — URL has access_token in hash
+  const isOAuthCallback = window.location.hash.includes('access_token=');
+  // Strip OAuth hash immediately so reloads don't reprocess stale tokens
+  if (isOAuthCallback) window.history.replaceState(null, '', window.location.pathname);
 
   let _loading = false;
   function runInit(session) {
     if (_loading) return;
-    if (session?.user) { _loading = true; CU = session.user; loadAll().finally(()=>{ _loading=false; }); }
-    else showScreen('s-login');
+    if (session?.user) {
+      _loading = true;
+      CU = session.user;
+      loadAll().finally(() => { _loading = false; });
+    } else if (!isOAuthCallback) {
+      // Only show login if this is NOT an OAuth callback
+      // For OAuth callbacks we wait for SIGNED_IN event with real session
+      showScreen('s-login');
+    }
+    // else: OAuth callback with null session — keep loader, wait for SIGNED_IN
   }
 
-  // SIGNED_IN handles fresh OAuth logins; getSession handles page reloads with existing session
   sb.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN') runInit(session);
     else if (event === 'SIGNED_OUT') { CU=null; CP=null; CPlac=null; _loading=false; showScreen('s-login'); }
   });
 
-  // Existing session on page load (stored in localStorage)
   sb.auth.getSession().then(({ data: { session } }) => runInit(session));
+
+  // Fallback: if nothing shows after 8s (SIGNED_IN never fired), show login
+  setTimeout(() => {
+    const ld = document.getElementById('loader');
+    if (ld) { ld.style.opacity='0'; setTimeout(() => { if(ld) ld.style.display='none'; }, 400); }
+    setTimeout(() => { if (!document.querySelector('.screen.on')) showScreen('s-login'); }, 500);
+  }, isOAuthCallback ? 8000 : 2500);
 });
 
 // ── Build chip UI ──
