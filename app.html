@@ -677,7 +677,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-si
 const SUPABASE_URL = 'https://dsrwktqgpngrviavceal.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bLUTa913DWCoVFTt9r_vew_Wa_hjEbV';
 const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { flowType: 'implicit', detectSessionInUrl: true, persistSession: true }
+});
 
 const ADMIN_EMAILS = ['monarch.baweja25b@example.com'];
 
@@ -731,18 +733,12 @@ let CU = null, CP = null, CPlac = null;
 window.addEventListener('DOMContentLoaded', () => {
   buildChips();
 
-  // Detect OAuth redirect: implicit flow = hash, PKCE flow (Supabase v2 default) = ?code= query param
-  const isOAuthCallback = window.location.hash.includes('access_token=') ||
-                          window.location.search.includes('code=');
-
   let _done = false;
   function go(session) {
     if (_done) return;
     _done = true;
     CU = session.user;
-    // Strip OAuth params from URL now that Supabase has read them
-    if (window.location.hash || window.location.search)
-      window.history.replaceState(null, '', window.location.pathname);
+    window.history.replaceState(null, '', window.location.pathname);
     loadAll();
   }
 
@@ -750,23 +746,16 @@ window.addEventListener('DOMContentLoaded', () => {
     if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
       go(session);
     } else if (event === 'SIGNED_OUT') {
-      _done = false; CU = null; CP = null; CPlac = null;
-      showScreen('s-login');
-    } else if (event === 'INITIAL_SESSION' && !session?.user && !isOAuthCallback) {
-      // No session, not an OAuth redirect → go straight to login
-      showScreen('s-login');
-      const ld = document.getElementById('loader');
-      if (ld) { ld.style.opacity='0'; setTimeout(()=>{ if(ld) ld.style.display='none'; },400); }
+      _done = false; CU = null; CP = null; CPlac = null; showScreen('s-login');
     }
   });
 
-  // Fallback loader hide + login safety net
-  const timeout = isOAuthCallback ? 10000 : 3000;
+  // Fallback: hide loader + show login if nothing happened after 5s
   setTimeout(() => {
     const ld = document.getElementById('loader');
     if (ld) { ld.style.opacity='0'; setTimeout(()=>{ if(ld) ld.style.display='none'; },400); }
     setTimeout(() => { if (!document.querySelector('.screen.on')) showScreen('s-login'); }, 500);
-  }, timeout);
+  }, 5000);
 });
 
 // ── Build chip UI ──
@@ -858,7 +847,7 @@ window.appSignInWithGoogle = async () => {
   if (err) err.className = 'lc-err';
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.href.split('#')[0].split('?')[0] }
+    options: { redirectTo: window.location.origin + '/app.html', skipBrowserRedirect: false }
   });
   if (error) {
     if (err) { err.textContent = error.message; err.className = 'lc-err show'; }
