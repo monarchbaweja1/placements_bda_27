@@ -6601,11 +6601,18 @@ window.verifyOTP = async function() {
   setLoadingButton(btn, 'Verifying…');
 
   try {
-    const response = await withTimeout(sbIndex.auth.verifyOtp({
-      email: _authEmail,
-      token,
-      type: 'email'
-    }), 20000, 'OTP verification');
+    // Try 'email' type first (existing users); fall back to 'signup' (new users
+    // whose first OTP is a signup-confirmation token, not a sign-in token)
+    let response = await withTimeout(sbIndex.auth.verifyOtp({
+      email: _authEmail, token, type: 'email'
+    }), 15000, 'OTP verification');
+
+    if (response.error) {
+      response = await withTimeout(sbIndex.auth.verifyOtp({
+        email: _authEmail, token, type: 'signup'
+      }), 15000, 'OTP verification (signup)');
+    }
+
     console.log('verifyOTP response', response);
 
     if (response.error) {
