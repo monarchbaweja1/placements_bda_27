@@ -6601,9 +6601,17 @@ window.verifyOTP = async function() {
     }
 
     if (response.data?.user) {
-      showAuthStatus('✅ Verified! Checking your account…', 'ok');
+      showAuthStatus('✅ Verified! Loading your hub…', 'ok');
       const uid = response.data.user.id;
-      const { data: existingProfile } = await sbIndex.from('profiles').select('id').eq('id', uid).maybeSingle();
+      let existingProfile = null;
+      try {
+        const { data } = await withTimeout(
+          sbIndex.from('profiles').select('id').eq('id', uid).maybeSingle(),
+          6000, 'profile check'
+        );
+        existingProfile = data;
+      } catch (_) { existingProfile = null; }
+
       if (existingProfile) {
         setTimeout(() => enterHub(), 400);
       } else {
@@ -6612,7 +6620,7 @@ window.verifyOTP = async function() {
         setTimeout(() => showScreen('screen-register'), 300);
       }
     } else {
-      throw new Error('OTP verification completed without an active user session.');
+      throw new Error('Verification completed but no session was returned.');
     }
   } catch (error) {
     console.error('verifyOTP failed', error);
