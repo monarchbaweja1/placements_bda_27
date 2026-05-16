@@ -6600,9 +6600,20 @@ window.verifyOTP = async function() {
       const uid = response.data.user.id;
       window._verifiedUid = uid; // store for saveRegistration
 
-      // Explicitly set the session so subsequent DB calls have auth token
-      // verifyOtp already stores the session internally — no need to call setSession.
-      // Check if profile exists; timeout prevents hanging on slow Supabase connections.
+      // Explicitly attach session so all subsequent DB calls carry the JWT.
+      // onAuthStateChange now only handles SIGNED_OUT so this won't cause double routing.
+      if (response.data.session) {
+        try {
+          await Promise.race([
+            sbIndex.auth.setSession({
+              access_token:  response.data.session.access_token,
+              refresh_token: response.data.session.refresh_token
+            }),
+            new Promise(r => setTimeout(r, 3000))
+          ]);
+        } catch (_) {}
+      }
+
       let existingProfile = null;
       try {
         const { data } = await withTimeout(
@@ -6722,13 +6733,11 @@ window.saveRegistration = async function() {
   if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 
   try {
-    // Use UID stored during OTP verification — avoids another getSession() round-trip
-    let uid = window._verifiedUid;
-    if (!uid) {
-      const { data: { session } } = await withTimeout(sbIndex.auth.getSession(), 8000, 'session');
-      if (!session?.user) throw new Error('Session expired — please sign in again.');
-      uid = session.user.id;
-    }
+    // Always confirm session is active before hitting DB (prevents RLS hang)
+    const { data: { session: liveSess } } = await withTimeout(sbIndex.auth.getSession(), 6000, 'session');
+    if (!liveSess?.user) throw new Error('Session expired — please sign in again.');
+    const uid = liveSess.user.id;
+    window._verifiedUid = uid; // keep in sync
 
     const { error: profErr } = await withTimeout(
       sbIndex.from('profiles').upsert({
