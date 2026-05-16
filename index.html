@@ -1864,8 +1864,8 @@ h2.section-h2 {
     <div class="section-wrap">
       <div class="section-header reveal">
         <span class="section-label">OVERVIEW</span>
-        <h2 class="section-h2" id="overviewTitle">BDA <span style="color:var(--green)">Placement</span> Prep Hub</h2>
-        <p class="sub-p" id="overviewSub">The complete placement preparation environment for PGDM-BDA batch 2025-27.</p>
+        <h2 class="section-h2" id="overviewTitle"><span style="color:var(--green)">Placement</span> Prep Hub</h2>
+        <p class="sub-p" id="overviewSub">The complete placement preparation environment for PGDM batch 2025-27.</p>
       </div>
 
       <!-- BENTO GRID -->
@@ -1898,7 +1898,7 @@ h2.section-h2 {
         </div>
         <!-- Sector chart -->
         <div class="bento-card b-4">
-          <div class="bento-label" id="sectorChartLabel">Sector Distribution — BDA</div>
+          <div class="bento-label" id="sectorChartLabel">Sector Distribution</div>
           <canvas id="sectorChart" height="180"></canvas>
           <div id="sectorLegend" style="margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
         </div>
@@ -1939,7 +1939,7 @@ h2.section-h2 {
     <div class="section-wrap">
       <div class="section-header reveal">
         <span class="section-label">COMPANY INTEL</span>
-        <h2 class="section-h2" id="companySecTitle">BDA <span style="color:var(--green)">Companies</span></h2>
+        <h2 class="section-h2" id="companySecTitle"><span style="color:var(--green)">Companies</span></h2>
         <p class="sub-p" id="companySecSub">87 company-intel cards — updated with public placement reports through 2025. Click to expand Q&A.</p>
       </div>
       <div class="legend-row">
@@ -2228,7 +2228,7 @@ function drawSectorChart(prog) {
       <span style="margin-left:auto;font-weight:700;color:${colors[i]};font-family:var(--mono)">${d.data[i]}%</span>
     </div>`).join('');
   const lbl = document.getElementById('sectorChartLabel');
-  if(lbl) lbl.textContent = 'Sector Distribution — ' + prog.toUpperCase();
+  if(lbl) lbl.textContent = 'Sector Distribution';
 }
 </script>
 
@@ -4635,8 +4635,8 @@ function downloadSectionAsPDF(title, contentId) {
   <span style="margin-left:auto;color:var(--text3)">Placement Guide</span>
 </div>
 
-    <h2>BDA Interview Prep — ${title}</h2>
-    <p>Prepared for: BDA Batch 2025-27</p>
+    <h2>Interview Prep — ${title}</h2>
+    <p>Prepared for: PGDM Batch 2025-27</p>
     <hr>
     ${content}
     </body></html>
@@ -5761,16 +5761,16 @@ function rebuildForProg(prog) {
 
   // ── Overview labels ───────────────────────────────────────────
   const overviewTitles = {
-    bda:  'BDA <span class="hi">PLACEMENT</span><br>PREP HUB',
-    core: 'CORE <span class="hi">PLACEMENT</span><br>PREP HUB',
-    hcm:  'HCM <span class="hi">PLACEMENT</span><br>PREP HUB',
-    bifs: 'BIFS <span class="hi">PLACEMENT</span><br>PREP HUB'
+    bda:  '<span class="hi">PLACEMENT</span><br>PREP HUB',
+    core: '<span class="hi">PLACEMENT</span><br>PREP HUB',
+    hcm:  '<span class="hi">PLACEMENT</span><br>PREP HUB',
+    bifs: '<span class="hi">PLACEMENT</span><br>PREP HUB'
   };
   const overviewSubs = {
-    bda:  'The complete PGDM-BDA placement preparation environment — companies, questions, roadmap &amp; cheatsheets',
-    core: 'The complete PGDM-Core placement preparation environment — companies, questions, roadmap &amp; cheatsheets',
-    hcm:  'The complete PGDM-HCM placement preparation environment — companies, questions, roadmap &amp; cheatsheets',
-    bifs: 'The complete PGDM-BIFS placement preparation environment — companies, questions, roadmap &amp; cheatsheets'
+    bda:  'The complete PGDM placement preparation environment — companies, questions, roadmap &amp; cheatsheets',
+    core: 'The complete PGDM placement preparation environment — companies, questions, roadmap &amp; cheatsheets',
+    hcm:  'The complete PGDM placement preparation environment — companies, questions, roadmap &amp; cheatsheets',
+    bifs: 'The complete PGDM placement preparation environment — companies, questions, roadmap &amp; cheatsheets'
   };
   const roadmapTitles = {
     bda:  'AI/ML <span class="hi">MASTERY</span><br>ROADMAP',
@@ -6311,12 +6311,12 @@ window.selectProg = function(prog) {
     bifs: '21 company-intel cards - updated with public placement reports through 2025.'
   };
   const el = (id) => document.getElementById(id);
-  if (el('sidebarTitle'))    el('sidebarTitle').innerHTML    = `${label}<br>PREP HUB`;
-  if (el('sidebarSub'))      el('sidebarSub').textContent     = `// placement.guide.${prog}`;
-  if (el('topbarTitle'))     el('topbarTitle').innerHTML     = `${label} <span>Prep Hub</span>`;
-  if (el('companySecTitle')) el('companySecTitle').innerHTML = `${label} <span class="hi">COMPANY</span><br>INTEL`;
+  if (el('sidebarTitle'))    el('sidebarTitle').innerHTML    = 'PREP HUB';
+  if (el('sidebarSub'))      el('sidebarSub').textContent     = `// placement.guide`;
+  if (el('topbarTitle'))     el('topbarTitle').innerHTML     = '<span>Prep Hub</span>';
+  if (el('companySecTitle')) el('companySecTitle').innerHTML = '<span class="hi">COMPANY</span><br>INTEL';
   if (el('companySecSub'))   el('companySecSub').textContent = progSubtitles[prog] || progSubtitles.bda;
-  if (el('navCompanyLabel')) el('navCompanyLabel').textContent = `${label} Companies`;
+  if (el('navCompanyLabel')) el('navCompanyLabel').textContent = 'Companies';
 
   // Update topbar stats
   const statChips = document.querySelectorAll('.stat-chip');
@@ -6890,7 +6890,7 @@ window.selectProg = function(prog) {
 
   // Update topbar title
   const topbarTitle = document.getElementById('topbarTitle');
-  if(topbarTitle) topbarTitle.innerHTML = '<span style="color:var(--accent)">' + prog.toUpperCase() + ' Prep Hub</span>';
+  if(topbarTitle) topbarTitle.innerHTML = '<span style="color:var(--accent)">Prep Hub</span>';
 
   // Update company count badge
   const companiesCount = document.getElementById('companiesCount');
@@ -6908,15 +6908,9 @@ window.selectProg = function(prog) {
   // Update section labels
   const progNames = {bda:'BDA',core:'CORE',hcm:'HCM',bifs:'BIFS'};
   const label = progNames[prog];
-  const overviewTitles = {
-    bda:'BDA <span class="hi">Placement</span> Prep Hub',
-    core:'CORE <span class="hi">Placement</span> Prep Hub',
-    hcm:'HCM <span class="hi">Placement</span> Prep Hub',
-    bifs:'BIFS <span class="hi">Placement</span> Prep Hub'
-  };
-  if(el('overviewTitle')) el('overviewTitle').innerHTML = overviewTitles[prog];
-  if(el('navCompanyLabel')) el('navCompanyLabel').textContent = label+' Companies';
-  if(el('companySecTitle')) el('companySecTitle').innerHTML = label+' <span class="hi">Companies</span>';
+  if(el('overviewTitle')) el('overviewTitle').innerHTML = '<span class="hi">Placement</span> Prep Hub';
+  if(el('navCompanyLabel')) el('navCompanyLabel').textContent = 'Companies';
+  if(el('companySecTitle')) el('companySecTitle').innerHTML = '<span class="hi">Companies</span>';
 
   const subtitles = {
     bda:'87 company-intel cards - updated with public placement reports through 2025.',
@@ -7118,7 +7112,7 @@ window.selectProg = function(prog) {
   const el = id => document.getElementById(id);
   if(el('progPillEmoji')) el('progPillEmoji').textContent = _progIcons[prog];
   if(el('progPillName'))  el('progPillName').textContent  = _progNames[prog];
-  if(el('topbarTitle'))   el('topbarTitle').textContent   = '' + _progNames[prog] + ' Prep Hub';
+  if(el('topbarTitle'))   el('topbarTitle').textContent   = 'Prep Hub';
 
   // Update stats
   const s = _statMap[prog];
@@ -7129,10 +7123,10 @@ window.selectProg = function(prog) {
 
   // Update labels
   const overviewTitles = {
-    bda:  'BDA <span style="color:var(--green)">Placement</span> Prep Hub',
-    core: 'CORE <span style="color:var(--green)">Placement</span> Prep Hub',
-    hcm:  'HCM <span style="color:var(--green)">Placement</span> Prep Hub',
-    bifs: 'BIFS <span style="color:var(--green)">Placement</span> Prep Hub'
+    bda:  '<span style="color:var(--green)">Placement</span> Prep Hub',
+    core: '<span style="color:var(--green)">Placement</span> Prep Hub',
+    hcm:  '<span style="color:var(--green)">Placement</span> Prep Hub',
+    bifs: '<span style="color:var(--green)">Placement</span> Prep Hub'
   };
   const subtitles = {
     bda:'87 company-intel cards - updated with public placement reports through 2025.',
@@ -7147,9 +7141,9 @@ window.selectProg = function(prog) {
     bifs:'Finance <span style="color:var(--green)">Mastery</span> Roadmap'
   };
   if(el('overviewTitle'))    el('overviewTitle').innerHTML    = overviewTitles[prog];
-  if(el('overviewSub'))      el('overviewSub').textContent    = 'The complete placement preparation environment for PGDM-' + _progNames[prog] + ' batch 2025-27.';
-  if(el('navCompanyLabel'))  el('navCompanyLabel').textContent = _progNames[prog] + ' Companies';
-  if(el('companySecTitle'))  el('companySecTitle').innerHTML  = _progNames[prog] + ' <span style="color:var(--green)">Companies</span>';
+  if(el('overviewSub'))      el('overviewSub').textContent    = 'The complete placement preparation environment for PGDM batch 2025-27.';
+  if(el('navCompanyLabel'))  el('navCompanyLabel').textContent = 'Companies';
+  if(el('companySecTitle'))  el('companySecTitle').innerHTML  = '<span style="color:var(--green)">Companies</span>';
   if(el('companySecSub'))    el('companySecSub').textContent  = subtitles[prog];
   if(el('roadmapTitle'))     el('roadmapTitle').innerHTML     = roadmapTitles[prog];
 

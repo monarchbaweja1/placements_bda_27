@@ -252,7 +252,6 @@
           <strong>GD Arena</strong>
           <span>Schedule GD sessions &bull; Join opens 15 min before</span>
         </div>
-        <span class="pg-gd-prog-badge" id="pgGdProgBadge">BDA</span>
         <button class="pg-gd-close-btn" type="button" aria-label="Close">&#215;</button>
       </div>
 
@@ -481,7 +480,6 @@
   const lobbyStatus      = document.getElementById('pgGdLobbyStatus');
   const createStatus     = document.getElementById('pgGdCreateStatus');
   const sessionStatus    = document.getElementById('pgGdSessionStatus');
-  const progBadge        = document.getElementById('pgGdProgBadge');
   const creatorNameInput = document.getElementById('pgGdCreatorName');
   const topicInput       = document.getElementById('pgGdTopic');
   const topicChars       = document.getElementById('pgGdTopicChars');
@@ -624,7 +622,6 @@
                 GD SLOT-${slotNum} <span class="pg-gd-slot-chevron">▾</span>
               </button>
               <div class="pg-gd-card-badges">
-                <span class="pg-gd-card-prog">${prog}</span>
                 ${statusBadge}
                 ${deleteBtn}
               </div>
@@ -658,7 +655,7 @@
             <div class="pg-gd-book-form-fields">
               <input class="pg-gd-book-input" id="pgGdBookName-${s.id}" type="text" placeholder="Your Full Name *" maxlength="100">
               <input class="pg-gd-book-input" id="pgGdBookRoll-${s.id}" type="text" placeholder="Roll Number *" maxlength="50">
-              <input class="pg-gd-book-input" id="pgGdBookProg-${s.id}" type="text" placeholder="Programme (e.g. BDA)" maxlength="20">
+              <input class="pg-gd-book-input" id="pgGdBookProg-${s.id}" type="text" placeholder="Programme" maxlength="20">
             </div>
             <div class="pg-gd-book-form-actions">
               <button class="pg-gd-book-confirm-btn" data-action="confirm-book" data-id="${s.id}">Confirm Booking</button>
@@ -1233,8 +1230,7 @@
   // ── Load sessions ──────────────────────────────────────────
   async function loadSessions() {
     state.currentProgramme = getProgramme();
-    progBadge.textContent = state.currentProgramme.toUpperCase();
-    document.getElementById('pgGdLobbyLabel').textContent = `GD Sessions — ${state.currentProgramme.toUpperCase()}`;
+    document.getElementById('pgGdLobbyLabel').textContent = 'GD Sessions';
     showStatus(lobbyStatus, 'loading', 'Loading sessions…');
     try {
       const data = await apiGet(`/api/gd/sessions?programme=${state.currentProgramme}`);
@@ -1631,7 +1627,6 @@
   // ── Open / Close ──────────────────────────────────────────
   function openArena() {
     state.currentProgramme = getProgramme();
-    progBadge.textContent = state.currentProgramme.toUpperCase();
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
     if (state.currentSession) { enterView('session'); return; }
@@ -1693,7 +1688,6 @@
   window.addEventListener('storage', e => {
     if (e.key === 'selectedProgramme') {
       state.currentProgramme = e.newValue || 'bda';
-      progBadge.textContent = state.currentProgramme.toUpperCase();
     }
   });
 
