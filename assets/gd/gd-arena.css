@@ -1452,3 +1452,61 @@ mark.pg-gd-filler {
   .pg-gd-wrap { right: 12px; bottom: 264px; }
   .pg-gd-feedback-grid { grid-template-columns: 1fr; }
 }
+
+/* ─── My Sessions tab ────────────────────────────────────── */
+.pg-gd-slot-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #7c3aed;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.pg-gd-edit-session-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(124, 58, 237, 0.35);
+  background: transparent;
+  color: #7c3aed;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+}
+.pg-gd-edit-session-btn:hover { background: rgba(124, 58, 237, 0.1); border-color: rgba(124, 58, 237, 0.55); }
+
+/* ─── My Sessions inline edit form ──────────────────────── */
+.pg-gd-mine-edit-form {
+  grid-column: 1 / -1;
+  border-top: 1px dashed rgba(124, 58, 237, 0.2);
+  padding-top: 14px;
+  margin-top: 6px;
+  animation: pgGdFadeIn .15s ease;
+}
+
+.pg-gd-mine-edit-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pg-gd-mine-edit-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.pg-gd-mine-card .pg-gd-card-top-row {
+  align-items: center;
+  gap: 8px;
+}
+
+@keyframes pgGdFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

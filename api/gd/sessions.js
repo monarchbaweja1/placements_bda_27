@@ -27,6 +27,7 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     if (req.query?.type === 'participants') return listParticipants(req, res);
     if (req.query?.type === 'scores')       return getScoreHistory(req, res);
+    if (req.query?.type === 'mine')         return listMySessions(req, res);
     return listSessions(req, res);
   }
   if (req.method === 'POST') {
@@ -35,6 +36,7 @@ export default async function handler(req, res) {
     if (action === 'join')       return bookSession(req, res); // alias
     if (action === 'leave')      return leaveSession(req, res);
     if (action === 'delete')     return deleteSession(req, res);
+    if (action === 'update')     return updateSession(req, res);
     if (action === 'save-score') return saveScore(req, res);
     return createSession(req, res);
   }
@@ -300,6 +302,70 @@ async function getScoreHistory(req, res) {
   } catch (error) {
     logError('gd_get_history_failed', { message: error?.message || String(error) });
     return sendJson(res, 500, { ok: false, error: { code: 'history_failed', message: 'Could not load history.' } });
+  }
+}
+
+// ── LIST MY SESSIONS — creator's own sessions ─────────────────
+async function listMySessions(req, res) {
+  try {
+    const auth = await requireUser(req);
+    if (!auth.ok) return sendJson(res, auth.status, { ok: false, error: auth.error });
+
+    const token = getBearerToken(req);
+    const supabase = getSupabaseForUser(token);
+    if (!supabase) return sendJson(res, 200, { ok: true, sessions: [] });
+
+    const { data, error } = await supabase
+      .from('gd_sessions')
+      .select('*')
+      .eq('created_by', auth.user.id)
+      .neq('status', 'ended')
+      .order('scheduled_at', { ascending: true, nullsFirst: false })
+      .limit(30);
+
+    if (error) throw error;
+    return sendJson(res, 200, { ok: true, sessions: data || [] });
+  } catch (error) {
+    logError('gd_list_mine_failed', { message: error?.message || String(error) });
+    return sendJson(res, 500, { ok: false, error: { code: 'list_failed', message: 'Unable to load your sessions.' } });
+  }
+}
+
+// ── UPDATE — creator only ─────────────────────────────────────
+async function updateSession(req, res) {
+  try {
+    const auth = await requireUser(req);
+    if (!auth.ok) return sendJson(res, auth.status, { ok: false, error: auth.error });
+
+    const body        = req.body || {};
+    const sessionId   = String(body.sessionId  || '').trim();
+    const topic       = String(body.topic       || '').trim().slice(0, 200);
+    const description = String(body.description || '').trim().slice(0, 500);
+    const slotNumber  = Math.min(10, Math.max(1, parseInt(body.slotNumber) || 1));
+    const scheduledAt = body.scheduledAt ? new Date(body.scheduledAt).toISOString() : null;
+
+    if (!sessionId)   return sendJson(res, 400, { ok: false, error: { code: 'session_id_required', message: 'Session ID required.' } });
+    if (!topic)       return sendJson(res, 400, { ok: false, error: { code: 'topic_required', message: 'Topic is required.' } });
+    if (!scheduledAt) return sendJson(res, 400, { ok: false, error: { code: 'scheduled_required', message: 'Date and time are required.' } });
+
+    const token = getBearerToken(req);
+    const supabase = getSupabaseForUser(token);
+    if (!supabase) return sendJson(res, 503, { ok: false, error: { code: 'db_not_configured', message: 'Database not configured.' } });
+
+    const { data: session } = await supabase.from('gd_sessions').select('created_by').eq('id', sessionId).single();
+    if (!session) return sendJson(res, 404, { ok: false, error: { code: 'not_found', message: 'Session not found.' } });
+    if (session.created_by !== auth.user.id) return sendJson(res, 403, { ok: false, error: { code: 'forbidden', message: 'Only the creator can edit this session.' } });
+
+    const { error } = await supabase.from('gd_sessions')
+      .update({ topic, description: description || null, slot_number: slotNumber, scheduled_at: scheduledAt })
+      .eq('id', sessionId);
+
+    if (error) throw error;
+    logInfo('gd_session_updated', { userId: auth.user.id, sessionId });
+    return sendJson(res, 200, { ok: true });
+  } catch (error) {
+    logError('gd_update_session_failed', { message: error?.message || String(error) });
+    return sendJson(res, 500, { ok: false, error: { code: 'update_failed', message: 'Unable to update session. Please try again.' } });
   }
 }
 
