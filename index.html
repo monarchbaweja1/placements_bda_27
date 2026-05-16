@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="assets/ai/jd-matcher.css">
 <link rel="stylesheet" href="assets/gd/gd-arena.css">
 <link rel="stylesheet" href="assets/profile/profile.css">
+<link rel="stylesheet" href="assets/tools/tools.css">
 <style>
 /* ════════════════════════════════════════════
    HELIUM EXACT THEME — PLACEMENT PREP HUB
@@ -1407,6 +1408,7 @@ h2.section-h2 {
     <button class="navbar-link" onclick="showSection('roles',this)">Roles Q&A</button>
     <button class="navbar-link" onclick="showSection('roadmap',this)">Roadmap</button>
     <button class="navbar-link" onclick="showSection('cheatsheets',this)">Cheatsheets</button>
+    <button class="navbar-link" onclick="showSection('tools',this)">🛠 Tools</button>
   </div>
   <div style="display:flex;align-items:center;gap:10px;margin-left:8px">
     <button class="navbar-cta" onclick="backToSelector()" id="progPill" style="background:var(--bg2);color:var(--text);border:1px solid var(--border);">
@@ -1989,6 +1991,18 @@ h2.section-h2 {
       </div>
       <div class="cheat-tabs-wrap" id="cheatTabs"></div>
       <div id="cheatContent"></div>
+    </div>
+  </div>
+
+  <!-- ── TOOLS ── -->
+  <div id="tools" class="app-section">
+    <div class="section-wrap">
+      <div class="section-header reveal">
+        <span class="section-label">PRODUCTIVITY</span>
+        <h2 class="section-h2">Study <span style="color:var(--green)">Tools</span></h2>
+        <p class="sub-p">Whiteboard, code compilers and AI-powered writing tools for your placement prep.</p>
+      </div>
+      <div class="tools-grid" id="toolsGrid"></div>
     </div>
   </div>
 
@@ -7621,5 +7635,6 @@ document.addEventListener('click', event => {
 <script src="assets/ai/jd-matcher.js" defer></script>
 <script src="assets/gd/gd-arena.js" defer></script>
 <script src="assets/profile/profile.js" defer></script>
+<script src="assets/tools/tools.js" defer></script>
 </body>
 </html>
