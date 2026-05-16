@@ -731,29 +731,29 @@ let CU = null, CP = null, CPlac = null;
 window.addEventListener('DOMContentLoaded', () => {
   buildChips();
 
-  // Always hide loader after 2s — never blocked by loadAll hanging
+  // Always hide loader after 2.5s — fallback to login if nothing loaded
   setTimeout(() => {
     const ld = document.getElementById('loader');
     if (ld) { ld.style.opacity='0'; setTimeout(()=>{ if(ld) ld.style.display='none'; },400); }
-    // Fallback: if loadAll is still hanging after loader hides, show login
     setTimeout(() => {
       if (!document.querySelector('.screen.on')) showScreen('s-login');
-    }, 600);
-  }, 2000);
+    }, 500);
+  }, 2500);
 
-  let _initDone = false;
+  let _loading = false;
   function runInit(session) {
-    if (_initDone) return;
-    _initDone = true;
-    if (session?.user) { CU = session.user; loadAll(); }
+    if (_loading) return;
+    if (session?.user) { _loading = true; CU = session.user; loadAll().finally(()=>{ _loading=false; }); }
     else showScreen('s-login');
   }
 
+  // SIGNED_IN handles fresh OAuth logins; getSession handles page reloads with existing session
   sb.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') runInit(session);
-    else if (event === 'SIGNED_OUT') { CU=null; CP=null; CPlac=null; showScreen('s-login'); }
+    if (event === 'SIGNED_IN') runInit(session);
+    else if (event === 'SIGNED_OUT') { CU=null; CP=null; CPlac=null; _loading=false; showScreen('s-login'); }
   });
 
+  // Existing session on page load (stored in localStorage)
   sb.auth.getSession().then(({ data: { session } }) => runInit(session));
 });
 
@@ -880,9 +880,9 @@ window.saveProfile = async () => {
     p_target_roles: roles, p_target_companies: companies
   });
   if (error) { toast('Error: '+error.message,'err'); btn.disabled=false; btn.textContent='Save & Enter Hub →'; return; }
-  // reload so loadAll() fetches fresh profile and drives showApp() cleanly
   toast('Profile saved! Loading your hub…','ok');
-  setTimeout(() => location.reload(), 1000);
+  // navigate without the OAuth hash so Supabase doesn't reuse stale tokens
+  setTimeout(() => window.location.replace(window.location.pathname), 1000);
 };
 
 // ── Update profile ──
