@@ -6524,7 +6524,7 @@ window.devBypassAuth = function() {
 window.sendOTP = async function() {
   const emailEl = getActiveAuthEmail();
   const btn = getActiveSendButton();
-  const email = (emailEl?.value || '').trim();
+  const email = (emailEl?.value || '').trim().toLowerCase();
 
   if (!email || !email.includes('@')) {
     showAuthStatus('Enter a valid email address.', 'err');
@@ -6551,7 +6551,7 @@ window.sendOTP = async function() {
     const emailChip = document.getElementById('otpEmailShow');
     if (emailChip) emailChip.textContent = email;
 
-    showAuthStatus('OTP sent! Check your GIM inbox (and spam folder) for the 6-digit code.', 'ok');
+    showAuthStatus('OTP sent! Check your inbox (and spam folder) for the 6-digit code.', 'ok');
     showScreen('screen-otp');
     startOtpTimer();
     document.getElementById('otp0')?.focus();
