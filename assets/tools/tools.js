@@ -10,6 +10,59 @@
     return window._accessToken || null;
   }
 
+  // ── Dynamic script loader ──────────────────────────────────────
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = src; s.onload = resolve; s.onerror = () => reject(new Error('Failed to load ' + src));
+      document.head.appendChild(s);
+    });
+  }
+
+  // ── Universal file → text extractor ───────────────────────────
+  async function extractTextFromFile(file, maxChars) {
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    if (ext === 'txt') {
+      return await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = e => resolve((e.target.result || '').slice(0, maxChars));
+        r.onerror = () => reject(new Error('Could not read file.'));
+        r.readAsText(file);
+      });
+    }
+
+    if (ext === 'pdf') {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const buf = await file.arrayBuffer();
+      const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+      let text = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page    = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(it => it.str).join(' ') + '\n';
+        if (text.length >= maxChars) break;
+      }
+      return text.slice(0, maxChars);
+    }
+
+    if (ext === 'docx') {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+      const buf    = await file.arrayBuffer();
+      const result = await window.mammoth.extractRawText({ arrayBuffer: buf });
+      return (result.value || '').slice(0, maxChars);
+    }
+
+    if (ext === 'doc') {
+      throw new Error('.doc (old Word format) is not supported. Please save as .docx or .txt and retry.');
+    }
+
+    throw new Error('Unsupported file type. Please use .pdf, .docx, or .txt');
+  }
+
   // ── Char count helper ──────────────────────────────────────────
   function bindCharCount(textarea, display, max) {
     function update() {
@@ -488,9 +541,9 @@ ORDER BY e.salary DESC;`;
             <div class="ai-tool-label">Paste or upload text to analyze</div>
             <textarea class="ai-textarea" id="aicText" maxlength="8000" placeholder="Paste the text you want to check here…"></textarea>
             <div class="ai-upload-row">
-              <button class="ai-upload-btn" id="aicUploadBtn">📎 Upload .txt file</button>
+              <button class="ai-upload-btn" id="aicUploadBtn">📎 Upload file (txt · pdf · docx)</button>
               <span class="ai-upload-file-name" id="aicFileName">No file selected</span>
-              <input class="ai-upload-input" type="file" id="aicFileInput" accept=".txt,text/plain">
+              <input class="ai-upload-input" type="file" id="aicFileInput" accept=".txt,.pdf,.docx,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
               <span class="ai-char-count" id="aicCharCount">0 / 8000</span>
             </div>
           </div>
@@ -528,16 +581,21 @@ ORDER BY e.salary DESC;`;
     bindCharCount(textarea, charCount, 8000);
 
     document.getElementById('aicUploadBtn').addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', () => {
+    fileInput.addEventListener('change', async () => {
       const f = fileInput.files[0];
       if (!f) return;
-      fileName.textContent = f.name;
-      const reader = new FileReader();
-      reader.onload = e => {
-        textarea.value = e.target.result.slice(0, 8000);
+      fileName.textContent = f.name + ' — extracting…';
+      hideErr(errorEl);
+      try {
+        const text = await extractTextFromFile(f, 8000);
+        textarea.value = text;
         textarea.dispatchEvent(new Event('input'));
-      };
-      reader.readAsText(f);
+        fileName.textContent = f.name;
+      } catch (e) {
+        fileName.textContent = 'Error';
+        showErr(aicModal, errorEl, e.message);
+      }
+      fileInput.value = '';
     });
 
     runBtn.addEventListener('click', analyzeText);
@@ -608,9 +666,9 @@ ORDER BY e.salary DESC;`;
             <div class="ai-tool-label">Paste or upload text to rephrase</div>
             <textarea class="ai-textarea" id="airText" maxlength="6000" placeholder="Paste the text you want to rephrase here…"></textarea>
             <div class="ai-upload-row">
-              <button class="ai-upload-btn" id="airUploadBtn">📎 Upload .txt file</button>
+              <button class="ai-upload-btn" id="airUploadBtn">📎 Upload file (txt · pdf · docx)</button>
               <span class="ai-upload-file-name" id="airFileName">No file selected</span>
-              <input class="ai-upload-input" type="file" id="airFileInput" accept=".txt,text/plain">
+              <input class="ai-upload-input" type="file" id="airFileInput" accept=".txt,.pdf,.docx,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
               <span class="ai-char-count" id="airCharCount">0 / 6000</span>
             </div>
           </div>
@@ -648,16 +706,21 @@ ORDER BY e.salary DESC;`;
     bindCharCount(textarea, charCount, 6000);
 
     document.getElementById('airUploadBtn').addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', () => {
+    fileInput.addEventListener('change', async () => {
       const f = fileInput.files[0];
       if (!f) return;
-      fileName.textContent = f.name;
-      const reader = new FileReader();
-      reader.onload = e => {
-        textarea.value = e.target.result.slice(0, 6000);
+      fileName.textContent = f.name + ' — extracting…';
+      hideErr(errorEl);
+      try {
+        const text = await extractTextFromFile(f, 6000);
+        textarea.value = text;
         textarea.dispatchEvent(new Event('input'));
-      };
-      reader.readAsText(f);
+        fileName.textContent = f.name;
+      } catch (e) {
+        fileName.textContent = 'Error';
+        showErr(airModal, errorEl, e.message);
+      }
+      fileInput.value = '';
     });
 
     runBtn.addEventListener('click', doRephrase);
