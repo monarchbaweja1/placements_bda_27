@@ -731,39 +731,40 @@ let CU = null, CP = null, CPlac = null;
 window.addEventListener('DOMContentLoaded', () => {
   buildChips();
 
-  // Detect OAuth callback — URL has access_token in hash
+  // Is this an OAuth redirect? Check BEFORE anything touches the hash.
   const isOAuthCallback = window.location.hash.includes('access_token=');
-  // Strip OAuth hash immediately so reloads don't reprocess stale tokens
-  if (isOAuthCallback) window.history.replaceState(null, '', window.location.pathname);
 
-  let _loading = false;
-  function runInit(session) {
-    if (_loading) return;
-    if (session?.user) {
-      _loading = true;
-      CU = session.user;
-      loadAll().finally(() => { _loading = false; });
-    } else if (!isOAuthCallback) {
-      // Only show login if this is NOT an OAuth callback
-      // For OAuth callbacks we wait for SIGNED_IN event with real session
-      showScreen('s-login');
-    }
-    // else: OAuth callback with null session — keep loader, wait for SIGNED_IN
+  let _done = false;
+  function go(session) {
+    if (_done) return;
+    _done = true;
+    CU = session.user;
+    // Strip hash NOW that Supabase has already read it
+    if (window.location.hash) window.history.replaceState(null, '', window.location.pathname);
+    loadAll();
   }
 
   sb.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN') runInit(session);
-    else if (event === 'SIGNED_OUT') { CU=null; CP=null; CPlac=null; _loading=false; showScreen('s-login'); }
+    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+      go(session);
+    } else if (event === 'SIGNED_OUT') {
+      _done = false; CU = null; CP = null; CPlac = null;
+      showScreen('s-login');
+    } else if (event === 'INITIAL_SESSION' && !session?.user && !isOAuthCallback) {
+      // No session, not an OAuth redirect → go straight to login
+      showScreen('s-login');
+      const ld = document.getElementById('loader');
+      if (ld) { ld.style.opacity='0'; setTimeout(()=>{ if(ld) ld.style.display='none'; },400); }
+    }
   });
 
-  sb.auth.getSession().then(({ data: { session } }) => runInit(session));
-
-  // Fallback: if nothing shows after 8s (SIGNED_IN never fired), show login
+  // Fallback loader hide + login safety net
+  const timeout = isOAuthCallback ? 10000 : 3000;
   setTimeout(() => {
     const ld = document.getElementById('loader');
-    if (ld) { ld.style.opacity='0'; setTimeout(() => { if(ld) ld.style.display='none'; }, 400); }
+    if (ld) { ld.style.opacity='0'; setTimeout(()=>{ if(ld) ld.style.display='none'; },400); }
     setTimeout(() => { if (!document.querySelector('.screen.on')) showScreen('s-login'); }, 500);
-  }, isOAuthCallback ? 8000 : 2500);
+  }, timeout);
 });
 
 // ── Build chip UI ──
