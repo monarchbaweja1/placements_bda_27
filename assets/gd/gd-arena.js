@@ -259,7 +259,6 @@
       <div class="pg-gd-tabs" id="pgGdTabs">
         <button class="pg-gd-tab active" data-tab="lobby">Sessions</button>
         <button class="pg-gd-tab" data-tab="create">Schedule New</button>
-        <button class="pg-gd-tab" data-tab="mine">My Sessions</button>
       </div>
 
       <div class="pg-gd-body" id="pgGdBody">
@@ -348,24 +347,6 @@
             <div class="pg-gd-status" id="pgGdCreateStatus"></div>
 
           </div>
-        </div>
-
-        <!-- ── My Sessions View ── -->
-        <div id="pgGdMineView" style="display:none">
-          <div class="pg-gd-lobby-toolbar">
-            <span class="pg-gd-lobby-label">My Scheduled Sessions</span>
-            <button class="pg-gd-refresh-btn" id="pgGdMineRefreshBtn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-                <path d="M21 3v5h-5"/>
-                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-                <path d="M8 16H3v5"/>
-              </svg>
-              Refresh
-            </button>
-          </div>
-          <div id="pgGdMineList"></div>
-          <div class="pg-gd-status" id="pgGdMineStatus"></div>
         </div>
 
         <!-- ── Session View ── -->
@@ -494,13 +475,9 @@
   const tabs             = overlay.querySelectorAll('.pg-gd-tab');
   const lobbyView        = document.getElementById('pgGdLobbyView');
   const createView       = document.getElementById('pgGdCreateView');
-  const mineView         = document.getElementById('pgGdMineView');
   const sessionView      = document.getElementById('pgGdSessionView');
   const feedbackView     = document.getElementById('pgGdFeedbackView');
   const sessionsList     = document.getElementById('pgGdSessionsList');
-  const mineList         = document.getElementById('pgGdMineList');
-  const mineStatus       = document.getElementById('pgGdMineStatus');
-  const mineRefreshBtn   = document.getElementById('pgGdMineRefreshBtn');
   const lobbyStatus      = document.getElementById('pgGdLobbyStatus');
   const createStatus     = document.getElementById('pgGdCreateStatus');
   const sessionStatus    = document.getElementById('pgGdSessionStatus');
@@ -532,12 +509,11 @@
 
   // ── Tab / View switching ───────────────────────────────────
   function switchTab(tabName) {
-    if (state.currentSession && tabName !== 'lobby' && tabName !== 'create' && tabName !== 'mine') return;
+    if (state.currentSession && tabName !== 'lobby' && tabName !== 'create') return;
     state.view = tabName;
     tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
     lobbyView.style.display    = tabName === 'lobby'  ? '' : 'none';
     createView.style.display   = tabName === 'create' ? '' : 'none';
-    mineView.style.display     = tabName === 'mine'   ? '' : 'none';
     sessionView.style.display  = tabName === 'session'  ? '' : 'none';
     feedbackView.style.display = tabName === 'feedback' ? '' : 'none';
     document.getElementById('pgGdTabs').style.display =
@@ -548,7 +524,6 @@
     state.view = viewName;
     lobbyView.style.display    = viewName === 'lobby'    ? '' : 'none';
     createView.style.display   = viewName === 'create'   ? '' : 'none';
-    mineView.style.display     = viewName === 'mine'     ? '' : 'none';
     sessionView.style.display  = viewName === 'session'  ? '' : 'none';
     feedbackView.style.display = viewName === 'feedback' ? '' : 'none';
     document.getElementById('pgGdTabs').style.display =
@@ -1680,38 +1655,12 @@
   overlay.addEventListener('click', e => { if (e.target === overlay) closeArena(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) closeArena(); });
 
-  // Mine list event delegation
-  mineList.addEventListener('click', e => {
-    const btn = e.target.closest('[data-action]');
-    if (!btn) return;
-    const action = btn.dataset.action;
-    const id     = btn.dataset.id;
-    const card   = btn.closest('.pg-gd-session-card');
-
-    if (action === 'mine-edit') {
-      const form = document.getElementById(`pgGdEditForm-${id}`);
-      if (form) form.style.display = form.style.display === 'none' ? '' : 'none';
-      return;
-    }
-    if (action === 'mine-cancel-edit') {
-      const form = document.getElementById(`pgGdEditForm-${id}`);
-      if (form) form.style.display = 'none';
-      return;
-    }
-    if (action === 'mine-save')   return saveEditSession(id, card, btn);
-    if (action === 'mine-delete') return deleteMineSession(id, card);
-    if (action === 'join-session' && !btn.disabled && btn.dataset.full !== 'true') joinSession(id);
-  });
-
-  mineRefreshBtn.addEventListener('click', () => { clearStatus(mineStatus); loadMySessions(); });
-
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       if (state.currentSession) return;
       switchTab(tab.dataset.tab);
       if (tab.dataset.tab === 'lobby')  loadSessions();
       if (tab.dataset.tab === 'create') populateTopicSuggestions(state.currentProgramme);
-      if (tab.dataset.tab === 'mine')   loadMySessions();
     });
   });
 
