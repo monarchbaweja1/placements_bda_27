@@ -207,8 +207,16 @@ export default async function handler(req, res) {
 
 async function scoreCompanyWithAI({ company, programme, cgpa, cgpa10, skills, projects, resumeText, targetRole }) {
   const progDesc    = PROGRAMME_CONTEXT[programme] || programme.toUpperCase();
-  const groundingDB = COMPANY_GROUNDING[programme] || [];
-  const groundEntry = groundingDB.find(c => c.name.toLowerCase() === company.toLowerCase().trim());
+
+  // Search the user's programme pool first, then all other pools.
+  // This lets a CORE student targeting Fractal Analytics (a BDA company) still get accurate grounding.
+  const companyLower = company.toLowerCase().trim();
+  const primaryPool  = COMPANY_GROUNDING[programme] || [];
+  let groundEntry    = primaryPool.find(c => c.name.toLowerCase() === companyLower);
+  if (!groundEntry) {
+    const allPools = Object.values(COMPANY_GROUNDING).flat();
+    groundEntry = allPools.find(c => c.name.toLowerCase() === companyLower);
+  }
 
   const groundingText = groundEntry
     ? `Reference hiring data for ${groundEntry.name}:
@@ -222,14 +230,18 @@ async function scoreCompanyWithAI({ company, programme, cgpa, cgpa10, skills, pr
     ? `The candidate is specifically targeting the "${targetRole}" role at ${company}. Evaluate their profile against what ${company} requires for "${targetRole}" candidates — not against the programme's generic skill list. If the candidate's skills match what "${targetRole}" needs, that should be reflected positively regardless of their academic programme.`
     : `No specific role specified. Evaluate fit based on the company's typical campus recruitment roles and the candidate's overall profile.`;
 
+  const roleSpecificNote = targetRole
+    ? `CRITICAL RULE: The candidate targets the "${targetRole}" role. Evaluate their skills STRICTLY against what ${company} needs for "${targetRole}" — not against their MBA programme's default curriculum. If their skills (e.g. SQL, Python, data visualization) are exactly what "${targetRole}" requires, reflect that positively. Do NOT penalize them for lacking skills unrelated to "${targetRole}".`
+    : `Evaluate fit based on the company's typical campus recruitment roles and the candidate's overall profile.`;
+
   const systemInstruction = `You are an expert Indian MBA placement consultant at top B-schools (IIMs, XLRI, NMIMS, SP Jain, GIM, etc.).
 
 You give brutally honest, accurate shortlist probability assessments based on:
-1. The candidate's actual skills, projects, and CGPA
-2. The company's real hiring standards for the target role
+1. The candidate's actual skills, projects, and CGPA — evaluated against the TARGET ROLE and COMPANY requirements
+2. The company's real hiring standards, thresholds, and selection criteria
 3. Evidence from the candidate's profile — not programme defaults
 
-IMPORTANT: If a target role is specified, evaluate the candidate's skills against THAT ROLE's requirements at the company. A strong data analytics skill set is relevant for a Data Analyst role at any company, regardless of the candidate's MBA programme. Do not penalize skills that match the role just because they differ from the programme's typical curriculum.
+${roleSpecificNote}
 
 You NEVER inflate scores. 70%+ means genuinely competitive. 30-50% means significant gaps. Never give 80%+ unless the profile truly meets or exceeds the company's bar.`;
 

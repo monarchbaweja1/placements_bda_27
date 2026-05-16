@@ -19,13 +19,13 @@
         <div class="pg-ai-mark">AI</div>
         <div class="pg-ai-title">
           <strong>Placement Assistant</strong>
-          <span id="pgAiScope">Programme-aware prep support</span>
+          <span id="pgAiScope">Placement prep · company &amp; role specific answers</span>
         </div>
         <button class="pg-ai-close" type="button" aria-label="Close AI assistant">×</button>
       </div>
       <div class="pg-ai-messages" id="pgAiMessages">
         <div class="pg-ai-empty">
-          Ask about company prep, resume strategy, interview questions, SQL/Python prep, or roadmap planning. Answers are scoped to your selected programme.
+          Ask about company prep, resume strategy, interview questions, SQL/Python prep, or roadmap planning. Specify your target role or company for sharper, more accurate answers.
         </div>
       </div>
       <div class="pg-ai-foot">
@@ -178,8 +178,7 @@
       return;
     }
 
-    const code = getProgrammeCode();
-    scope.textContent = code ? `${code.toUpperCase()} scoped assistant` : 'Select a programme to scope answers';
+    scope.textContent = 'Placement prep · company & role specific answers';
   }
 
   function getProgrammeCode() {

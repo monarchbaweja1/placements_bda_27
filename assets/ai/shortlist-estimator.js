@@ -84,7 +84,7 @@
           </div>
 
           <div class="pg-sl-form-foot">
-            <span class="pg-sl-form-note">Probabilities are AI estimates only. Results depend on data<br>available in the system for your programme.</span>
+            <span class="pg-sl-form-note">AI estimates based on your CGPA, skills, and target companies.<br>Not a prediction or guarantee of actual shortlisting.</span>
             <button class="pg-sl-btn-primary" id="pgSlSubmit" type="button" disabled>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -175,9 +175,7 @@
     }
 
     const code = getProgrammeCode();
-    if (scopeEl) scopeEl.textContent = code
-      ? `${code.toUpperCase()} · AI-based estimate · Not a guarantee`
-      : 'Select a programme to scope estimates';
+    if (scopeEl) scopeEl.textContent = 'AI-based probability estimate · Not a guarantee';
     if (progDisplay) progDisplay.value = code ? code.toUpperCase() : '';
     renderSuggestions();
     checkReady();
@@ -319,10 +317,10 @@
       const bd = est.breakdown || {};
 
       const barDefs = [
-        { name: 'CGPA',         val: bd.cgpa          ?? 0 },
-        { name: 'Skills',       val: bd.skills        ?? 0 },
-        { name: 'Role Align',   val: bd.roleAlignment ?? 0 },
-        { name: 'Projects',     val: bd.projects      ?? 0 }
+        { name: 'CGPA',         val: bd.cgpa     ?? 0 },
+        { name: 'Skills',       val: bd.skills   ?? 0 },
+        { name: 'Role Align',   val: bd.role     ?? 0 },
+        { name: 'Projects',     val: bd.projects ?? 0 }
       ];
       const barsHtml = barDefs.map(({ name, val }) => {
         const cls = val >= 70 ? '' : val >= 45 ? ' amber' : ' red';
@@ -366,7 +364,7 @@
       <div class="pg-sl-section">Shortlist Probability Estimates</div>
       <div class="pg-sl-cards">${cardsHtml}</div>
       <div class="pg-sl-disclaimer">
-        ⚠ These are AI-based estimates derived from programme-level historical patterns.
+        ⚠ These are AI-based estimates derived from your profile and each company's known hiring standards.
         They are <strong>not predictions or guarantees</strong> of actual shortlisting.
         Use them for self-assessment and targeted preparation only.
       </div>

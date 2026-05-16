@@ -659,7 +659,7 @@ function buildFallbackAnswer({ message, pageContext, programmeCode, reason = 'fa
 }
 
 function fallbackIntro(code, contextLine) {
-  return `${code} scoped answer. ${contextLine}`;
+  return `Placement prep answer. ${contextLine}`;
 }
 
 function extractCompanyName(message, pageContext) {
