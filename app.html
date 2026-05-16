@@ -735,6 +735,10 @@ window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     const ld = document.getElementById('loader');
     if (ld) { ld.style.opacity='0'; setTimeout(()=>{ if(ld) ld.style.display='none'; },400); }
+    // Fallback: if loadAll is still hanging after loader hides, show login
+    setTimeout(() => {
+      if (!document.querySelector('.screen.on')) showScreen('s-login');
+    }, 600);
   }, 2000);
 
   let _initDone = false;
@@ -809,18 +813,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Load all data ──
 async function loadAll() {
+  const timedQuery = (q) => Promise.race([
+    q, new Promise((_, rej) => setTimeout(() => rej(new Error('query_timeout')), 10000))
+  ]);
   try {
     const emailEl = document.getElementById('ob_email_display');
     if (emailEl) emailEl.textContent = CU?.email || '—';
-    const { data: profile, error: pe } = await sb.from('profiles').select('*').eq('id', CU.id).maybeSingle();
+    const { data: profile, error: pe } = await timedQuery(
+      sb.from('profiles').select('*').eq('id', CU.id).maybeSingle()
+    );
     if (pe) { console.error('profile fetch:', pe.message); showScreen('s-onboard'); return; }
     if (!profile) { showScreen('s-onboard'); return; }
     CP = profile;
-    const { data: plac } = await sb.from('placements').select('*').eq('id', CU.id).maybeSingle();
+    const { data: plac } = await timedQuery(
+      sb.from('placements').select('*').eq('id', CU.id).maybeSingle()
+    );
     CPlac = plac || { status:'searching', interviews:[] };
     if (!plac) sb.from('placements').insert({ id: CU.id, status:'searching', interviews:[] });
     try { showApp(); } catch(appErr) { console.error('showApp crash:', appErr); }
-  } catch(e) { console.error('loadAll:', e); showScreen('s-onboard'); }
+  } catch(e) {
+    console.error('loadAll:', e.message);
+    if (e.message === 'query_timeout') toast('Connection slow — please refresh','err');
+    showScreen('s-login');
+  }
 }
 
 // ── Google Sign-In ──
