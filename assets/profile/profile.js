@@ -590,9 +590,16 @@
   saveProfileBtn.addEventListener('click', saveProfile);
   savePlacementBtn.addEventListener('click', savePlacement);
 
-  // ── Show only when logged in ───────────────────────────────
-  function syncVis() { wrap.hidden = !getToken(); }
+  // ── Show only when logged in AND on the hub (progSelector or mainApp) ───
+  function syncVis() {
+    const token = getToken();
+    const ps = document.getElementById('progSelector');
+    const ma = document.getElementById('mainApp');
+    const onHub = (ps && ps.style.display === 'flex') ||
+                  (ma && ma.classList.contains('show') && ma.style.display !== 'none');
+    wrap.hidden = !token || !onHub;
+  }
   syncVis();
-  const visInterval = setInterval(() => { syncVis(); if (getToken()) clearInterval(visInterval); }, 3000);
+  const visInterval = setInterval(syncVis, 500);
 
 })();
