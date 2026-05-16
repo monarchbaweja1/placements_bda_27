@@ -832,9 +832,9 @@ async function loadAll() {
     if (!plac) sb.from('placements').insert({ id: CU.id, status:'searching', interviews:[] });
     try { showApp(); } catch(appErr) { console.error('showApp crash:', appErr); }
   } catch(e) {
-    console.error('loadAll:', e.message);
-    if (e.message === 'query_timeout') toast('Connection slow — please refresh','err');
-    showScreen('s-login');
+    console.error('loadAll error:', e.message);
+    // Show onboard so user can register/re-register — never loop back to login
+    showScreen('s-onboard');
   }
 }
 
