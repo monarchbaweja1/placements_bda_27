@@ -104,11 +104,25 @@
   function getProgramme() { return localStorage.getItem('selectedProgramme') || 'bda'; }
 
   function getCurrentUserId() {
+    if (window._verifiedUid) return window._verifiedUid;
     try {
-      const sbKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+      const keys = Object.keys(localStorage);
+      const sbKey = keys.find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
       if (sbKey) {
         const d = JSON.parse(localStorage.getItem(sbKey) || '{}');
-        return d?.user?.id || null;
+        const id = d?.user?.id || d?.session?.user?.id || d?.currentSession?.user?.id;
+        if (id) return id;
+      }
+      // scan all auth keys for any user.id
+      for (const key of keys) {
+        if (!key.includes('auth')) continue;
+        try {
+          const val = localStorage.getItem(key);
+          if (!val) continue;
+          const d = JSON.parse(val);
+          const id = d?.user?.id || d?.session?.user?.id;
+          if (id && id.length > 20) return id;
+        } catch {}
       }
     } catch {}
     return null;
@@ -586,9 +600,46 @@
         ? `<button class="pg-gd-delete-btn" data-action="delete-session" data-id="${s.id}" title="Delete session">🗑</button>`
         : '';
 
+      const editBtn = isCreator
+        ? `<button class="pg-gd-edit-session-btn" data-action="edit-session" data-id="${s.id}">✏ Edit</button>`
+        : '';
+
       const bookBtnHtml = isBooked
         ? `<span class="pg-gd-booked-badge">✓ Booked</span>`
         : `<button class="pg-gd-book-btn" data-action="show-book-form" data-id="${s.id}">Book Session</button>`;
+
+      const editForm = isCreator ? `
+        <div class="pg-gd-mine-edit-form" id="pgGdEditForm-${s.id}" style="display:none">
+          <div class="pg-gd-mine-edit-inner">
+            <div class="pg-gd-form-group">
+              <label class="pg-gd-form-label">Topic *</label>
+              <input class="pg-gd-form-input" id="pgGdEditTopic-${s.id}" type="text" maxlength="200" value="${escHtml(s.topic)}">
+            </div>
+            <div class="pg-gd-form-group">
+              <label class="pg-gd-form-label">Context (optional)</label>
+              <textarea class="pg-gd-form-textarea" id="pgGdEditDesc-${s.id}" maxlength="500" rows="2">${escHtml(s.description || '')}</textarea>
+            </div>
+            <div class="pg-gd-form-row">
+              <div class="pg-gd-form-col">
+                <label class="pg-gd-form-label">Slot</label>
+                <select class="pg-gd-form-select" id="pgGdEditSlot-${s.id}">${slotOptions}</select>
+              </div>
+              <div class="pg-gd-form-col">
+                <label class="pg-gd-form-label">Date *</label>
+                <input class="pg-gd-form-input" id="pgGdEditDate-${s.id}" type="date" min="${minDate}">
+              </div>
+              <div class="pg-gd-form-col">
+                <label class="pg-gd-form-label">Time *</label>
+                <input class="pg-gd-form-input" id="pgGdEditTime-${s.id}" type="time">
+              </div>
+            </div>
+            <div class="pg-gd-mine-edit-actions">
+              <button class="pg-gd-create-submit" style="font-size:13px;padding:8px 18px" data-action="save-edit-session" data-id="${s.id}">Save Changes</button>
+              <button class="pg-gd-book-cancel-btn" data-action="cancel-edit-session" data-id="${s.id}">Cancel</button>
+            </div>
+            <div class="pg-gd-status" id="pgGdEditStatus-${s.id}"></div>
+          </div>
+        </div>` : '';
 
       return `
         <div class="pg-gd-session-card" data-id="${s.id}" data-scheduled="${s.scheduled_at || ''}">
@@ -618,6 +669,7 @@
             </div>
           </div>
           <div class="pg-gd-join-col">
+            ${editBtn}
             ${bookBtnHtml}
             <button class="pg-gd-join-btn${canJoin ? ' ready' : ''}"
                     data-action="join-session" data-id="${s.id}" data-full="${isFull}"
@@ -639,9 +691,25 @@
             </div>
             <div class="pg-gd-book-form-status"></div>
           </div>
+          ${editForm}
         </div>
       `;
     }).join('');
+
+    // Populate edit form values for creator's own sessions
+    const myId = getCurrentUserId();
+    sessions.forEach(s => {
+      if (!myId || s.created_by !== myId) return;
+      const slotEl = document.getElementById(`pgGdEditSlot-${s.id}`);
+      const dateEl = document.getElementById(`pgGdEditDate-${s.id}`);
+      const timeEl = document.getElementById(`pgGdEditTime-${s.id}`);
+      if (slotEl) slotEl.value = s.slot_number || 1;
+      if (s.scheduled_at) {
+        const d = new Date(s.scheduled_at);
+        if (dateEl) dateEl.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        if (timeEl) timeEl.value = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      }
+    });
 
     startCountdownUpdates();
   }
@@ -659,6 +727,17 @@
     if (action === 'cancel-book')         return cancelBooking(id, card);
     if (action === 'confirm-book')        return confirmBooking(id, card);
     if (action === 'delete-session')      return confirmDeleteSession(id, card);
+    if (action === 'edit-session') {
+      const form = document.getElementById(`pgGdEditForm-${id}`);
+      if (form) form.style.display = form.style.display === 'none' ? '' : 'none';
+      return;
+    }
+    if (action === 'cancel-edit-session') {
+      const form = document.getElementById(`pgGdEditForm-${id}`);
+      if (form) form.style.display = 'none';
+      return;
+    }
+    if (action === 'save-edit-session') return saveEditSession(id, card, btn);
     if (action === 'join-session' && !btn.disabled && btn.dataset.full !== 'true') joinSession(id);
   });
 
@@ -1153,15 +1232,18 @@
       // Update card display without re-render
       const topicDisplay = card.querySelector('.pg-gd-card-topic');
       const schedDisplay = card.querySelector('.pg-gd-card-schedule');
-      const slotDisplay  = card.querySelector('.pg-gd-slot-badge');
+      const slotBadge    = card.querySelector('.pg-gd-slot-badge');
+      const slotBadgeBtn = card.querySelector('.pg-gd-slot-badge-btn');
       const descDisplay  = card.querySelector('.pg-gd-card-desc');
       if (topicDisplay) topicDisplay.textContent = topic;
       if (schedDisplay) schedDisplay.textContent = `📅 ${formatScheduledAt(scheduledAt)}`;
-      if (slotDisplay)  slotDisplay.textContent  = `GD SLOT-${slotNumber}`;
+      if (slotBadge)    slotBadge.textContent = `GD SLOT-${slotNumber}`;
+      if (slotBadgeBtn) slotBadgeBtn.innerHTML = `GD SLOT-${slotNumber} <span class="pg-gd-slot-chevron">▾</span>`;
       if (descDisplay && description) { descDisplay.textContent = description.slice(0, 100) + (description.length > 100 ? '…' : ''); }
       card.dataset.scheduled = scheduledAt;
 
-      const sess = state.mineSessions.find(s => s.id === sessionId);
+      const sess = state.mineSessions.find(s => s.id === sessionId) ||
+                   state.sessions.find(s => s.id === sessionId);
       if (sess) { sess.topic = topic; sess.description = description; sess.slot_number = slotNumber; sess.scheduled_at = scheduledAt; }
 
       const form = document.getElementById(`pgGdEditForm-${sessionId}`);
